@@ -1,0 +1,45 @@
+{
+  // Use IntelliSense to learn about possible Node.js debug attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Program",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/ts-node/dist/_bin.js",
+      "args": [
+        "${workspaceRoot}/src/server.ts"
+      ],
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector",
+      "env": {
+        "NODE_ENV": "development",
+        "MONGO_URI": "mongodb://localhost:27017/wodbook",
+        "MONGO_MAX_POOL_SIZE": "10"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Tests",
+      "program": "${workspaceRoot}/node_modules/ts-node/dist/_bin.js",
+      "args": [
+        "${workspaceRoot}/node_modules/jest/bin/jest.js",
+        "--runInBand"
+      ],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceRoot}/build/**/*"
+      ],
+      "cwd": "${workspaceRoot}",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development",
+        "MONGO_URI": "mongodb://localhost:27017/wodbook",
+        "MONGO_MAX_POOL_SIZE": "10"
+      }
+    }
+  ]
+}

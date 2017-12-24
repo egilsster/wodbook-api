@@ -1,0 +1,43 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/wodbook-api
+    environment:
+      SERVICE_NAME: wodbook-api
+      DOCKER_URL: https://download.docker.com/linux/static/edge/x86_64/docker-17.06.0-ce.tgz
+      DOCKER_COMPOSE_URL: https://github.com/docker/compose/releases/download/1.13.0/docker-compose-Linux-x86_64
+    steps:
+      - checkout
+      - run:
+          name: Upgrade Docker
+          command: |
+            set -e
+            curl -sSL $DOCKER_URL | sudo tar -xz --strip-components=1 -C /usr/bin/
+            sudo service docker restart
+      - run:
+          name: Pull public docker images in the background
+          background: true
+          command: |
+             docker pull node:8-alpine
+      - run:
+          name: Upgrade Docker Compose
+          command: |
+            set -e
+            loc=$(which docker-compose)
+            sudo curl -sSLf -z $loc -o $loc $DOCKER_COMPOSE_URL
+            sudo chmod 755 $loc
+      - run:
+          name: Build Docker Image
+          command: VER=$(cat ./version.txt) make build-image
+      - run:
+          name: Build test image
+          command: make build-test-image
+      - run:
+          name: Unit Tests
+          command: docker-compose -f docker-compose.unit-test.yml run test
+      - store_artifacts:
+          path: ./coverage
+          destination: coverage
+      - store_test_results:
+          path: ./coverage

@@ -1,0 +1,5 @@
+.git/
+.circleci/
+
+build/
+node_modules/

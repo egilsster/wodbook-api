@@ -1,0 +1,7 @@
+test:
+  image: test-image
+  environment:
+    - CIRCLE_BUILD_NUM
+  volumes:
+    - ./coverage:/usr/src/app/coverage
+  command: make test-ci

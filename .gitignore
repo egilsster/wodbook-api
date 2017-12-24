@@ -1,0 +1,11 @@
+# Build related
+npm-debug.log*
+coverage/
+node_modules
+.npmrc
+
+# OS X Files
+.DS_Store
+
+# Docker build-related files
+docker-compose.cloud.yml
