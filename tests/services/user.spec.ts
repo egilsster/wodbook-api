@@ -20,7 +20,6 @@ describe('UserService', () => {
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
 		this.email = 'some@email.com';
-		this.athleteId = undefined;
 		this.save = () => data;
 		return modelInstance;
 	};

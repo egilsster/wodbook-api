@@ -2,20 +2,20 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as mongoose from 'mongoose';
 import * as sqlite from 'sqlite';
-import { AthleteModel, AthleteType } from '../models/athlete';
+import { UserModel, UserType } from '../models/user';
 import { MongoError } from 'mongodb';
 
 export class MywodService {
 	public static FILE_LOCATION = `${process.cwd()}/sql`;
-	private athleteModel: mongoose.Model<AthleteType>;
+	private userModel: mongoose.Model<UserType>;
 
 	constructor(public options: any = {}) {
-		this.athleteModel = this.options.athleteModel || new AthleteModel().createModel();
+		this.userModel = this.options.userModel || new UserModel().createModel();
 	}
 
 	public async saveAthlete(data: any) {
 		data.gender = this.mapGender(data.gender);
-		const model = new this.athleteModel(data);
+		const model = new this.userModel(data);
 		return model.save();
 	}
 

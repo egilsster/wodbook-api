@@ -3,9 +3,9 @@ import * as HttpStatus from 'http-status-codes';
 import * as bodyParser from 'body-parser';
 
 import BaseRouter from './base';
-import { UserService } from '../services/user';
 import ExpressError from '../utils/express.error';
 import { JwtUtils } from '../utils/jwt.utils';
+import { UserService } from '../services/user';
 import { UserType } from '../models/user';
 
 export default class UserRouter extends BaseRouter {
