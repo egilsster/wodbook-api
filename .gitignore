@@ -3,6 +3,7 @@ npm-debug.log*
 coverage/
 node_modules
 .npmrc
+package-lock.json
 
 # OS X Files
 .DS_Store

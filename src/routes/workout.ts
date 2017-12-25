@@ -17,7 +17,7 @@ export default class WorkoutRouter extends BaseRouter {
 		this.initRoutes();
 	}
 
-	initRoutes() {
+	protected initRoutes() {
 		this.router.use(bodyParser.json());
 
 		this.router.route(`/`)

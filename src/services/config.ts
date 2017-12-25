@@ -7,6 +7,9 @@ export default class ConfigService {
 			'uri': process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/wodbook',
 			'keepAlive': process.env.MONGO_KEEP_ALIVE || '5000',
 			'connectTimeoutMS': process.env.MONGO_CONN_TIMEOUT || '30000'
+		},
+		'webtokens': {
+			'public': 'cHVibGljS2V5' // needs to be base64
 		}
 	};
 
