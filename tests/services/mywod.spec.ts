@@ -26,7 +26,6 @@ describe('MywodService', () => {
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
 		this.name = 'some@email.com';
-		this.athleteId = undefined;
 		this.save = () => data;
 		return modelInstance;
 	};
@@ -40,7 +39,7 @@ describe('MywodService', () => {
 		_model = sinon.mock(MockModel);
 
 		const options = {
-			'athleteModel': MockModel
+			'userModel': MockModel
 		};
 
 		service = new MywodService(options);
@@ -67,7 +66,7 @@ describe('MywodService', () => {
 	});
 
 	describe('saveAthlete', () => {
-		it('should successfully save an athlete model', async (done) => {
+		it('should successfully save a user model', async (done) => {
 			try {
 				_modelInstance.expects('save').resolves(data);
 
