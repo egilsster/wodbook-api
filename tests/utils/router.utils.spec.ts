@@ -56,7 +56,7 @@ describe('RouterUtils', () => {
 
 	describe('registerMiddleware', () => {
 		it('should register middleware to app', () => {
-			_app.expects('use').exactly(0);
+			_app.expects('use').atLeast(1);
 			routerUtils.registerMiddleware(app);
 			verifyAll();
 		});
@@ -64,8 +64,8 @@ describe('RouterUtils', () => {
 
 	describe('registerRoutes', () => {
 		it('should register routes to app', () => {
-			_app.expects('use').exactly(5);
-			routerUtils.registerRoutes(app);
+			_app.expects('use').atLeast(5);
+			routerUtils.registerRoutes(app, config);
 			verifyAll();
 		});
 	});

@@ -33,7 +33,7 @@ export default class Server {
 			}
 
 			this.routerUtils.registerMiddleware(this.app);
-			this.routerUtils.registerRoutes(this.app);
+			this.routerUtils.registerRoutes(this.app, config);
 
 			server.listen(config.servicePort, () => {
 				console.info(`Listening on port ${config.servicePort}`);

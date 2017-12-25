@@ -1,10 +1,14 @@
 import * as path from 'path';
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
+import * as bearerToken from 'express-bearer-token';
 
+import jwtVerify from '../middleware/jwt.verify';
 import WorkoutRouter from '../routes/workout';
 import HealthRouter from '../routes/health';
 import ExpressError from './express.error';
+import MywodRouter from '../routes/mywod';
+import UserRouter from '../routes/user';
 
 const MONGO_ERROR_DUPLICATE_KEY_ON_INSERT = 11000;
 const MONGO_ERROR_DUPLICATE_KEY_ON_UPDATE = 11001;
@@ -14,11 +18,11 @@ export default class RouterUtils {
 
 	constructor(public options: any = {}) { }
 
-	public registerMiddleware(_app: express.Application, ) {
-
+	public registerMiddleware(app: express.Application) {
+		app.use(bearerToken());
 	}
 
-	public registerRoutes(app: express.Application) {
+	public registerRoutes(app: express.Application, config: any) {
 		// Static routes
 		app.use('/api-docs', (_req: express.Request, res: express.Response) => res.sendFile(path.resolve('./api-docs.yml')));
 
@@ -26,11 +30,17 @@ export default class RouterUtils {
 		const healthRouter = new HealthRouter();
 		app.use('/health', healthRouter.router);
 
-		// JWT verification goes here
+		const userRouterInstance = new UserRouter();
+		app.use(`/${RouterUtils.LATEST_VERSION}/${userRouterInstance.path}`, userRouterInstance.router);
+
+		app.use(jwtVerify(config.webtokens.public));
 
 		// Private routes
 		const workoutRouterInstance = new WorkoutRouter();
 		app.use(`/${RouterUtils.LATEST_VERSION}/${workoutRouterInstance.path}`, workoutRouterInstance.router);
+
+		const mywodRouterInstance = new MywodRouter();
+		app.use(`/${RouterUtils.LATEST_VERSION}/${mywodRouterInstance.path}`, mywodRouterInstance.router);
 
 		// If a route is not registered, return 404
 		app.use((_req: express.Request, _res: express.Response, next: express.NextFunction) => {
