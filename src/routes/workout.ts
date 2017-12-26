@@ -17,7 +17,7 @@ export default class WorkoutRouter extends BaseRouter {
 		this.initRoutes();
 	}
 
-	protected initRoutes() {
+	initRoutes() {
 		this.router.use(bodyParser.json());
 
 		this.router.route(`/`)
@@ -37,8 +37,8 @@ export default class WorkoutRouter extends BaseRouter {
 		}
 	}
 
-	async list(_req: express.Request, res: express.Response) {
-		const workouts = await this.workoutService.getWorkouts();
+	async list(req: express.Request, res: express.Response) {
+		const workouts = await this.workoutService.getWorkouts(req['user']);
 		res.status(200).send({
 			'data': workouts
 		});
@@ -46,7 +46,7 @@ export default class WorkoutRouter extends BaseRouter {
 
 	async get(req: express.Request, res: express.Response) {
 		const workoutId: string = req.params.id;
-		const data = await this.workoutService.getWorkout(workoutId);
+		const data = await this.workoutService.getWorkout(req['user'], workoutId);
 
 		if (!data) {
 			return res.status(HttpStatus.NOT_FOUND).send({ 'msg': `workout not found` });
@@ -60,7 +60,7 @@ export default class WorkoutRouter extends BaseRouter {
 	async create(req: express.Request, res: express.Response) {
 		try {
 			const workoutData: any = req.body.data;
-			const data = await this.workoutService.createWorkout(workoutData);
+			const data = await this.workoutService.createWorkout(req['user'], workoutData);
 
 			return res.status(HttpStatus.CREATED).send({
 				'data': data
@@ -76,7 +76,7 @@ export default class WorkoutRouter extends BaseRouter {
 
 		try {
 			const { score } = req.body.data;
-			const data = await this.workoutService.addScore(workoutId, score);
+			const data = await this.workoutService.addScore(req['user'], workoutId, score);
 			res.status(HttpStatus.CREATED).send({
 				'data': data
 			});

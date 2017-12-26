@@ -70,6 +70,7 @@ export default class UserRouter extends BaseRouter {
 
 	private getPayload(user: UserType) {
 		return {
+			id: user._id,
 			email: user.email,
 			admin: user.admin
 		};

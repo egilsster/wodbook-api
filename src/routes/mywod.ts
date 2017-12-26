@@ -34,11 +34,15 @@ export default class MywodRouter extends BaseRouter {
 			}
 
 			const contents = await this.mywodService.readContentsFromDatabase(file.filename);
-			const user = await this.mywodService.saveAthlete(contents.athlete);
+			const user = await this.mywodService.saveAthlete(req['user'], contents.athlete);
+			const workouts = await this.mywodService.saveWorkouts(user, contents.workouts);
+
+			// Add serializer
 
 			return res.status(HttpStatus.OK).send({
 				'data': {
-					user
+					user,
+					workouts
 				}
 			});
 		} catch (err) {
