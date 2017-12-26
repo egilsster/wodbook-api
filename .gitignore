@@ -4,9 +4,14 @@ coverage/
 node_modules
 .npmrc
 package-lock.json
+version.txt
 
 # OS X Files
 .DS_Store
 
 # Docker build-related files
 docker-compose.cloud.yml
+
+# Misc
+mywod/
+data.mywod
