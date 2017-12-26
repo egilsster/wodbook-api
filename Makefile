@@ -33,7 +33,7 @@ test-ci:
 	$(CODECLIMATE) < coverage/lcov.info
 
 depcheck:
-	$(DEPCHECK) --ignores depcheck,tslint,nsp,ts-jest,@types/*
+	$(DEPCHECK) --ignores codeclimate-test-reporter,depcheck,tslint,nsp,ts-jest,@types/*
 
 check-security:
 	$(MOD_BIN)/nsp check
