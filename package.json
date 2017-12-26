@@ -54,6 +54,7 @@
     "typescript": "^2.6.2"
   },
   "devDependencies": {
+    "codeclimate-test-reporter": "^0.5.0",
     "depcheck": "^0.6.8",
     "jest": "^22.0.3",
     "nodemon": "^1.14.1",
