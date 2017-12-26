@@ -28,6 +28,9 @@ jobs:
             sudo curl -sSLf -z $loc -o $loc $DOCKER_COMPOSE_URL
             sudo chmod 755 $loc
       - run:
+          name: Set version
+          command: node -e "console.log(require('./package.json').version.replace(/-[0-9]+/, '-$CIRCLE_BUILD_NUM'))" > ./version.txt
+      - run:
           name: Build Docker Image
           command: VER=$(cat ./version.txt) make build-image
       - run:

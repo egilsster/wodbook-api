@@ -10,9 +10,9 @@ networks:
         gateway: 172.30.0.1
 
 services:
-  mongodb:
+  mongo:
     image: mongo:latest
-    container_name: mongodb
+    container_name: mongo
     restart: always
     ports:
      - "27017:27017"

@@ -10,7 +10,7 @@ import ExpressError from '../utils/express.error';
 import { MywodUtils } from '../utils/mywod.utils';
 
 export class MywodService {
-	public static FILE_LOCATION = `${process.cwd()}/sql`;
+	public static FILE_LOCATION = `${process.cwd()}/mywod`;
 	private userModel: mongoose.Model<UserType>;
 	private workoutModel: mongoose.Model<WorkoutType>;
 

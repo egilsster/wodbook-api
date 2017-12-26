@@ -5,14 +5,15 @@ services:
     image: wodbook-api:latest
     container_name: wodbook-api
     depends_on:
-      - mongodb
+      mongo:
+        condition: service_started
     environment:
-      - NODE_ENV=development
-      - MONGO_URI=mongodb://mongodb:27017/wodbook
+      - ACCOUNT=dev
+      - MONGO_URI=mongodb://mongo:27017/wodbook
       - MONGO_MAX_POOL_SIZE=10
     ports:
       - "43210:43210"
-    cpu_shares: 50
-    mem_limit: "128M"
+    cpu_shares: 100
+    mem_limit: 512M
     networks:
       - wodbook_network

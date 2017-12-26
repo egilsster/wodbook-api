@@ -17,13 +17,19 @@ FROM node:8-alpine AS production
 
 RUN apk --no-cache add curl
 
+USER root
+
+WORKDIR /usr/src/app
+
 USER nobody
 
 COPY --from=builder /usr/src/app .
 
 EXPOSE 43210
 
-HEALTHCHECK CMD curl --fail http://localhost:21068/health || exit 1
+ENV SERVICE_NAME wodbook-api
+
+HEALTHCHECK CMD curl --fail http://localhost:43210/health || exit 1
 
 CMD [ "node", "./build/server.js" ]
 
@@ -35,4 +41,4 @@ FROM production AS test
 USER root
 RUN npm install
 
-RUN apk --no-cache add make
+RUN apk --no-cache add make grep git
