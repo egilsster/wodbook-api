@@ -7,11 +7,13 @@ import WorkoutRouter from '../../src/routes/workout';
 import WorkoutService from '../../src/services/workout';
 
 describe('workout endpoint', function () {
+	const user = {
+		'id': 'userId',
+		'email': 'user@email.com'
+	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let workoutRouter: WorkoutRouter;
 	let workoutMongo;
-	let res;
-	let _res;
 	let workoutService: WorkoutService;
 	let _workoutService: sinon.SinonMock;
 	let app: express.Application;
@@ -35,23 +37,20 @@ describe('workout endpoint', function () {
 		workoutRouter.initRoutes();
 
 		app = express();
+		app.use((req, res, next) => {
+			req['user'] = user;
+			next();
+		});
 		app.use('/', workoutRouter.router);
 		request = supertest(app);
-
-		res = {
-			send() { }
-		};
-		_res = sinon.mock(res);
 	});
 
 	afterEach(function () {
 		_workoutService.restore();
-		_res.restore();
 	});
 
 	function verifyAll() {
 		_workoutService.verify();
-		_res.verify();
 	}
 
 	it('should create instance of router when no options are given', () => {
@@ -76,7 +75,7 @@ describe('workout endpoint', function () {
 
 	describe('GET /workout/{id}', function () {
 		it('200 Get specific workout.', function (done) {
-			_workoutService.expects('getWorkout').withArgs(workoutMongo.id).resolves(workoutMongo);
+			_workoutService.expects('getWorkout').withArgs(user, workoutMongo.id).resolves(workoutMongo);
 
 			request.get(`/${workoutMongo.id}`)
 				.expect(HttpStatus.OK)
@@ -90,7 +89,7 @@ describe('workout endpoint', function () {
 		});
 
 		it('404 The specified workout does not exist', function (done) {
-			_workoutService.expects('getWorkout').withArgs(workoutMongo.id).resolves(null);
+			_workoutService.expects('getWorkout').withArgs(user, workoutMongo.id).resolves(null);
 			request.get(`/${workoutMongo.id}`)
 				.expect(HttpStatus.NOT_FOUND)
 				.end(function (err, res) {
@@ -128,10 +127,11 @@ describe('workout endpoint', function () {
 		});
 
 		it('201 Successful workout creation', async (done) => {
-			_workoutService.expects('createWorkout').withArgs(createWorkoutPostBody.data).returns(workoutMongo);
+			_workoutService.expects('createWorkout').withArgs(user, createWorkoutPostBody.data).returns(workoutMongo);
 
 			try {
-				const res = await request.post('/').send(createWorkoutPostBody);
+				const res = await request.post('/')
+					.send(createWorkoutPostBody);
 				expect(res.status).toBe(HttpStatus.CREATED);
 				expect(res.body.data).toEqual(workoutMongo);
 				verifyAll();
@@ -142,10 +142,11 @@ describe('workout endpoint', function () {
 		});
 
 		it('should return 500 if workout could not be created', async (done) => {
-			_workoutService.expects('createWorkout').withArgs(createWorkoutPostBody.data).rejects();
+			_workoutService.expects('createWorkout').withArgs(user, createWorkoutPostBody.data).rejects();
 
 			try {
-				const res = await request.post('/').send(createWorkoutPostBody);
+				const res = await request.post('/')
+					.send(createWorkoutPostBody);
 				expect(res.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
 				verifyAll();
 				done();
@@ -166,7 +167,7 @@ describe('workout endpoint', function () {
 			const updatedworkout = workoutMongo;
 			updatedworkout.scores.push(payload.data.score);
 
-			_workoutService.expects('addScore').withArgs(workoutMongo.id, payload.data.score).resolves(updatedworkout);
+			_workoutService.expects('addScore').withArgs(user, workoutMongo.id, payload.data.score).resolves(updatedworkout);
 
 			try {
 				const res = await request.post(`/${workoutMongo.id}`).send(payload);
@@ -185,7 +186,7 @@ describe('workout endpoint', function () {
 		});
 
 		it('should return 500 internal server error if a workout could not be updated', async (done) => {
-			_workoutService.expects('addScore').withArgs(workoutMongo.id, payload.data.score).rejects();
+			_workoutService.expects('addScore').withArgs(user, workoutMongo.id, payload.data.score).rejects();
 
 			try {
 				const res = await request.post(`/${workoutMongo.id}`).send(payload);

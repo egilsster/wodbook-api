@@ -8,6 +8,10 @@ import { MywodService } from '../../src/services/mywod';
 import { MongoError } from 'mongodb';
 
 describe('MywodService', () => {
+	const user = {
+		'id': 'userId',
+		'email': 'user@email.com'
+	};
 	const filename = 'filename';
 	let data = {
 		'id': 'someid',
@@ -68,9 +72,10 @@ describe('MywodService', () => {
 	describe('saveAthlete', () => {
 		it('should successfully save a user model', async (done) => {
 			try {
+				_model.expects('findOne').resolves(modelInstance);
 				_modelInstance.expects('save').resolves(data);
 
-				const promise = service.saveAthlete(data);
+				const promise = service.saveAthlete(user, data);
 				await expect(promise).resolves.toEqual(data);
 				verifyAll();
 				done();
@@ -82,6 +87,12 @@ describe('MywodService', () => {
 
 	describe('readContentsFromDatabase', () => {
 		it('should return an object with the contents', () => {
+
+		});
+	});
+
+	describe('saveWorkouts', () => {
+		it('should successfully save a list of workouts to a user', () => {
 
 		});
 	});
@@ -106,24 +117,6 @@ describe('MywodService', () => {
 			const res = service.resolvePath(filename);
 			expect(res).toEqual('fullPath');
 			_pathResolve.restore();
-		});
-	});
-
-	describe('mapGender', () => {
-		it('should map valid numerical values to its appropriate string value', () => {
-			const genders = ['female', 'male', 'other'];
-
-			for (let i = 0; i < genders.length; ++i) {
-				const gender = genders[i];
-				const res = service.mapGender(i);
-				expect(res).toEqual(gender);
-			}
-		});
-
-		it('should throw exception if numerical value is not a valid gender', () => {
-			expect(() => {
-				service.mapGender(3);
-			}).toThrow();
 		});
 	});
 });

@@ -1,34 +1,63 @@
 import * as mongoose from 'mongoose';
-import { BaseModel } from './base';
+
+const scoreTypes = ['time', 'distance', 'load', 'repetitions', 'rounds', 'timed_rounds', 'tabata', 'total', 'none'];
 
 export type WorkoutType = mongoose.Document & {
-	name: string;
+	title: string;
 	scores: string[];
-	type: string;
-	added: Date;
+	scoreType: string;
+	description: string;
+	createdBy: mongoose.Schema.Types.ObjectId;
+	createdAt: Date;
+	modifiedAt: Date;
 };
 
-export class WorkoutModel extends BaseModel {
+export class WorkoutModel {
 	private static NAME = 'Workout';
 	private static DEFINITION = {
-		'name': {
+		'title': {
 			'type': String,
-			'required': true,
-			'index': true,
-			'unique': true
+			'required': true
 		},
 		'scores': {
 			'type': Array,
 			'required': false,
 			'default': []
 		},
-		'type': {
+		'scoreType': {
 			'type': String,
-			'required': true
+			'required': true,
+			'enum': scoreTypes
+		},
+		'description': {
+			'type': String,
+			'required': false
+		},
+		'createdBy': {
+			'type': mongoose.Schema.Types.ObjectId,
+			'ref': 'User'
 		}
 	};
 
-	constructor(public options: any = {}) {
-		super(WorkoutModel.NAME, WorkoutModel.DEFINITION);
+	/**
+	 * Create the Blob model
+	 * @return {Object} Blob mongoose model
+	 */
+	public createModel() {
+		if ((mongoose as any).models[WorkoutModel.NAME]) {
+			return mongoose.model(WorkoutModel.NAME);
+		}
+		return mongoose.model(WorkoutModel.NAME, this.createSchema());
+	}
+
+	/**
+	 * Setup the mongo schema.
+	 * @return {mongoose.Schema} Created mongoose schema
+	 */
+	public createSchema(): mongoose.Schema {
+		return new mongoose.Schema(WorkoutModel.DEFINITION, {
+			'timestamps': true,
+			'versionKey': false
+		}).index({ 'title': 1, 'createdBy': 1 }, { 'unique': true });
 	}
 }

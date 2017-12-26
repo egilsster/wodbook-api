@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { BaseModel } from './base';
-import { DateUtils } from '../utils/date.utils';
+import { MywodUtils } from '../utils/mywod.utils';
 
 const genders = ['female', 'male', 'other'];
 
@@ -15,6 +15,8 @@ export type UserType = mongoose.Document & {
 	height: number;
 	weight: number;
 	boxName: string;
+	createdAt: Date;
+	modifiedAt: Date;
 };
 
 export class UserModel extends BaseModel {
@@ -55,7 +57,7 @@ export class UserModel extends BaseModel {
 		'dateOfBirth': {
 			'type': Date,
 			'required': false,
-			'set': DateUtils.parseDate
+			'set': MywodUtils.mapDate
 		},
 		'height': {
 			'type': Number,

@@ -10,16 +10,16 @@ export default class WorkoutService {
 		this.workoutModel = this.options.workoutModel || new WorkoutModel().createModel();
 	}
 
-	async getWorkouts() {
-		return this.workoutModel.find();
+	async getWorkouts(user: any) {
+		return this.workoutModel.find({ 'createdBy': user.id });
 	}
 
-	async getWorkout(id: string) {
-		return this.workoutModel.findById(id);
+	async getWorkout(user: any, id: string) {
+		return this.workoutModel.findOne({ '_id': id, 'createdBy': user.id });
 	}
 
-	async createWorkout(data: any) {
-		const workout = await this.getWorkout(data.workout);
+	async createWorkout(data: any, user: any) {
+		const workout = await this.getWorkout(user, data.workout);
 
 		if (workout) {
 			console.error(`Conflict, workout '${data.workout}' already exists`);
@@ -31,8 +31,8 @@ export default class WorkoutService {
 		return model.save();
 	}
 
-	async addScore(workout: string, score: string) {
-		const model = await this.getWorkout(workout);
+	async addScore(user: any, workout: string, score: string) {
+		const model = await this.getWorkout(user, workout);
 
 		if (!model) {
 			throw new ExpressError('Object not found', `Entity with identity '${workout}' does not exist`, HttpStatus.NOT_FOUND);
