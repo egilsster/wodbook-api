@@ -9,6 +9,7 @@ import HealthRouter from '../routes/health';
 import ExpressError from './express.error';
 import MywodRouter from '../routes/mywod';
 import UserRouter from '../routes/user';
+import MovementRouter from '../routes/movement';
 
 const MONGO_ERROR_DUPLICATE_KEY_ON_INSERT = 11000;
 const MONGO_ERROR_DUPLICATE_KEY_ON_UPDATE = 11001;
@@ -38,6 +39,9 @@ export default class RouterUtils {
 		// Private routes
 		const workoutRouterInstance = new WorkoutRouter();
 		app.use(`/${RouterUtils.LATEST_VERSION}/${workoutRouterInstance.path}`, workoutRouterInstance.router);
+
+		const movementRouterInstance = new MovementRouter();
+		app.use(`/${RouterUtils.LATEST_VERSION}/${movementRouterInstance.path}`, movementRouterInstance.router);
 
 		const mywodRouterInstance = new MywodRouter();
 		app.use(`/${RouterUtils.LATEST_VERSION}/${mywodRouterInstance.path}`, mywodRouterInstance.router);

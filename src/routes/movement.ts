@@ -2,18 +2,18 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 
-import WorkoutService from '../services/workout';
+import { MovementService } from '../services/movement';
 import BaseRouter from './base';
 import ExpressError from '../utils/express.error';
 
-export default class WorkoutRouter extends BaseRouter {
-	public path: string = 'workouts';
+export default class MovementRouter extends BaseRouter {
+	public path: string = 'movements';
 	public router: express.Router;
-	private workoutService: WorkoutService;
+	private movementService: MovementService;
 
 	constructor(options: any = {}) {
 		super(options);
-		this.workoutService = options.workoutService || new WorkoutService(options);
+		this.movementService = options.movementService || new MovementService(options);
 		this.initRoutes();
 	}
 
@@ -38,18 +38,18 @@ export default class WorkoutRouter extends BaseRouter {
 	}
 
 	async list(req: express.Request, res: express.Response) {
-		const workouts = await this.workoutService.getWorkouts(req['user']);
+		const movements = await this.movementService.getMovements(req['user']);
 		res.status(200).send({
-			'data': workouts
+			'data': movements
 		});
 	}
 
 	async get(req: express.Request, res: express.Response) {
-		const workoutId: string = req.params.id;
-		const data = await this.workoutService.getWorkout(req['user'], workoutId);
+		const movementId: string = req.params.id;
+		const data = await this.movementService.getMovement(req['user'], movementId);
 
 		if (!data) {
-			return res.status(HttpStatus.NOT_FOUND).send({ 'msg': `workout not found` });
+			return res.status(HttpStatus.NOT_FOUND).send({ 'msg': `Movement not found` });
 		}
 
 		res.send({
@@ -59,8 +59,8 @@ export default class WorkoutRouter extends BaseRouter {
 
 	async create(req: express.Request, res: express.Response) {
 		try {
-			const workoutData: any = req.body.data;
-			const data = await this.workoutService.createWorkout(req['user'], workoutData);
+			const movementData: any = req.body.data;
+			const data = await this.movementService.createMovement(req['user'], movementData);
 
 			return res.status(HttpStatus.CREATED).send({
 				'data': data
@@ -72,11 +72,11 @@ export default class WorkoutRouter extends BaseRouter {
 	}
 
 	async update(req: express.Request, res: express.Response) {
-		const workoutId: string = req.params.id;
+		const movementId: string = req.params.id;
 
 		try {
 			const { score } = req.body.data;
-			const data = await this.workoutService.addScore(req['user'], workoutId, score);
+			const data = await this.movementService.addScore(req['user'], movementId, score);
 			res.status(HttpStatus.CREATED).send({
 				'data': data
 			});

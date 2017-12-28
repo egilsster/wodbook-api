@@ -1,38 +1,33 @@
 import * as mongoose from 'mongoose';
 import { MywodUtils } from '../utils/mywod.utils';
-import { WorkoutScoreType } from './workout.score';
+import { MovementScoreType } from './movement.score';
 
-export type WorkoutType = mongoose.Document & {
-	title: string;
-	scores: WorkoutScoreType[];
-	scoreType: string;
-	description: string;
+export type MovementType = mongoose.Document & {
+	name: string;
+	scores: MovementScoreType[];
+	measurement: string;
 	createdBy: mongoose.Schema.Types.ObjectId;
 	createdAt: Date;
 	modifiedAt: Date;
 };
 
-export class WorkoutModel {
-	private static NAME = 'Workout';
+export class MovementModel {
+	private static NAME = 'Movement';
 	private static DEFINITION = {
-		'title': {
+		'name': {
 			'type': String,
 			'required': true,
 			'trim': true
 		},
 		'scores': [{
 			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'WorkoutScore'
+			'ref': 'MovementScore'
 		}],
-		'scoreType': {
+		'measurement': {
 			'type': String,
 			'required': true,
-			'enum': Object.values(MywodUtils.WORKOUT_MEASUREMENTS),
-			'set': MywodUtils.mapWorkoutMeasurement
-		},
-		'description': {
-			'type': String,
-			'required': false
+			'enum': MywodUtils.MOVEMENT_MEASUREMENTS,
+			'set': MywodUtils.mapMovementMeasurement
 		},
 		'createdBy': {
 			'type': mongoose.Schema.Types.ObjectId,
@@ -45,10 +40,10 @@ export class WorkoutModel {
 	 * @return {Object} Blob mongoose model
 	 */
 	public createModel() {
-		if ((mongoose as any).models[WorkoutModel.NAME]) {
-			return mongoose.model(WorkoutModel.NAME);
+		if ((mongoose as any).models[MovementModel.NAME]) {
+			return mongoose.model(MovementModel.NAME);
 		}
-		return mongoose.model(WorkoutModel.NAME, this.createSchema());
+		return mongoose.model(MovementModel.NAME, this.createSchema());
 	}
 
 	/**
@@ -56,9 +51,9 @@ export class WorkoutModel {
 	 * @return {mongoose.Schema} Created mongoose schema
 	 */
 	public createSchema(): mongoose.Schema {
-		return new mongoose.Schema(WorkoutModel.DEFINITION, {
+		return new mongoose.Schema(MovementModel.DEFINITION, {
 			'timestamps': true,
 			'versionKey': false
-		}).index({ 'title': 1, 'createdBy': 1 }, { 'unique': true });
+		}).index({ 'name': 1, 'createdBy': 1 }, { 'unique': true });
 	}
 }

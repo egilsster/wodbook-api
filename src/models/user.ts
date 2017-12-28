@@ -52,7 +52,8 @@ export class UserModel extends BaseModel {
 		'gender': {
 			'type': String,
 			'required': false,
-			'enum': genders
+			'enum': genders,
+			'set': MywodUtils.mapGender
 		},
 		'dateOfBirth': {
 			'type': Date,
