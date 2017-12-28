@@ -57,7 +57,7 @@ export class WorkoutScoreModel extends BaseModel {
 		}
 	};
 
-	constructor(public options: any = {}) {
-		super(WorkoutScoreModel.NAME, WorkoutScoreModel.DEFINITION);
+	constructor(options: any = {}) {
+		super(WorkoutScoreModel.NAME, WorkoutScoreModel.DEFINITION, options);
 	}
 }

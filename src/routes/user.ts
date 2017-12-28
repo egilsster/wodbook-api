@@ -3,7 +3,6 @@ import * as HttpStatus from 'http-status-codes';
 import * as bodyParser from 'body-parser';
 
 import BaseRouter from './base';
-import ExpressError from '../utils/express.error';
 import { JwtUtils } from '../utils/jwt.utils';
 import { UserService } from '../services/user';
 import { UserType } from '../models/user';
@@ -28,14 +27,6 @@ export default class UserRouter extends BaseRouter {
 			.post(this.register.bind(this));
 
 		super.useLogger();
-	}
-
-	requireJSON(req: express.Request, _res: express.Response, next: express.NextFunction) {
-		if (!req.is('json')) {
-			next(new ExpressError('Unsupported media type', 'The request must be a JSON object', HttpStatus.UNSUPPORTED_MEDIA_TYPE));
-		} else {
-			next();
-		}
 	}
 
 	async login(req: express.Request, res: express.Response, next: express.NextFunction) {

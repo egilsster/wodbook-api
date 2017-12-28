@@ -4,11 +4,10 @@ import * as HttpStatus from 'http-status-codes';
 
 import { MovementService } from '../services/movement';
 import BaseRouter from './base';
-import ExpressError from '../utils/express.error';
+import requireJSON from '../middleware/require.json';
 
 export default class MovementRouter extends BaseRouter {
 	public path: string = 'movements';
-	public router: express.Router;
 	private movementService: MovementService;
 
 	constructor(options: any = {}) {
@@ -22,19 +21,11 @@ export default class MovementRouter extends BaseRouter {
 
 		this.router.route(`/`)
 			.get(this.list.bind(this))
-			.post(this.requireJSON.bind(this), this.create.bind(this));
+			.post(requireJSON.bind(this), this.create.bind(this));
 
 		this.router.route(`/:id`)
 			.get(this.get.bind(this))
 			.post(this.update.bind(this));
-	}
-
-	requireJSON(req: express.Request, _res: express.Response, next: express.NextFunction) {
-		if (!req.is('json')) {
-			next(new ExpressError('Unsupported media type', 'The request must be a JSON object', HttpStatus.UNSUPPORTED_MEDIA_TYPE));
-		} else {
-			next();
-		}
 	}
 
 	async list(req: express.Request, res: express.Response) {

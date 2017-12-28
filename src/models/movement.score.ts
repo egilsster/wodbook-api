@@ -46,7 +46,7 @@ export class MovementScoreModel extends BaseModel {
 		}
 	};
 
-	constructor(public options: any = {}) {
-		super(MovementScoreModel.NAME, MovementScoreModel.DEFINITION);
+	constructor(options: any = {}) {
+		super(MovementScoreModel.NAME, MovementScoreModel.DEFINITION, options);
 	}
 }

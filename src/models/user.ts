@@ -75,7 +75,7 @@ export class UserModel extends BaseModel {
 		}
 	};
 
-	constructor(public options: any = {}) {
-		super(UserModel.NAME, UserModel.DEFINITION);
+	constructor(options: any = {}) {
+		super(UserModel.NAME, UserModel.DEFINITION, options);
 	}
 }
