@@ -2,13 +2,15 @@ import * as mongoose from 'mongoose';
 import * as HttpStatus from 'http-status-codes';
 import { MovementModel, MovementType } from '../models/movement';
 import ExpressError from '../utils/express.error';
-import { MovementScoreType } from '../models/movement.score';
+import { MovementScoreType, MovementScoreModel } from '../models/movement.score';
 
 export class MovementService {
 	private movementModel: mongoose.Model<MovementType>;
+	private movementScoreModel: mongoose.Model<MovementScoreType>;
 
 	constructor(private options: any = {}) {
 		this.movementModel = this.options.movementModel || new MovementModel().createModel();
+		this.movementScoreModel = this.options.movementScoreModel || new MovementScoreModel().createModel();
 	}
 
 	async getMovements(user: any) {
@@ -31,15 +33,16 @@ export class MovementService {
 		return model.save();
 	}
 
-	async addScore(user: any, movementId: string, _score: MovementScoreType) {
-		const model = await this.getMovement(user, movementId);
+	async addScore(user: any, movementId: string, score: MovementScoreType) {
+		const movementModel = await this.getMovement(user, movementId);
 
-		if (!model) {
+		if (!movementModel) {
 			throw new ExpressError('Object not found', `Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 
-		// TODO Create movementScoreModel and add _id to movement model
-
-		return model.save();
+		const movementScoreModel = new this.movementScoreModel(score);
+		await movementScoreModel.save();
+		movementModel.scores.push(movementScoreModel._id);
+		return movementModel.save();
 	}
 }
