@@ -31,11 +31,11 @@ export class MovementService {
 		return model.save();
 	}
 
-	async addScore(user: any, movement: MovementType, _score: MovementScoreType) {
-		const model = await this.getMovement(user, movement.id);
+	async addScore(user: any, movementId: string, _score: MovementScoreType) {
+		const model = await this.getMovement(user, movementId);
 
 		if (!model) {
-			throw new ExpressError('Object not found', `Entity with identity '${movement}' does not exist`, HttpStatus.NOT_FOUND);
+			throw new ExpressError('Object not found', `Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 
 		// TODO Create movementScoreModel and add _id to movement model
