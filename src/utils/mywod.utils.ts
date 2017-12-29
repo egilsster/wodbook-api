@@ -1,5 +1,7 @@
+import * as mongoose from 'mongoose';
+
 export class MywodUtils {
-	public static SCORE_TYPES = {
+	public static WORKOUT_MEASUREMENTS = {
 		'For Time:': 'time',
 		'For Distance:': 'distance',
 		'For Load:': 'load',
@@ -14,7 +16,7 @@ export class MywodUtils {
 	/**
 	 * The index in the array represents the type in myWOD
 	 */
-	public static MOVEMENT_TYPES = ['weight', 'distance', 'reps', 'height'];
+	public static MOVEMENT_MEASUREMENTS = ['weight', 'distance', 'reps', 'height'];
 
 	public static mapDate(date: string | Date) {
 		if (typeof date === 'string') {
@@ -23,12 +25,12 @@ export class MywodUtils {
 		return date;
 	}
 
-	public static mapWorkoutType(type: string) {
-		return MywodUtils.SCORE_TYPES[type.trim()];
+	public static mapWorkoutMeasurement(type: string) {
+		return MywodUtils.WORKOUT_MEASUREMENTS[type.trim()];
 	}
 
-	public static mapMovementType(type: number) {
-		return MywodUtils.MOVEMENT_TYPES[type];
+	public static mapMovementMeasurement(type: number) {
+		return MywodUtils.MOVEMENT_MEASUREMENTS[type];
 	}
 
 	/**
@@ -53,19 +55,20 @@ export class MywodUtils {
 		return value;
 	}
 
-	public static getScoreForMovement(movement: any, movementSessions: any[]) {
+	public static getScoresForMovement(movement: any, movementModelId: mongoose.Types.ObjectId, movementScores: any[]) {
 		const movementClientId = movement.primaryClientID;
 		const movementId = movement.primaryRecordID;
 
 		const scores: any[] = [];
-		for (const session of movementSessions) {
+		for (const session of movementScores) {
 			if (session.foreignMovementClientID === movementClientId && session.foreignMovementRecordID === movementId) {
 				scores.push({
+					'movementId': movementModelId,
 					'score': session.measurementAValue,
-					'type': MywodUtils.mapMovementType(movement.type),
-					'sets': Number(session.sets),
-					'notes': session.notes as string,
-					'date': new Date(session.date)
+					'measurement': movement.type,
+					'sets': session.sets,
+					'notes': session.notes,
+					'date': session.date
 				});
 			}
 		}

@@ -2,40 +2,38 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
+import * as sqlite from 'sqlite';
 
 import ExpressError from '../../src/utils/express.error';
 import { MywodService } from '../../src/services/mywod';
 import { MongoError } from 'mongodb';
 
 describe('MywodService', () => {
-	const user = {
+	const user: any = {
+		'_id': 'userId',
 		'id': 'userId',
 		'email': 'user@email.com'
 	};
 	const filename = 'filename';
-	let data = {
-		'id': 'someid',
-		'firstName': 'firstname',
-		'lastName': 'lastname',
-		'gender': 1,
-		'email': 'some@email.com',
-		'dateOfBirth': '1000-10-01',
-		'height': 100,
-		'weight': 100,
-		'boxName': 'string'
-	};
+	let _sqlite: sinon.SinonMock;
+	let db, _db: sinon.SinonMock;
 	let _fs: sinon.SinonMock;
 	let service: MywodService, _service: sinon.SinonMock;
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
-		this.name = 'some@email.com';
-		this.save = () => data;
+		this.save = () => { };
 		return modelInstance;
 	};
 	MockModel.findOne = () => { };
 
 	beforeEach(() => {
+		_sqlite = sinon.mock(sqlite);
+		db = {
+			get() { },
+			all() { }
+		};
+		_db = sinon.mock(db);
 		_fs = sinon.mock(fs);
 
 		modelInstance = new MockModel();
@@ -43,7 +41,8 @@ describe('MywodService', () => {
 		_model = sinon.mock(MockModel);
 
 		const options = {
-			'userModel': MockModel
+			'userModel': MockModel,
+			'workoutModel': MockModel
 		};
 
 		service = new MywodService(options);
@@ -51,6 +50,8 @@ describe('MywodService', () => {
 	});
 
 	afterEach(() => {
+		_sqlite.restore();
+		_db.restore();
 		_fs.restore();
 		_model.restore();
 		_service.restore();
@@ -58,6 +59,8 @@ describe('MywodService', () => {
 	});
 
 	function verifyAll() {
+		_sqlite.verify();
+		_db.verify();
 		_fs.verify();
 		_model.verify();
 		_service.verify();
@@ -70,13 +73,49 @@ describe('MywodService', () => {
 	});
 
 	describe('saveAthlete', () => {
-		it('should successfully save a user model', async (done) => {
+		const userData = {
+			'id': 'someid',
+			'firstName': 'firstname',
+			'lastName': 'lastname',
+			'gender': 1,
+			'email': 'user@email.com',
+			'dateOfBirth': '1000-10-01',
+			'height': 100,
+			'weight': 100,
+			'boxName': 'string'
+		};
+
+		it('should successfully update a user if he exists', async (done) => {
 			try {
 				_model.expects('findOne').resolves(modelInstance);
-				_modelInstance.expects('save').resolves(data);
+				_modelInstance.expects('save').resolves(userData);
 
-				const promise = service.saveAthlete(user, data);
-				await expect(promise).resolves.toEqual(data);
+				const promise = service.saveAthlete(user, userData);
+				await expect(promise).resolves.toEqual(userData);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should throw 403 Forbidden if the email from the backup dont match', async (done) => {
+			try {
+				const promise = service.saveAthlete({ 'email': 'another@email.com' }, userData);
+				await expect(promise).rejects.toHaveProperty('status', HttpStatus.FORBIDDEN);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should throw 404 Not found if the user info in the JWT does not exist', async (done) => {
+			try {
+				_model.expects('findOne').resolves(null);
+
+				const promise = service.saveAthlete(user, userData);
+				await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
 				verifyAll();
 				done();
 			} catch (err) {
@@ -85,15 +124,77 @@ describe('MywodService', () => {
 		});
 	});
 
-	describe('readContentsFromDatabase', () => {
-		it('should return an object with the contents', () => {
+	describe('saveWorkouts', () => {
+		const workouts = [
+			{
+				'id': 'id1',
+				'description': 'This is a sample custom WOD',
+				'title': 'w1'
+			},
+			{
+				'id': 'id2',
+				'description': 'Great workout',
+				'title': 'w2'
+			}
+		];
+
+		it('should successfully save a list of workouts to a user', async (done) => {
+			try {
+				_modelInstance.expects('save').resolves();
+
+				const res = await service.saveWorkouts(user, workouts);
+				expect(res).toBeInstanceOf(Array);
+				expect(res.length).toBe(1);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should ignore failed migrations', async (done) => {
+			try {
+				_modelInstance.expects('save').rejects(new Error('Saving failed'));
+
+				const res = await service.saveWorkouts(user, workouts);
+				expect(res).toBeInstanceOf(Array);
+				expect(res.length).toBe(0);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+	});
+
+	describe('saveMovementsAndMovementScores', () => {
+		it('should save movements and scores', () => {
 
 		});
 	});
 
-	describe('saveWorkouts', () => {
-		it('should successfully save a list of workouts to a user', () => {
+	describe('readContentsFromDatabase', () => {
+		it('should return an object with the contents', async (done) => {
+			try {
+				_service.expects('resolvePath').returns('path');
+				_sqlite.expects('open').withArgs('path').resolves(db);
+				_db.expects('get').resolves('athletes');
+				_db.expects('all').resolves('customwods');
+				_db.expects('all').resolves('movements');
+				_db.expects('all').resolves('movementscores');
+				_db.expects('all').resolves('mywods');
 
+				const res = await service.readContentsFromDatabase('filename');
+				expect(res).toHaveProperty('athlete');
+				expect(res).toHaveProperty('workouts');
+				expect(res).toHaveProperty('movements');
+				expect(res).toHaveProperty('movementScores');
+				expect(res).toHaveProperty('workoutScores');
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
 		});
 	});
 

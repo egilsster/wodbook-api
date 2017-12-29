@@ -1,10 +1,11 @@
 import * as mongoose from 'mongoose';
-
-const scoreTypes = ['time', 'distance', 'load', 'repetitions', 'rounds', 'timed_rounds', 'tabata', 'total', 'none'];
+import { BaseModel } from './base';
+import { MywodUtils } from '../utils/mywod.utils';
+import { WorkoutScoreType } from './workout.score';
 
 export type WorkoutType = mongoose.Document & {
 	title: string;
-	scores: string[];
+	scores: WorkoutScoreType[];
 	scoreType: string;
 	description: string;
 	createdBy: mongoose.Schema.Types.ObjectId;
@@ -12,22 +13,23 @@ export type WorkoutType = mongoose.Document & {
 	modifiedAt: Date;
 };
 
-export class WorkoutModel {
+export class WorkoutModel extends BaseModel {
 	private static NAME = 'Workout';
 	private static DEFINITION = {
 		'title': {
 			'type': String,
-			'required': true
+			'required': true,
+			'trim': true
 		},
-		'scores': {
-			'type': Array,
-			'required': false,
-			'default': []
-		},
+		'scores': [{
+			'type': mongoose.Schema.Types.ObjectId,
+			'ref': 'WorkoutScore'
+		}],
 		'scoreType': {
 			'type': String,
 			'required': true,
-			'enum': scoreTypes
+			'enum': Object.values(MywodUtils.WORKOUT_MEASUREMENTS),
+			'set': MywodUtils.mapWorkoutMeasurement
 		},
 		'description': {
 			'type': String,
@@ -39,25 +41,7 @@ export class WorkoutModel {
 		}
 	};
 
-	/**
-	 * Create the Blob model
-	 * @return {Object} Blob mongoose model
-	 */
-	public createModel() {
-		if ((mongoose as any).models[WorkoutModel.NAME]) {
-			return mongoose.model(WorkoutModel.NAME);
-		}
-		return mongoose.model(WorkoutModel.NAME, this.createSchema());
-	}
-
-	/**
-	 * Setup the mongo schema.
-	 * @return {mongoose.Schema} Created mongoose schema
-	 */
-	public createSchema(): mongoose.Schema {
-		return new mongoose.Schema(WorkoutModel.DEFINITION, {
-			'timestamps': true,
-			'versionKey': false
-		}).index({ 'title': 1, 'createdBy': 1 }, { 'unique': true });
+	constructor(options: any = {}) {
+		super(WorkoutModel.NAME, WorkoutModel.DEFINITION, { ...options, indices: { 'title': 1, 'createdBy': 1 }, unique: { 'unique': true } });
 	}
 }

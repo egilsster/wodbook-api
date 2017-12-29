@@ -52,7 +52,8 @@ export class UserModel extends BaseModel {
 		'gender': {
 			'type': String,
 			'required': false,
-			'enum': genders
+			'enum': genders,
+			'set': MywodUtils.mapGender
 		},
 		'dateOfBirth': {
 			'type': Date,
@@ -74,7 +75,7 @@ export class UserModel extends BaseModel {
 		}
 	};
 
-	constructor(public options: any = {}) {
-		super(UserModel.NAME, UserModel.DEFINITION);
+	constructor(options: any = {}) {
+		super(UserModel.NAME, UserModel.DEFINITION, options);
 	}
 }

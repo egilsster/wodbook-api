@@ -9,7 +9,8 @@
     "noImplicitAny": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "lib": ["es2017", "dom"]
   },
   "include": [
     "src"

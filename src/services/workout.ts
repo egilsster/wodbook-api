@@ -31,14 +31,14 @@ export default class WorkoutService {
 		return model.save();
 	}
 
-	async addScore(user: any, workout: string, score: string) {
+	async addScore(user: any, workout: string, _score: string) {
 		const model = await this.getWorkout(user, workout);
 
 		if (!model) {
 			throw new ExpressError('Object not found', `Entity with identity '${workout}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 
-		model.scores.push(score);
+		// model.scores.push(score);
 		return model.save();
 	}
 }

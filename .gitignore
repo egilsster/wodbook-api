@@ -5,6 +5,7 @@ node_modules
 .npmrc
 package-lock.json
 version.txt
+dist/
 
 # OS X Files
 .DS_Store

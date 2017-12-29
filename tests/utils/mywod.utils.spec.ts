@@ -14,20 +14,20 @@ describe('MywodUtils', () => {
 		});
 	});
 
-	describe('mapWorkoutType', () => {
+	describe('mapWorkoutMeasurement', () => {
 		it('should map workout based on myWOD string', () => {
-			expect(MywodUtils.mapWorkoutType('For Time:')).toEqual('time');
-			expect(MywodUtils.mapWorkoutType('For Distance:')).toEqual('distance');
-			expect(MywodUtils.mapWorkoutType('No Score:')).toEqual('none');
+			expect(MywodUtils.mapWorkoutMeasurement('For Time:')).toEqual('time');
+			expect(MywodUtils.mapWorkoutMeasurement('For Distance:')).toEqual('distance');
+			expect(MywodUtils.mapWorkoutMeasurement('No Score:')).toEqual('none');
 		});
 	});
 
-	describe('mapMovementType', () => {
+	describe('mapMovementMeasurement', () => {
 		it('should map movement measurement based on myWOD numerical values', () => {
-			expect(MywodUtils.mapMovementType(0)).toEqual('weight');
-			expect(MywodUtils.mapMovementType(1)).toEqual('distance');
-			expect(MywodUtils.mapMovementType(2)).toEqual('reps');
-			expect(MywodUtils.mapMovementType(3)).toEqual('height');
+			expect(MywodUtils.mapMovementMeasurement(0)).toEqual('weight');
+			expect(MywodUtils.mapMovementMeasurement(1)).toEqual('distance');
+			expect(MywodUtils.mapMovementMeasurement(2)).toEqual('reps');
+			expect(MywodUtils.mapMovementMeasurement(3)).toEqual('height');
 		});
 	});
 
@@ -54,7 +54,7 @@ describe('MywodUtils', () => {
 		});
 	});
 
-	describe('getScoreForMovement', () => {
+	describe('getScoresForMovement', () => {
 		const movements = [
 			{
 				'primaryClientID': 'initial',
@@ -88,7 +88,7 @@ describe('MywodUtils', () => {
 			}
 		];
 
-		const movementSessions = [
+		const movementScores = [
 			{
 				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
 				'primaryRecordID': 50,
@@ -123,16 +123,17 @@ describe('MywodUtils', () => {
 
 		it('should find scores for movement', () => {
 			const movement = movements[2];
-			const session = movementSessions[0];
+			const session = movementScores[0];
 
-			const scores = MywodUtils.getScoreForMovement(movement, movementSessions);
+			const scores = MywodUtils.getScoresForMovement(movement, 'someId' as any, movementScores);
 
 			expect(scores.length).toEqual(1);
+			expect(scores[0]).toHaveProperty('movementId', 'someId');
 			expect(scores[0]).toHaveProperty('score', 7);
-			expect(scores[0]).toHaveProperty('type', 'reps');
-			expect(scores[0]).toHaveProperty('sets', 1);
+			expect(scores[0]).toHaveProperty('measurement', 2);
+			expect(scores[0]).toHaveProperty('sets', '1');
 			expect(scores[0]).toHaveProperty('notes');
-			expect(scores[0]).toHaveProperty('date', new Date(session.date));
+			expect(scores[0]).toHaveProperty('date', session.date);
 		});
 	});
 });
