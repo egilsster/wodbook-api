@@ -35,7 +35,9 @@ describe('MovementService', () => {
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
+		this.id = 'someId';
 		this.name = 'Snatch';
+		this.scores = [];
 		this.save = () => movement;
 		return modelInstance;
 	};
@@ -49,7 +51,8 @@ describe('MovementService', () => {
 		_model = sinon.mock(MockModel);
 
 		const options = {
-			'movementModel': MockModel
+			'movementModel': MockModel,
+			'movementScoreModel': MockModel
 		};
 
 		service = new MovementService(options);
@@ -127,6 +130,8 @@ describe('MovementService', () => {
 	describe('addScore', () => {
 		it('should successfully add a score', async () => {
 			_service.expects('getMovement').resolves(movement);
+			_modelInstance.expects('save').resolves();
+			_modelInstance.expects('save').resolves();
 
 			const promise = service.addScore(user, movement, score);
 		});
