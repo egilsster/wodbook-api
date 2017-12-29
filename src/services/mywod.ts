@@ -29,13 +29,17 @@ export class MywodService {
 	}
 
 	public async saveAthlete(user: any, data: any) {
-		const model = await this.userModel.findOne({ email: user.email });
+		if (data.email !== user.email) {
+			throw new ExpressError('Emails do not match', 'This myWOD backup does not belong to this email address', HttpStatus.FORBIDDEN);
+		}
+
+		let model = await this.userModel.findOne({ email: user.email });
 
 		if (!model) {
 			throw new ExpressError('Not found', 'Could not detect a user logged in', HttpStatus.NOT_FOUND);
 		}
 
-		this.updateUser(model, data);
+		model = this.updateUser(model, data);
 		return model.save();
 	}
 
@@ -47,6 +51,7 @@ export class MywodService {
 		model.gender = data.gender;
 		model.dateOfBirth = data.dateOfBirth;
 		model.boxName = data.boxName;
+		return model;
 	}
 
 	public async saveWorkouts(user: UserType, workouts: any[]) {

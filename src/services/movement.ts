@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import * as HttpStatus from 'http-status-codes';
 import { MovementModel, MovementType } from '../models/movement';
 import ExpressError from '../utils/express.error';
+import { MovementScoreType } from '../models/movement.score';
 
 export class MovementService {
 	private movementModel: mongoose.Model<MovementType>;
@@ -27,18 +28,18 @@ export class MovementService {
 		}
 
 		const model = new this.movementModel(data);
-
 		return model.save();
 	}
 
-	async addScore(user: any, movement: string, _score: string) {
-		const model = await this.getMovement(user, movement);
+	async addScore(user: any, movement: MovementType, _score: MovementScoreType) {
+		const model = await this.getMovement(user, movement.id);
 
 		if (!model) {
 			throw new ExpressError('Object not found', `Entity with identity '${movement}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 
-		// model.scores.push(score);
+		// TODO Create movementScoreModel and add _id to movement model
+
 		return model.save();
 	}
 }
