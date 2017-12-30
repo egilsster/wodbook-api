@@ -23,7 +23,7 @@ describe('workout endpoint', function () {
 		_workoutService = sinon.mock(workoutService);
 
 		workoutMongo = {
-			'id': 'someId',
+			'id': '5a4704ca46425f97c638bcaa',
 			'name': 'spliff',
 			'scores': [
 				'TBD'

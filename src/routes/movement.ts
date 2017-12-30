@@ -17,6 +17,7 @@ export default class MovementRouter extends BaseRouter {
 	}
 
 	initRoutes() {
+		this.validateIdAsUuid();
 		this.router.use(bodyParser.json());
 
 		this.router.route(`/`)

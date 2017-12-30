@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { validateObjectId } from '../middleware/objectid.validator';
 
 export default class BaseRouter {
 	public router: Router;
@@ -19,5 +20,9 @@ export default class BaseRouter {
 
 	protected useLogger() {
 		this.router.use(this.logErrors.bind(this));
+	}
+
+	protected validateIdAsUuid() {
+		this.router.param('id', validateObjectId);
 	}
 }

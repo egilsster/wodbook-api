@@ -49,7 +49,6 @@ describe('JwtVerify', () => {
 
 		expect(_next.callCount).toBe(0);
 		expect(req).not.toHaveProperty('user');
-
 	});
 
 	it('should call sendStatus with 401 Unauthorized if there is no JWT on the request', () => {
@@ -60,6 +59,5 @@ describe('JwtVerify', () => {
 
 		expect(_next.callCount).toBe(0);
 		expect(req).not.toHaveProperty('user');
-
 	});
 });
