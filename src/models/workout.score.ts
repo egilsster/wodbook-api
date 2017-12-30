@@ -4,13 +4,14 @@ import { MywodUtils } from '../utils/mywod.utils';
 
 export type WorkoutScoreType = mongoose.Document & {
 	workoutId: mongoose.Schema.Types.ObjectId;
-	workoutTitle: string;
+	workoutTitle: string; // Sometimes the score is added to a nonexisting workout
+	description: string;
 	score: string;
 	rx: boolean;
-	type: string;
-	sets: number;
+	measurement: string;
 	notes: string;
 	date: Date;
+	createdBy: mongoose.Schema.Types.ObjectId;
 	createdAt: Date;
 	modifiedAt: Date;
 };
@@ -18,14 +19,14 @@ export type WorkoutScoreType = mongoose.Document & {
 export class WorkoutScoreModel extends BaseModel {
 	private static NAME = 'WorkoutScore';
 	private static DEFINITION = {
-		'workoutId': {
-			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'Workout',
-			'required': false
-		},
 		'workoutTitle': {
 			'type': String,
-			'required': true
+			'required': true,
+			'trim': true
+		},
+		'description': {
+			'type': String,
+			'required': false
 		},
 		'score': {
 			'type': String,
@@ -35,16 +36,11 @@ export class WorkoutScoreModel extends BaseModel {
 			'type': Boolean,
 			'default': false
 		},
-		'type': {
+		'measurement': {
 			'type': String,
 			'required': true,
 			'enum': Object.values(MywodUtils.WORKOUT_MEASUREMENTS),
 			'set': MywodUtils.mapWorkoutMeasurement
-		},
-		'sets': {
-			'type': Number,
-			'default': 1,
-			'set': Number
 		},
 		'notes': {
 			'type': String,
@@ -54,6 +50,10 @@ export class WorkoutScoreModel extends BaseModel {
 			'type': Date,
 			'required': true,
 			'set': MywodUtils.mapDate
+		},
+		'createdBy': {
+			'type': mongoose.Schema.Types.ObjectId,
+			'ref': 'User'
 		}
 	};
 

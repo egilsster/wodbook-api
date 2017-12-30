@@ -6,7 +6,7 @@ import { WorkoutScoreType } from './workout.score';
 export type WorkoutType = mongoose.Document & {
 	title: string;
 	scores: WorkoutScoreType[];
-	scoreType: string;
+	measurement: string;
 	description: string;
 	createdBy: mongoose.Schema.Types.ObjectId;
 	createdAt: Date;
@@ -25,7 +25,7 @@ export class WorkoutModel extends BaseModel {
 			'type': mongoose.Schema.Types.ObjectId,
 			'ref': 'WorkoutScore'
 		}],
-		'scoreType': {
+		'measurement': {
 			'type': String,
 			'required': true,
 			'enum': Object.values(MywodUtils.WORKOUT_MEASUREMENTS),

@@ -37,6 +37,7 @@ export default class MywodRouter extends BaseRouter {
 			const user = await this.mywodService.saveAthlete(req['user'], contents.athlete);
 			const workouts = await this.mywodService.saveWorkouts(user, contents.workouts);
 			const movements = await this.mywodService.saveMovementsAndMovementScores(user, contents.movements, contents.movementScores);
+			await this.mywodService.saveWorkoutScores(user, contents.workoutScores);
 
 			// Add serializer
 

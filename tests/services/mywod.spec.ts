@@ -22,6 +22,8 @@ describe('MywodService', () => {
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
+		this._id = 'someId';
+		this.scores = [];
 		this.save = () => { };
 		return modelInstance;
 	};
@@ -42,7 +44,10 @@ describe('MywodService', () => {
 
 		const options = {
 			'userModel': MockModel,
-			'workoutModel': MockModel
+			'workoutModel': MockModel,
+			'workoutScoreModel': MockModel,
+			'movementModel': MockModel,
+			'movementScoreModel': MockModel
 		};
 
 		service = new MywodService(options);
@@ -167,10 +172,184 @@ describe('MywodService', () => {
 		});
 	});
 
-	describe('saveMovementsAndMovementScores', () => {
-		it('should save movements and scores', () => {
+	describe('saveWorkoutScores', () => {
+		const scores = [
+			{
+				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				'primaryRecordID': 1,
+				'hasChangesForServer': 0,
+				'parseId': 'OPssEL9w2Q',
+				'title': '181017',
+				'date': '2017-11-18',
+				'scoreType': 'For Time:',
+				'score': '14:20',
+				'personalRecord': 0,
+				'asPrescribed': 1,
+				'description': '5 rounds:\n15 ft rope climb, 3 ascents,\n10 toes-to-bar,\n21 walking lunges with 20.4/13.6kg plate overhead,\n400 meter run',
+				'notes': '',
+				'heartRate': 'NA',
+				'deleted': 0
+			},
+			{
+				'primaryClientID': 'i-2fb15b03cbs313ef86270ad1eff1a340-2017-01-02 12:14:48 +0000',
+				'primaryRecordID': 1,
+				'hasChangesForServer': 0,
+				'parseId': 'OPssEL9w2Q',
+				'title': 'Fran',
+				'date': '2017-12-06',
+				'scoreType': 'For Time:',
+				'score': '3:22',
+				'personalRecord': 1,
+				'asPrescribed': 1,
+				'description': 'You already know what it is',
+				'notes': '',
+				'heartRate': 'NA',
+				'deleted': 0
+			}
+		];
 
+		it('should save workout scores', async () => {
+			_modelInstance.expects('save').resolves();
+			_model.expects('findOne').resolves(modelInstance);
+			_modelInstance.expects('save').resolves();
+			_modelInstance.expects('save').resolves();
+			_model.expects('findOne').resolves(null);
+
+			const promise = service.saveWorkoutScores(user, scores);
+			await expect(promise).resolves.toBeUndefined();
+			verifyAll();
 		});
+
+		it('should not care about failed score migration', async () => {
+			_modelInstance.expects('save').rejects();
+			_modelInstance.expects('save').rejects();
+
+			const promise = service.saveWorkoutScores(user, scores);
+			await expect(promise).resolves.toBeUndefined();
+			verifyAll();
+		});
+	});
+
+	describe('saveMovementsAndMovementScores', () => {
+		const movements = [
+			{
+				'primaryClientID': 'initial',
+				'primaryRecordID': 1,
+				'hasChangesForServer': 1,
+				'parseId': null,
+				'name': 'Thruster',
+				'type': 0,
+				'everModifiedByAthlete': 0,
+				'deleted': 0
+			},
+			{
+				'primaryClientID': 'initial',
+				'primaryRecordID': 3,
+				'hasChangesForServer': 1,
+				'parseId': null,
+				'name': 'Snatch',
+				'type': 0,
+				'everModifiedByAthlete': 0,
+				'deleted': 0
+			},
+			{
+				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				'primaryRecordID': 5,
+				'hasChangesForServer': 1,
+				'parseId': null,
+				'name': 'HSPU',
+				'type': 2,
+				'everModifiedByAthlete': 1,
+				'deleted': 0
+			}
+		];
+
+		const movementScores = [
+			{
+				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				'primaryRecordID': 50,
+				'foreignMovementClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				'foreignMovementRecordID': 5,
+				'hasChangesForServer': 1,
+				'parseId': null,
+				'date': '2017-11-07',
+				'measurementAValue': 7,
+				'measurementAUnitsCode': 8,
+				'measuermentB': '0:00',
+				'sets': '1',
+				'notes': '',
+				'deleted': 0
+			},
+			{
+				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				'primaryRecordID': 44,
+				'foreignMovementClientID': 'initial',
+				'foreignMovementRecordID': 3,
+				'hasChangesForServer': 1,
+				'parseId': null,
+				'date': '2017-04-11',
+				'measurementAValue': 70,
+				'measurementAUnitsCode': 1,
+				'measuermentB': '1',
+				'sets': '1',
+				'notes': '',
+				'deleted': 0
+			}
+		];
+
+		it('should save movements and scores', async (done) => {
+			try {
+				// 3 times for each model in the end of saveScoresForMovement
+				// 2 times when adding score for two of the movements
+				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').resolves();
+
+				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
+				expect(savedMovements.length).toBe(3);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should not care if migration fails for a score', async (done) => {
+			try {
+				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').rejects();
+				_modelInstance.expects('save').rejects();
+				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').resolves();
+
+				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
+				expect(savedMovements.length).toBe(3);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		// it('should not care if migration fails for a movement', async (done) => {
+		// 	try {
+		// 		_service.expects('saveScoresForMovement').resolves();
+		// 		_modelInstance.expects('save').resolves();
+		// 		_service.expects('saveScoresForMovement').resolves();
+		// 		_modelInstance.expects('save').resolves();
+		// 		_service.expects('saveScoresForMovement').resolves();
+		// 		_modelInstance.expects('save').resolves();
+
+		// 		const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
+		// 		expect(savedMovements.length).toBe(3);
+		// 		verifyAll();
+		// 		done();
+		// 	} catch (err) {
+		// 		done(err);
+		// 	}
+		// });
 	});
 
 	describe('readContentsFromDatabase', () => {
@@ -206,6 +385,7 @@ describe('MywodService', () => {
 			_fs.expects('unlinkSync').withArgs(fullPath);
 
 			service.deleteDatabaseFile(filename);
+			verifyAll();
 		});
 	});
 
@@ -218,6 +398,7 @@ describe('MywodService', () => {
 			const res = service.resolvePath(filename);
 			expect(res).toEqual('fullPath');
 			_pathResolve.restore();
+			verifyAll();
 		});
 	});
 });

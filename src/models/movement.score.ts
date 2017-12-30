@@ -3,12 +3,12 @@ import { BaseModel } from './base';
 import { MywodUtils } from '../utils/mywod.utils';
 
 export type MovementScoreType = mongoose.Document & {
-	movementId: mongoose.Schema.Types.ObjectId;
 	score: string;
-	type: string;
+	measurement: string;
 	sets: number;
 	notes: string;
 	date: Date;
+	createdBy: mongoose.Schema.Types.ObjectId;
 	createdAt: Date;
 	modifiedAt: Date;
 };
@@ -16,10 +16,6 @@ export type MovementScoreType = mongoose.Document & {
 export class MovementScoreModel extends BaseModel {
 	private static NAME = 'MovementScore';
 	private static DEFINITION = {
-		'movementId': {
-			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'Movement'
-		},
 		'score': {
 			'type': String,
 			'required': true
@@ -43,6 +39,10 @@ export class MovementScoreModel extends BaseModel {
 			'type': Date,
 			'required': true,
 			'set': MywodUtils.mapDate
+		},
+		'createdBy': {
+			'type': mongoose.Schema.Types.ObjectId,
+			'ref': 'User'
 		}
 	};
 
