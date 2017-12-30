@@ -11,7 +11,7 @@ describe('WorkoutService', () => {
 	};
 	const data = {
 		'name': 'Amanda',
-		'id': 'someid'
+		'id': '5a4704ca46425f97c638bcaa'
 	};
 	let service: WorkoutService;
 	let _service: sinon.SinonMock;

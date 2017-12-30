@@ -15,7 +15,7 @@ describe('MovementService', () => {
 		'email': 'user@email.com'
 	};
 	const movement: any = {
-		'id': 'someId',
+		'id': '5a4704ca46425f97c638bcaa',
 		'name': 'Snatch',
 		'scores': [],
 		'measurement': 'weight',
@@ -35,7 +35,7 @@ describe('MovementService', () => {
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
-		this.id = 'someId';
+		this.id = '5a4704ca46425f97c638bcaa';
 		this.name = 'Snatch';
 		this.scores = [];
 		this.save = () => movement;
