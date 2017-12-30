@@ -26,7 +26,7 @@ describe('MovementService', () => {
 	const score: any = {
 		'movementId': movement.id,
 		'score': '100',
-		'type': 'weight',
+		'measurement': 'weight',
 		'sets': 1,
 		'notes': '',
 		'date': new Date('2014-01-03')
@@ -38,6 +38,7 @@ describe('MovementService', () => {
 		this.id = '5a4704ca46425f97c638bcaa';
 		this.name = 'Snatch';
 		this.scores = [];
+		this.populate = () => { };
 		this.save = () => movement;
 		return modelInstance;
 	};
@@ -128,18 +129,21 @@ describe('MovementService', () => {
 	});
 
 	describe('addScore', () => {
-		it('should successfully add a score', async () => {
-			_service.expects('getMovement').resolves(movement);
+		it('should successfully add a score if movement exists', async () => {
+			_service.expects('getMovement').resolves(modelInstance);
 			_modelInstance.expects('save').resolves();
 			_modelInstance.expects('save').resolves();
+			_modelInstance.expects('populate').resolves('data');
 
-			const promise = service.addScore(user, movement, score);
+			const promise = service.addScore(user, movement.id, score);
+			await expect(promise).resolves.toEqual('data');
+			verifyAll();
 		});
 
 		it('should throw 404 Not found if movement does not exist', async () => {
 			_service.expects('getMovement').resolves();
 
-			const promise = service.addScore(user, movement, score);
+			const promise = service.addScore(user, movement.id, score);
 			await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
 			verifyAll();
 		});

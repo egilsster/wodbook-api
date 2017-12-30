@@ -54,6 +54,36 @@ describe('MywodUtils', () => {
 		});
 	});
 
+	describe('parseWorkoutScore', () => {
+		it('should parse myWOD workout score to correct object', () => {
+			const score = {
+				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				'primaryRecordID': 1,
+				'hasChangesForServer': 0,
+				'parseId': 'OPssEL9w2Q',
+				'title': '181017',
+				'date': '2017-11-18',
+				'scoreType': 'For Time:',
+				'score': '14:20',
+				'personalRecord': 1,
+				'asPrescribed': 1,
+				'description': '5 rounds:\n15 ft rope climb, 3 ascents,\n10 toes-to-bar,\n21 walking lunges with 20.4/13.6kg plate overhead,\n400 meter run',
+				'notes': '',
+				'heartRate': 'NA',
+				'deleted': 0
+			};
+
+			const res = MywodUtils.parseWorkoutScore(score);
+			expect(res).toHaveProperty('workoutTitle', score.title);
+			expect(res).toHaveProperty('description', score.description);
+			expect(res).toHaveProperty('score', score.score);
+			expect(res).toHaveProperty('rx', Boolean(score.asPrescribed));
+			expect(res).toHaveProperty('measurement');
+			expect(res).toHaveProperty('notes', score.notes);
+			expect(res).toHaveProperty('date', score.date);
+		});
+	});
+
 	describe('getScoresForMovement', () => {
 		const movements = [
 			{
@@ -125,10 +155,9 @@ describe('MywodUtils', () => {
 			const movement = movements[2];
 			const session = movementScores[0];
 
-			const scores = MywodUtils.getScoresForMovement(movement, 'someId' as any, movementScores);
+			const scores = MywodUtils.getScoresForMovement(movement, movementScores);
 
 			expect(scores.length).toEqual(1);
-			expect(scores[0]).toHaveProperty('movementId', 'someId');
 			expect(scores[0]).toHaveProperty('score', 7);
 			expect(scores[0]).toHaveProperty('measurement', 2);
 			expect(scores[0]).toHaveProperty('sets', '1');

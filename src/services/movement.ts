@@ -43,6 +43,7 @@ export class MovementService {
 		const movementScoreModel = new this.movementScoreModel(score);
 		await movementScoreModel.save();
 		movementModel.scores.push(movementScoreModel._id);
-		return movementModel.save();
+		await movementModel.save();
+		return movementModel.populate('scores');
 	}
 }

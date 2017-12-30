@@ -1,5 +1,3 @@
-import * as mongoose from 'mongoose';
-
 export class MywodUtils {
 	public static WORKOUT_MEASUREMENTS = {
 		'For Time:': 'time',
@@ -55,24 +53,35 @@ export class MywodUtils {
 		return value;
 	}
 
-	public static getScoresForMovement(movement: any, movementModelId: mongoose.Types.ObjectId, movementScores: any[]) {
+	public static getScoresForMovement(movement: any, movementScores: any[]) {
 		const movementClientId = movement.primaryClientID;
 		const movementId = movement.primaryRecordID;
 
 		const scores: any[] = [];
-		for (const session of movementScores) {
-			if (session.foreignMovementClientID === movementClientId && session.foreignMovementRecordID === movementId) {
+		for (const score of movementScores) {
+			if (score.foreignMovementClientID === movementClientId && score.foreignMovementRecordID === movementId) {
 				scores.push({
-					'movementId': movementModelId,
-					'score': session.measurementAValue,
+					'score': score.measurementAValue,
 					'measurement': movement.type,
-					'sets': session.sets,
-					'notes': session.notes,
-					'date': session.date
+					'sets': score.sets,
+					'notes': score.notes,
+					'date': score.date
 				});
 			}
 		}
 
 		return scores;
+	}
+
+	public static parseWorkoutScore(score: any) {
+		return {
+			'workoutTitle': score.title,
+			'description': score.description,
+			'score': score.score,
+			'rx': Boolean(score.asPrescribed),
+			'measurement': score.scoreType,
+			'notes': score.notes,
+			'date': score.date,
+		};
 	}
 }
