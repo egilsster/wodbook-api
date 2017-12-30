@@ -103,10 +103,9 @@ export class MywodService {
 				movement.createdBy = user._id;
 				movement.measurement = movement.type;
 				const movementModelInstance = new this.movementModel(movement);
-
-				const scores = MywodUtils.getScoresForMovement(movement, movementScores);
-				await this.saveScoresForMovement(user, movement, movementModelInstance, scores);
+				await this.saveScoresForMovement(user, movement, movementModelInstance, movementScores);
 				savedMovements.push(movementModelInstance.name);
+				await movementModelInstance.save();
 			} catch (err) {
 				console.log(`Error migrating movement '${movement.name}'. Error: ${err}`);
 			}
@@ -114,7 +113,8 @@ export class MywodService {
 		return savedMovements;
 	}
 
-	private async saveScoresForMovement(user: UserType, movement: any, movementModelInstance: MovementType, scores: any[]) {
+	private async saveScoresForMovement(user: UserType, movement: any, movementModelInstance: MovementType, movementScores: any[]) {
+		const scores = MywodUtils.getScoresForMovement(movement, movementScores);
 		for (const score of scores) {
 			try {
 				const scoreModelInstance = new this.movementScoreModel(score);
@@ -125,7 +125,6 @@ export class MywodService {
 				console.error(`Error migrating movement score '${score.score}' for '${movement.name}'`);
 			}
 		}
-		return movementModelInstance.save();
 	}
 
 	public async readContentsFromDatabase(filename: string) {

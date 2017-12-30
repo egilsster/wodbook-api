@@ -98,7 +98,7 @@ describe('MywodUtils', () => {
 			},
 			{
 				'primaryClientID': 'initial',
-				'primaryRecordID': 5,
+				'primaryRecordID': 3,
 				'hasChangesForServer': 1,
 				'parseId': null,
 				'name': 'Snatch',
