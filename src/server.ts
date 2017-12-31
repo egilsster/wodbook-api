@@ -90,5 +90,5 @@ if (!String(process.env.NODE_ENV).startsWith('test')) {
 
 process.on('unhandledRejection', (reason, p) => {
 	// call handler here
-	this.logger.log(reason, p);
+	console.log(reason, p);
 });
