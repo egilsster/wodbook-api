@@ -1,21 +1,14 @@
 import * as winston from 'winston';
-import * as expressWinston from 'express-winston';
 import * as _ from 'lodash';
 import * as cls from 'continuation-local-storage';
-import { logContextInjector } from './log.context.injector';
 
 // the static context that gets added to each message
-let STATIC_CONTEXT = {};
-
-let LOG_LEVELS = {
-	fatal: 0,
-	error: 0,
-	warn: 1,
-	info: 2,
-	verbose: 3,
-	debug: 4,
-	trace: 5,
-	silly: 6
+let STATIC_CONTEXT = {
+	'type': 'wodbook-api',
+	// 'serverInfo': {
+	// 	'version': version.version,
+	// 	'shortSHA': version.SHA
+	// }
 };
 
 // Shared winston logger among all Logger instances to save memory!
@@ -25,7 +18,16 @@ let winstonLogger;
  * Logger is a thin wrapper around winston.
  */
 export class Logger {
-	public static LOG_LEVELS = LOG_LEVELS;
+	public static LOG_LEVELS = {
+		fatal: 0,
+		error: 0,
+		warn: 1,
+		info: 2,
+		verbose: 3,
+		debug: 4,
+		trace: 5,
+		silly: 6
+	};
 
 	// Cache of compiled templates
 	public static templates = {};
@@ -39,7 +41,7 @@ export class Logger {
 		_.merge(this.defaultContext, STATIC_CONTEXT, { module: moduleName }, options.context);
 	}
 
-	_createContext(req) {
+	public _createContext(req) {
 		if (!req) {
 			return {};
 		}
@@ -49,42 +51,18 @@ export class Logger {
 		}
 
 		return {
-			id: req.id,
-			ip: req.ip,
 			url: req.url,
 			method: req.method,
+			userId,
 			query: Logger._parseQuery(req),
-			userId
 		};
-	}
-
-	/**
-	 * Injects the logContextInjector and a configured winston logger into the given express app
-	 * @param {object} app - The express app
-	 * @param {object} options - Send [Optional] function parameters
-	 * @param {object} options.ignoreRouteFunc (Optional) - The function to determine if a given request
-	 * shouldn't be logged by winston, if no value is provided then health checks and metrics requests will be ignored
-	 */
-	public static injectLogger(app, options?: any) {
-		app.use(logContextInjector());
-		if (_.isFunction(options)) {
-			let ignoreRoute = options;
-			options = { ignoreRoute };
-		}
-		options = options || {};
-		if (!options.winstonInstance) {
-			let logger = options.logger || new Logger('express-winston');
-			delete options.logger;
-			options.winstonInstance = options.winstonInstance || { log: logger._wrappedLog.bind(logger) };
-		}
-		app.use(this.createWinstonLogger(options));
 	}
 
 	/**
 	 * TRACE
 	 * Fine-grained debug message, typically used to capture a flow of events.
 	 */
-	trace(..._args) {
+	public trace(..._args) {
 		this.log('trace', [].slice.call(arguments));
 	}
 
@@ -93,14 +71,14 @@ export class Logger {
 	 * - Mostly used for debugging purposes.
 	 * - Typically not enabled by default in production.
 	 */
-	debug(..._args) {
+	public debug(..._args) {
 		this.log('debug', [].slice.call(arguments));
 	}
 
 	/**
 	 * VERBOSE
 	 */
-	verbose(..._args) {
+	public verbose(..._args) {
 		this.log('verbose', [].slice.call(arguments));
 	}
 
@@ -109,7 +87,7 @@ export class Logger {
 	 * - Normal operations of the service that should be logged.
 	 * - Indicate some important operation or state in the service.
 	 */
-	info(..._args) {
+	public info(..._args) {
 		this.log('info', [].slice.call(arguments));
 	}
 
@@ -119,7 +97,7 @@ export class Logger {
 	 *  - Event that potentially can become an error.
 	 *  - Event that does not prevent correct operation of the system from an end-user perspective.
 	 */
-	warn(..._args) {
+	public warn(..._args) {
 		this.log('warn', [].slice.call(arguments));
 	}
 
@@ -128,7 +106,7 @@ export class Logger {
 	 * - Unhandled error that was unexpected to the service.
 	 * - Service can continue normal operation after error recovery.
 	 */
-	error(..._args) {
+	public error(..._args) {
 		this.log('error', [].slice.call(arguments));
 	}
 
@@ -136,7 +114,7 @@ export class Logger {
 	 * FATAL
 	 * - Non-recoverable error that forces the service to terminate.
 	 */
-	fatal(..._args) {
+	public fatal(..._args) {
 		this.log('fatal', [].slice.call(arguments));
 	}
 
@@ -144,23 +122,20 @@ export class Logger {
 	 * @param level - the log level
 	 * @param args - an array of arguments to the log function
 	 */
-	log(level, args) {
+	public log(level, args) {
 		args = this.massageArgsForWinston(level, args);
 		this.winston.log.apply(this.winston, args);
-	}
-
-	_wrappedLog() {
-		let args = [].slice.call(arguments);
-		let level = args.shift();
-		this.log(level, args);
 	}
 
 	/**
 	 * Transform the arguments to those understood by winston
 	 */
-	massageArgsForWinston(level, args) {
-		args.unshift(level);
+	private massageArgsForWinston(level: string, args: string | string[]) {
+		if (typeof args === 'string') {
+			args = [args];
+		}
 
+		args.unshift(level);
 		let lastArg = args[args.length - 1];
 		let msgContext;
 
@@ -170,7 +145,7 @@ export class Logger {
 			msgContext = result.msgContext;
 		} else if (args.length === 2 && (_.isObject(lastArg) && !_.isError(lastArg))) {
 			msgContext = args.pop();
-			args.splice(1, 0, undefined);
+			args.splice(1, 0);
 		} else if (_.isObject(lastArg) && !_.isError(lastArg)) {
 			msgContext = args.pop();
 		}
@@ -184,7 +159,7 @@ export class Logger {
 	/**
 	 * Determines the args and msgContext for a message code type log
 	 */
-	messageCodeArgsAndMsgContext(level, args) {
+	private messageCodeArgsAndMsgContext(level, args) {
 		let msgStruct = args[1];
 		let paramsOrMsgContext = args[2];
 		let msgContext = args[3];
@@ -200,7 +175,7 @@ export class Logger {
 		};
 	}
 
-	computeContext(msgContext) {
+	private computeContext(msgContext) {
 		let context;
 		let req = cls.getNamespace('logger').get('req');
 		if (req) {
@@ -216,7 +191,7 @@ export class Logger {
 		return context;
 	}
 
-	isMessageCodeArgs(args) {
+	private isMessageCodeArgs(args) {
 		if (args && args[1]) {
 			let keys = _.keys(args[1]);
 			// check if the argument is an object with only code and template properties
@@ -226,7 +201,7 @@ export class Logger {
 		return false;
 	}
 
-	applyTemplate(template, params) {
+	private applyTemplate(template, params) {
 		let compiledTemplate = Logger.templates[template];
 		if (!compiledTemplate) {
 			compiledTemplate = _.template(template);
@@ -237,11 +212,11 @@ export class Logger {
 	}
 
 	/**
-	 * Converts a query object into an array of k/v pairs. Filters out any key-less
-	 * values (i.e. elements in the query string where no `=` is present), to avoid
-	 * high cardinality fields.
-	 */
-	public static _parseQuery = function (req) {
+ 	 * Converts a query object into an array of k/v pairs. Filters out any key-less
+ 	 * values (i.e. elements in the query string where no `=` is present), to avoid
+ 	 * high cardinality fields.
+ 	 */
+	private static _parseQuery = function (req) {
 		let pairs = _.toPairs(_.get(req, 'query', {}));
 		return _.filter(pairs, n => n[1]);
 	};
@@ -259,8 +234,6 @@ export class Logger {
 			return `${req.method} ${endpoint}`;
 		} else if (propName === 'user_agent') {
 			return _.get(req, 'headers.user-agent');
-		} else if (propName === 'query') {
-			return Logger._parseQuery(req);
 		}
 		return req[propName];
 	};
@@ -273,47 +246,10 @@ export class Logger {
 		return (req.url === '/health' || req.url === '/metrics');
 	}
 
-	/**
-	 * Create an express-winston middleware logging function
-	 *
-	 * @param {object}  options Send [Optional] function parameters. Supports the same
-	 * options supported by express-winston: https://www.npmjs.com/package/express-winston#options
-	 */
-	public static createWinstonLogger(options: any = {}) {
-		if (_.isFunction(options)) {
-			let ignoreRoute = options;
-			options = { ignoreRoute };
-		}
-
-		options.winstonInstance = options.winstonInstance || Logger.getWinstonLogger();
-		options.requestWhitelist = options.requestWhitelist || ['url', 'user', 'method', 'query', 'endpoint', 'user_agent'];
-		options.responseWhitelist = options.responseWhitelist;
-		options.statusLevels = options.statusLevels || true;
-		// slightly prettier output in local dev
-		options.expressFormat = options.expressFormat || process.env.NODE_ENV === 'development';
-		options.requestFilter = options.requestFilter || options.defaultRequestFilter || Logger._defaultRequestFilter;
-		options.ignoreRoute = options.ignoreRoute || Logger._defaultIgnoreRoute;
-
-		return expressWinston.logger(options);
-	}
-
-	/**
-	 * Adds a static global context value
-	 */
-	public static addContext(context) {
-		_.merge(STATIC_CONTEXT, context);
-	}
-
-	public static setContext(context) {
-		STATIC_CONTEXT = context;
-	}
-
 	public static getWinstonLogger() {
 		if (!winstonLogger) {
 			let logOpts: any = {
-				timestamp: function () {
-					return new Date().toISOString();
-				},
+				timestamp: () => new Date().toISOString(),
 				json: true,
 				stringify: true,
 				level: process.env.LOG_LEVEL || 'info',
@@ -332,7 +268,7 @@ export class Logger {
 
 			winstonLogger = new winston.Logger({
 				transports,
-				levels: LOG_LEVELS,
+				levels: Logger.LOG_LEVELS,
 				exitOnError: true
 			});
 			winstonLogger.emitErrors = false;

@@ -16,13 +16,6 @@ export default class Server {
 	constructor(public config: ConfigService = new ConfigService(), public routers?, public middleware?, public models?: Models, options: any = {}) {
 		this.app = express();
 		this.app.disable('x-powered-by');
-		Logger.addContext({
-			'type': 'wodbook-api',
-			// 'serverInfo': {
-			// 	'version': version.version,
-			// 	'shortSHA': version.SHA
-			// }
-		});
 		this.logger = options.logger || new Logger('server');
 		this.routerUtils = options.routerUtils || new RouterUtils(options);
 	}
@@ -42,7 +35,7 @@ export default class Server {
 				throw err;
 			}
 
-			this.routerUtils.registerMiddleware(this.app);
+			this.routerUtils.registerMiddleware(this.app, this.logger);
 			this.routerUtils.registerRoutes(this.app, config);
 
 			server.listen(config.servicePort, () => {

@@ -9,7 +9,6 @@ describe('Logger', () => {
 	let logger, transport, winstonInstance;
 
 	beforeEach(() => {
-		Logger.setContext({});
 		transport = new winston.transports.Memory({
 			json: true,
 			stringify: true,
@@ -25,7 +24,6 @@ describe('Logger', () => {
 	afterEach(() => {
 		transport.errorOutput.length = 0;
 		transport.writeOutput.length = 0;
-		Logger.setContext({});
 		Logger._resetLogger();
 		delete process.env.LOG_LEVEL;
 	});
@@ -43,97 +41,10 @@ describe('Logger', () => {
 		});
 
 		it('overrides level with setting from LOG_LEVEL', () => {
+			process.env.NODE_ENV = 'development';
 			process.env.LOG_LEVEL = 'warn';
 			const l = Logger.getWinstonLogger().transports.console.level;
 			expect(l).toEqual('warn');
-		});
-	});
-
-	describe('addContext', () => {
-		it('alters default context', () => {
-			Logger.addContext({
-				version: '123'
-			});
-			const l = new Logger();
-			delete l.defaultContext.pid;
-			expect(l.defaultContext).toEqual({
-				version: '123'
-			});
-		});
-	});
-
-	describe('injectLogger', () => {
-		let _Logger, app, _app;
-
-		beforeEach(() => {
-			app = {
-				use() { }
-			};
-			_app = sinon.mock(app);
-			_Logger = sinon.mock(Logger);
-		});
-
-		afterEach(() => {
-			_Logger.restore();
-		});
-
-		function verifyInjectLogger() {
-			_app.verify();
-			_Logger.verify();
-		}
-
-		it('should inject the context injector and a winston logger', () => {
-			// Test that 'logContextInjector' returns a function, We really should mock this somehow
-			_app.expects('use').withArgs(sinon.match((arg) => {
-				return _.isFunction(arg);
-			})).once();
-
-			const fooFunction = () => { };
-			_Logger.expects('createWinstonLogger').withArgs({
-				winstonInstance: { log: sinon.match.func }
-			}).returns(fooFunction).once();
-			_app.expects('use').withArgs(fooFunction).once();
-
-			Logger.injectLogger(app);
-			verifyInjectLogger();
-		});
-
-		it('should treat a passed in function as the ignoreRoute to be passed to createWinstonLogger', () => {
-			// Test that 'logContextInjector' returns a function, We really should mock this somehow
-			_app.expects('use').withArgs(sinon.match((arg) => {
-				return _.isFunction(arg);
-			})).once();
-
-			const fooFunction = () => { };
-			const barFunction = () => { };
-			const options = {
-				ignoreRoute: barFunction,
-				winstonInstance: { log: sinon.match.func }
-			};
-			_Logger.expects('createWinstonLogger').withArgs(options).returns(fooFunction).once();
-			_app.expects('use').withArgs(fooFunction).once();
-
-			Logger.injectLogger(app, barFunction);
-			verifyInjectLogger();
-		});
-
-		it('should pass passed in options to createWinstonLogger', () => {
-			// Test that 'logContextInjector' returns a function, We really should mock this somehow
-			_app.expects('use').withArgs(sinon.match((arg) => {
-				return _.isFunction(arg);
-			})).once();
-
-			const fooFunction = () => { };
-			const options = {
-				foo: 'bar',
-				ignoreRoute: 'foo',
-				winstonInstance: { log: sinon.match.func }
-			};
-			_Logger.expects('createWinstonLogger').withArgs(options).returns(fooFunction).once();
-			_app.expects('use').withArgs(fooFunction).once();
-
-			Logger.injectLogger(app, { foo: options.foo, ignoreRoute: options.ignoreRoute });
-			verifyInjectLogger();
 		});
 	});
 
@@ -144,7 +55,8 @@ describe('Logger', () => {
 			});
 			delete l.defaultContext.pid;
 			expect(l.defaultContext).toEqual({
-				module: 'themodule'
+				module: 'themodule',
+				type: 'wodbook-api'
 			});
 		});
 
@@ -158,7 +70,8 @@ describe('Logger', () => {
 			delete l.defaultContext.pid;
 			expect(l.defaultContext).toEqual({
 				module: 'themodule',
-				foo: 'foo'
+				foo: 'foo',
+				type: 'wodbook-api'
 			});
 		});
 
@@ -171,7 +84,8 @@ describe('Logger', () => {
 			});
 			delete l.defaultContext.pid;
 			expect(l.defaultContext).toEqual({
-				module: 'someotherthing'
+				module: 'someotherthing',
+				type: 'wodbook-api'
 			});
 		});
 	});
@@ -184,8 +98,6 @@ describe('Logger', () => {
 
 		it('returns augmented context given correct request', () => {
 			const req = {
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: 'foo'
@@ -194,8 +106,6 @@ describe('Logger', () => {
 			};
 			const context = logger._createContext(req);
 			expect(context).toEqual({
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
 				query: [
@@ -207,8 +117,6 @@ describe('Logger', () => {
 
 		it('returns userId when it is provided in the request in req.user.id', () => {
 			const req = {
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: 'foo'
@@ -218,8 +126,6 @@ describe('Logger', () => {
 			};
 			const context = logger._createContext(req);
 			expect(context).toEqual({
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
 				query: [
@@ -231,8 +137,6 @@ describe('Logger', () => {
 
 		it('drops query entries where the values are empty', () => {
 			const req = {
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: 'foo',
@@ -244,8 +148,6 @@ describe('Logger', () => {
 			};
 			const context = logger._createContext(req);
 			expect(context).toEqual({
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
 				query: [
@@ -257,8 +159,6 @@ describe('Logger', () => {
 
 		it('correctly handles multi-value query params', () => {
 			const req = {
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: ['foo', 'bar']
@@ -268,8 +168,6 @@ describe('Logger', () => {
 			};
 			const context = logger._createContext(req);
 			expect(context).toEqual({
-				id: 'abcd1234',
-				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
 				query: [
@@ -332,39 +230,6 @@ describe('Logger', () => {
 		});
 	});
 
-	describe('createWinstonLogger', () => {
-		it('should not fail when passed a function', (done) => {
-			const barFunction = () => { };
-			try {
-				Logger.createWinstonLogger(barFunction);
-				done();
-			} catch (err) {
-				done(err); // Failed when passed a function
-			}
-		});
-
-		it('should not fail when passed an object', (done) => {
-			const options = {
-				foo: 'bar'
-			};
-			try {
-				Logger.createWinstonLogger(options);
-				done();
-			} catch (err) {
-				done(err); // Failed when passed an object
-			}
-		});
-
-		it('should not fail when passed nothing', (done) => {
-			try {
-				Logger.createWinstonLogger();
-				done();
-			} catch (err) {
-				done(err); // Failed when passed an object
-			}
-		});
-	});
-
 	describe('log functions', () => {
 		_.each(['trace', 'debug', 'verbose', 'info', 'warn', 'error', 'fatal'], function (level) {
 			it(`${level} level with message and messageContext`, function (done) {
@@ -408,7 +273,8 @@ describe('Logger', () => {
 						appId: messageContext.appId,
 						url: context.url,
 						module: 'logger:tests',
-						query: [['filter', 'blah']]
+						query: [['filter', 'blah']],
+						type: 'wodbook-api'
 					});
 					done();
 				});
@@ -442,8 +308,9 @@ describe('Logger', () => {
 						message,
 						url: context.url,
 						module: 'logger:tests',
+						userId: req.user.id,
 						query: [],
-						userId: req.user.id
+						type: 'wodbook-api'
 					});
 					done();
 				});
@@ -477,12 +344,13 @@ describe('Logger', () => {
 					expect(msg).toEqual({
 						level,
 						logseverity: level.toUpperCase(),
-						message: 'undefined',
+						message: '',
 						userId: messageContext.userId,
 						appId: messageContext.appId,
 						url: context.url,
 						module: 'logger:tests',
-						query: []
+						query: [],
+						type: 'wodbook-api'
 					});
 					done();
 				});
@@ -514,8 +382,9 @@ describe('Logger', () => {
 						message: 'Hello, world!',
 						url: context.url,
 						module: 'logger:tests',
+						userId: req.user.id,
 						query: [],
-						userId: req.user.id
+						type: 'wodbook-api'
 					});
 					done();
 				});
@@ -554,7 +423,8 @@ describe('Logger', () => {
 						appId: messageContext.appId,
 						url: context.url,
 						module: 'logger:tests',
-						query: []
+						query: [],
+						type: 'wodbook-api'
 					});
 					done();
 				});
@@ -590,6 +460,7 @@ describe('Logger', () => {
 					expect(msg).toHaveProperty('module', 'logger:tests');
 					expect(msg).toHaveProperty('query', []);
 					expect(msg).toHaveProperty('userId', req.user.id);
+					expect(msg).toHaveProperty('type', 'wodbook-api');
 					done();
 				});
 			});
