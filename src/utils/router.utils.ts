@@ -26,7 +26,7 @@ export default class RouterUtils {
 		app.use(logContextInjector());
 		app.use(expressWinston.logger({
 			'winstonInstance': logger,
-			'requestWhitelist': ['url', 'user', 'method', 'query', 'endpoint', 'logTraceId'],
+			'requestWhitelist': ['url', 'user', 'method', 'query', 'endpoint'],
 			'statusLevels': true,
 			// slightly prettier output in local dev
 			'expressFormat': process.env.NODE_ENV === 'development'
