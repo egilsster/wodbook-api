@@ -12,7 +12,7 @@ export default class UserRouter extends BaseRouter {
 	private userService: UserService;
 
 	constructor(options: any = {}) {
-		super(options);
+		super(options, 'router:user');
 		this.userService = options.userService || new UserService(options);
 		this.initRoutes();
 	}

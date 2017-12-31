@@ -47,7 +47,12 @@ describe('MywodService', () => {
 			'workoutModel': MockModel,
 			'workoutScoreModel': MockModel,
 			'movementModel': MockModel,
-			'movementScoreModel': MockModel
+			'movementScoreModel': MockModel,
+			'logger': {
+				info() { },
+				warn() { },
+				error() { }
+			}
 		};
 
 		service = new MywodService(options);
@@ -332,24 +337,6 @@ describe('MywodService', () => {
 				done(err);
 			}
 		});
-
-		// it('should not care if migration fails for a movement', async (done) => {
-		// 	try {
-		// 		_service.expects('saveScoresForMovement').resolves();
-		// 		_modelInstance.expects('save').resolves();
-		// 		_service.expects('saveScoresForMovement').resolves();
-		// 		_modelInstance.expects('save').resolves();
-		// 		_service.expects('saveScoresForMovement').resolves();
-		// 		_modelInstance.expects('save').resolves();
-
-		// 		const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
-		// 		expect(savedMovements.length).toBe(3);
-		// 		verifyAll();
-		// 		done();
-		// 	} catch (err) {
-		// 		done(err);
-		// 	}
-		// });
 	});
 
 	describe('readContentsFromDatabase', () => {

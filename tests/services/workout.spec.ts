@@ -47,7 +47,12 @@ describe('WorkoutService', () => {
 
 		const options = {
 			'workoutModel': WorkoutModel,
-			'workoutScoreModel': WorkoutModel
+			'workoutScoreModel': WorkoutModel,
+			'logger': {
+				info() { },
+				warn() { },
+				error() { }
+			}
 		};
 
 		service = new WorkoutService(options);

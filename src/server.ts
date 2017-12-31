@@ -5,15 +5,18 @@ import { Connection } from 'mongoose';
 import RouterUtils from './utils/router.utils';
 import ConfigService from './services/config';
 import Models from './models';
+import { Logger } from './utils/logger/logger';
 
 export default class Server {
 	private routerUtils: RouterUtils;
+	private logger: Logger;
 	public app: express.Express;
 	private server: http.Server;
 
 	constructor(public config: ConfigService = new ConfigService(), public routers?, public middleware?, public models?: Models, options: any = {}) {
 		this.app = express();
 		this.app.disable('x-powered-by');
+		this.logger = options.logger || new Logger('server');
 		this.routerUtils = options.routerUtils || new RouterUtils(options);
 	}
 
@@ -28,15 +31,15 @@ export default class Server {
 
 		this.models.connect((err: any, connection: Connection) => {
 			if (err) {
-				console.error(`Error connecting to Mongo`, err);
+				this.logger.error(`Error connecting to Mongo`, err);
 				throw err;
 			}
 
-			this.routerUtils.registerMiddleware(this.app);
+			this.routerUtils.registerMiddleware(this.app, this.logger);
 			this.routerUtils.registerRoutes(this.app, config);
 
 			server.listen(config.servicePort, () => {
-				console.info(`Listening on port ${config.servicePort}`);
+				this.logger.info(`Listening on port ${config.servicePort}`);
 			});
 
 			connection.once('disconnected', () => {
@@ -44,7 +47,7 @@ export default class Server {
 			});
 
 			connection.once('error', (e) => {
-				console.error(`Mongo error encountered: ${e}`);
+				this.logger.error(`Mongo error encountered: ${e}`);
 				server.close();
 			});
 		});
@@ -53,7 +56,7 @@ export default class Server {
 	public close() {
 		if (this.server) {
 			this.server.close();
-			console.info('Express server stopped');
+			this.logger.info('Express server stopped');
 		}
 	}
 }

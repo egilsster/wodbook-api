@@ -11,7 +11,7 @@ export default class WorkoutRouter extends BaseRouter {
 	private workoutService: WorkoutService;
 
 	constructor(options: any = {}) {
-		super(options);
+		super(options, 'router:workout');
 		this.workoutService = options.workoutService || new WorkoutService(options);
 		this.initRoutes();
 	}
@@ -27,6 +27,8 @@ export default class WorkoutRouter extends BaseRouter {
 		this.router.route(`/:id`)
 			.get(this.get.bind(this))
 			.post(this.update.bind(this));
+
+		super.useLogger();
 	}
 
 	async list(req: express.Request, res: express.Response) {
@@ -58,7 +60,7 @@ export default class WorkoutRouter extends BaseRouter {
 				'data': data
 			});
 		} catch (err) {
-			console.error(err);
+			this.logger.error(err);
 			return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err);
 		}
 	}

@@ -31,8 +31,16 @@ describe('workout endpoint', function () {
 			'type': 'TBD'
 		};
 
+		const logger = {
+			debug() { },
+			info() { },
+			warn() { },
+			error() { }
+		};
+
 		workoutRouter = new WorkoutRouter({
-			workoutService
+			workoutService,
+			logger
 		});
 		workoutRouter.initRoutes();
 

@@ -12,12 +12,19 @@ describe('RouterUtils', () => {
 	let config;
 	let res;
 	let _res: sinon.SinonMock;
+	let logger;
 
 	beforeEach(() => {
 		app = express();
 		_app = sinon.mock(app);
 
-		routerUtils = new RouterUtils();
+		logger = {
+			info() { },
+			warn() { },
+			error() { }
+		};
+
+		routerUtils = new RouterUtils({ logger });
 
 		config = {
 			'rollbar': {
@@ -56,8 +63,8 @@ describe('RouterUtils', () => {
 
 	describe('registerMiddleware', () => {
 		it('should register middleware to app', () => {
-			_app.expects('use').atLeast(1);
-			routerUtils.registerMiddleware(app);
+			_app.expects('use').atLeast(2);
+			routerUtils.registerMiddleware(app, logger);
 			verifyAll();
 		});
 	});

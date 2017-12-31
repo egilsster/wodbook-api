@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 import * as bearerToken from 'express-bearer-token';
+import * as expressWinston from 'express-winston';
 
 import jwtVerify from '../middleware/jwt.verify';
 import WorkoutRouter from '../routes/workout';
@@ -10,6 +11,7 @@ import ExpressError from './express.error';
 import MywodRouter from '../routes/mywod';
 import UserRouter from '../routes/user';
 import MovementRouter from '../routes/movement';
+import { logContextInjector } from './logger/log.context.injector';
 
 const MONGO_ERROR_DUPLICATE_KEY_ON_INSERT = 11000;
 const MONGO_ERROR_DUPLICATE_KEY_ON_UPDATE = 11001;
@@ -19,8 +21,16 @@ export default class RouterUtils {
 
 	constructor(public options: any = {}) { }
 
-	public registerMiddleware(app: express.Application) {
+	public registerMiddleware(app: express.Application, logger) {
 		app.use(bearerToken());
+		app.use(logContextInjector());
+		app.use(expressWinston.logger({
+			'winstonInstance': logger,
+			'requestWhitelist': ['url', 'user', 'method', 'query', 'endpoint'],
+			'statusLevels': true,
+			// slightly prettier output in local dev
+			'expressFormat': process.env.NODE_ENV === 'development'
+		}));
 	}
 
 	public registerRoutes(app: express.Application, config: any) {
