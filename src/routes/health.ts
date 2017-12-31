@@ -7,7 +7,7 @@ export default class HealthRouter extends BaseRouter {
 	public router: express.Router;
 
 	constructor(options: any = {}) {
-		super(options);
+		super(options, 'router:health');
 		this.initRoutes();
 	}
 

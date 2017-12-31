@@ -10,6 +10,7 @@ import ExpressError from './express.error';
 import MywodRouter from '../routes/mywod';
 import UserRouter from '../routes/user';
 import MovementRouter from '../routes/movement';
+import { logContextInjector } from './logger/log.context.injector';
 
 const MONGO_ERROR_DUPLICATE_KEY_ON_INSERT = 11000;
 const MONGO_ERROR_DUPLICATE_KEY_ON_UPDATE = 11001;
@@ -21,6 +22,7 @@ export default class RouterUtils {
 
 	public registerMiddleware(app: express.Application) {
 		app.use(bearerToken());
+		app.use(logContextInjector());
 	}
 
 	public registerRoutes(app: express.Application, config: any) {

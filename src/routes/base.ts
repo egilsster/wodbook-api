@@ -1,15 +1,18 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateObjectId } from '../middleware/objectid.validator';
+import { Logger } from '../utils/logger/logger';
 
 export default class BaseRouter {
+	public logger: Logger;
 	public router: Router;
 
-	constructor(public options: any = {}) {
+	constructor(public options: any = {}, loggerName: string) {
+		this.logger = options.logger || new Logger(loggerName);
 		this.router = Router();
 	}
 
 	protected logErrors(err: any, _req: Request, _res: Response, next: NextFunction) {
-		console.error(err);
+		this.logger.error(err);
 		next(err);
 	}
 

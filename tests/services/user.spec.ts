@@ -31,7 +31,12 @@ describe('UserService', () => {
 		_model = sinon.mock(MockModel);
 
 		const options = {
-			'userModel': MockModel
+			'userModel': MockModel,
+			'logger': {
+				info() { },
+				warn() { },
+				error() { }
+			}
 		};
 
 		service = new UserService(options);

@@ -53,7 +53,12 @@ describe('MovementService', () => {
 
 		const options = {
 			'movementModel': MockModel,
-			'movementScoreModel': MockModel
+			'movementScoreModel': MockModel,
+			'logger': {
+				info() { },
+				warn() { },
+				error() { }
+			}
 		};
 
 		service = new MovementService(options);

@@ -12,9 +12,11 @@ import { MovementScoreModel, MovementScoreType } from '../models/movement.score'
 import { WorkoutScoreModel, WorkoutScoreType } from '../models/workout.score';
 import ExpressError from '../utils/express.error';
 import { MywodUtils } from '../utils/mywod.utils';
+import { Logger } from '../utils/logger/logger';
 
 export class MywodService {
 	public static FILE_LOCATION = `${process.cwd()}/mywod`;
+	private logger: Logger;
 	private userModel: mongoose.Model<UserType>;
 	private workoutModel: mongoose.Model<WorkoutType>;
 	private workoutScoreModel: mongoose.Model<WorkoutScoreType>;
@@ -22,6 +24,7 @@ export class MywodService {
 	private movementScoreModel: mongoose.Model<MovementScoreType>;
 
 	constructor(public options: any = {}) {
+		this.logger = this.options.logger || new Logger('service:workout');
 		this.userModel = this.options.userModel || new UserModel().createModel();
 		this.workoutModel = this.options.workoutModel || new WorkoutModel().createModel();
 		this.workoutScoreModel = this.options.workoutScoreModel || new WorkoutScoreModel().createModel();
@@ -68,7 +71,7 @@ export class MywodService {
 				await workoutModelInstance.save();
 				savedWorkouts.push(workoutModelInstance.title);
 			} catch (err) {
-				console.log(`Error migrating workout ${workout.title}. Error: ${err}`);
+				this.logger.info(`Error migrating workout ${workout.title}. Error: ${err}`);
 			}
 		}
 
@@ -90,7 +93,7 @@ export class MywodService {
 					await workoutModel.save();
 				}
 			} catch (err) {
-				console.log(`Could not migrate score for ${score.title}`);
+				this.logger.info(`Could not migrate score for ${score.title}`);
 			}
 		}
 	}
@@ -107,7 +110,7 @@ export class MywodService {
 				savedMovements.push(movementModelInstance.name);
 				await movementModelInstance.save();
 			} catch (err) {
-				console.log(`Error migrating movement '${movement.name}'. Error: ${err}`);
+				this.logger.info(`Error migrating movement '${movement.name}'. Error: ${err}`);
 			}
 		}
 		return savedMovements;
@@ -122,7 +125,7 @@ export class MywodService {
 				await scoreModelInstance.save();
 				movementModelInstance.scores.push(scoreModelInstance._id);
 			} catch (err) {
-				console.error(`Error migrating movement score '${score.score}' for '${movement.name}'`);
+				this.logger.error(`Error migrating movement score '${score.score}' for '${movement.name}'`);
 			}
 		}
 	}

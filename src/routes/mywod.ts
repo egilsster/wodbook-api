@@ -14,7 +14,7 @@ export default class MywodRouter extends BaseRouter {
 	private mywodService: MywodService;
 
 	constructor(options: any = {}) {
-		super(options);
+		super(options, 'router:mywod');
 		this.mywodService = options.mywodService || new MywodService(options);
 		this.initRoutes();
 	}

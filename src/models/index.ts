@@ -1,17 +1,19 @@
 import * as _ from 'lodash';
 import { Mongoose } from 'mongoose';
 import * as mongoose from 'mongoose';
+import { Logger } from '../utils/logger/logger';
 
 const CONN_TO = 30000;
 const KEEP_ALIVE = 5000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 
 export default class Models {
+	public logger: Logger;
 	public mongoose: Mongoose;
 	public reconnectTimer: NodeJS.Timer;
 
 	constructor(public options: any = {}, providedMongoose?) {
-		this.options = options;
+		this.logger = this.options.logger || new Logger('models:index');
 		this.mongoose = providedMongoose || mongoose;
 		this.mongoose.Promise = global.Promise;
 	}
@@ -41,7 +43,7 @@ export default class Models {
 		let retryCount = MAX_RECONNECT_ATTEMPTS;
 		this.mongoose.connect(uri, mongooseOptions, (err) => {
 			if (err && !callbackCalled) {
-				console.error(err.message);
+				this.logger.error(err.message);
 				callback(err);
 				callbackCalled = true;
 			}
@@ -49,35 +51,35 @@ export default class Models {
 
 		connection.once('error', (err) => {
 			if (!callbackCalled) {
-				console.error(`Error connecting: ${err}`);
+				this.logger.error(`Error connecting: ${err}`);
 				callback(err);
 			}
 		});
 
 		connection.on('open', () => {
-			console.info(`Opening connection to: ${uri}`);
+			this.logger.info(`Opening connection to: ${uri}`);
 		});
 
 		connection.once('close', () => {
-			console.error('Mongo connection closed');
+			this.logger.error('Mongo connection closed');
 		});
 
 		connection.on('connected', () => {
-			console.info(`Connecting to: ${uri}`);
+			this.logger.info(`Connecting to: ${uri}`);
 			callback(null, connection);
 			callbackCalled = true;
 		});
 
 		connection.on('reconnected', () => {
 			clearTimeout(this.reconnectTimer);
-			console.info(`Reconnected to: ${uri}`);
+			this.logger.info(`Reconnected to: ${uri}`);
 		});
 
 		connection.on('disconnected', () => {
 			if (retryCount <= 0) {
 				throw new Error(`Too many disconnections from ${uri}. Giving up.`);
 			}
-			console.warn(`Lost connection to: ${uri}. Starting reconnect timer (${retryCount} attempt(s) remaining)...`);
+			this.logger.warn(`Lost connection to: ${uri}. Starting reconnect timer (${retryCount} attempt(s) remaining)...`);
 			this.reconnectTimer = setTimeout(() => {
 				throw new Error(`Lost connection to: ${uri} and could not reconnect in time.`);
 			}, CONN_TO);
