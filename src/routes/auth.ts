@@ -31,8 +31,7 @@ export class AuthRouter extends BaseRouter {
 
 	async login(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
-			const userData = req.body.data;
-			const user = await this.authService.login(userData);
+			const user = await this.authService.login(req.body.data);
 
 			return res.status(HttpStatus.OK).json({
 				'data': {
@@ -46,8 +45,7 @@ export class AuthRouter extends BaseRouter {
 
 	async register(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
-			const userData = req.body.data;
-			const user = await this.authService.register(userData);
+			const user = await this.authService.register(req.body.data);
 
 			return res.status(HttpStatus.CREATED).json({
 				'data': {
