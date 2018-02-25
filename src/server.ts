@@ -18,12 +18,11 @@ export default class Server {
 		this.app.disable('x-powered-by');
 		this.logger = options.logger || new Logger('server');
 		this.routerUtils = options.routerUtils || new RouterUtils(options);
+		this.server = http.createServer(this.app as any);
 	}
 
 	public async start() {
 		const config = await ConfigService.getConfig();
-
-		const server = http.createServer(this.app as any);
 
 		this.models = new Models({
 			'uri': config.mongo.uri
@@ -38,17 +37,17 @@ export default class Server {
 			this.routerUtils.registerMiddleware(this.app, this.logger);
 			this.routerUtils.registerRoutes(this.app, config);
 
-			server.listen(config.servicePort, () => {
+			this.server.listen(config.servicePort, () => {
 				this.logger.info(`Listening on port ${config.servicePort}`);
 			});
 
 			connection.once('disconnected', () => {
-				server.close();
+				this.server.close();
 			});
 
 			connection.once('error', (e) => {
 				this.logger.error(`Mongo error encountered: ${e}`);
-				server.close();
+				this.server.close();
 			});
 		});
 	}
