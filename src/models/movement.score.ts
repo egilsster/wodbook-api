@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { BaseModel } from './base';
-import { MywodUtils } from '../utils/mywod.utils';
+import { MyWodUtils } from '../utils/my.wod.utils';
 
 export type MovementScoreType = mongoose.Document & {
 	score: string;
@@ -23,8 +23,8 @@ export class MovementScoreModel extends BaseModel {
 		'measurement': {
 			'type': String,
 			'required': true,
-			'enum': MywodUtils.MOVEMENT_MEASUREMENTS,
-			'set': MywodUtils.mapMovementMeasurement
+			'enum': MyWodUtils.MOVEMENT_MEASUREMENTS,
+			'set': MyWodUtils.mapMovementMeasurement
 		},
 		'sets': {
 			'type': Number,
@@ -38,7 +38,7 @@ export class MovementScoreModel extends BaseModel {
 		'date': {
 			'type': Date,
 			'required': true,
-			'set': MywodUtils.mapDate
+			'set': MyWodUtils.mapDate
 		},
 		'createdBy': {
 			'type': mongoose.Schema.Types.ObjectId,

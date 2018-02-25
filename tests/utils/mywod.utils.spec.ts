@@ -1,33 +1,33 @@
-import { MywodUtils } from '../../src/utils/mywod.utils';
+import { MyWodUtils } from '../../src/utils/my.wod.utils';
 
 describe('MywodUtils', () => {
 	describe('mapDate', () => {
 		it('should parse date string to a date', () => {
-			const res = MywodUtils.mapDate('01-01-2018');
+			const res = MyWodUtils.mapDate('01-01-2018');
 			expect(res.toISOString().startsWith('2018-01-01')).toBe(true);
 		});
 
 		it('should return date if parameter is not a string', () => {
 			const date = new Date();
-			const res = MywodUtils.mapDate(date);
+			const res = MyWodUtils.mapDate(date);
 			expect(res).toEqual(date);
 		});
 	});
 
 	describe('mapWorkoutMeasurement', () => {
 		it('should map workout based on myWOD string', () => {
-			expect(MywodUtils.mapWorkoutMeasurement('For Time:')).toEqual('time');
-			expect(MywodUtils.mapWorkoutMeasurement('For Distance:')).toEqual('distance');
-			expect(MywodUtils.mapWorkoutMeasurement('No Score:')).toEqual('none');
+			expect(MyWodUtils.mapWorkoutMeasurement('For Time:')).toEqual('time');
+			expect(MyWodUtils.mapWorkoutMeasurement('For Distance:')).toEqual('distance');
+			expect(MyWodUtils.mapWorkoutMeasurement('No Score:')).toEqual('none');
 		});
 	});
 
 	describe('mapMovementMeasurement', () => {
 		it('should map movement measurement based on myWOD numerical values', () => {
-			expect(MywodUtils.mapMovementMeasurement(0)).toEqual('weight');
-			expect(MywodUtils.mapMovementMeasurement(1)).toEqual('distance');
-			expect(MywodUtils.mapMovementMeasurement(2)).toEqual('reps');
-			expect(MywodUtils.mapMovementMeasurement(3)).toEqual('height');
+			expect(MyWodUtils.mapMovementMeasurement(0)).toEqual('weight');
+			expect(MyWodUtils.mapMovementMeasurement(1)).toEqual('distance');
+			expect(MyWodUtils.mapMovementMeasurement(2)).toEqual('reps');
+			expect(MyWodUtils.mapMovementMeasurement(3)).toEqual('height');
 		});
 	});
 
@@ -37,19 +37,19 @@ describe('MywodUtils', () => {
 
 			for (let i = 0; i < genders.length; ++i) {
 				const gender = genders[i];
-				const res = MywodUtils.mapGender(i);
+				const res = MyWodUtils.mapGender(i);
 				expect(res).toEqual(gender);
 			}
 		});
 
 		it(`should get 'other' if numerical value does not map to female or male`, () => {
-			const res = MywodUtils.mapGender(3);
+			const res = MyWodUtils.mapGender(3);
 			expect(res).toEqual('other');
 		});
 
 		it('should return value unchanged if it is not a number', () => {
 			const gender = 'male';
-			const res = MywodUtils.mapGender(gender);
+			const res = MyWodUtils.mapGender(gender);
 			expect(res).toEqual(gender);
 		});
 	});
@@ -73,7 +73,7 @@ describe('MywodUtils', () => {
 				'deleted': 0
 			};
 
-			const res = MywodUtils.parseWorkoutScore(score);
+			const res = MyWodUtils.parseWorkoutScore(score);
 			expect(res).toHaveProperty('workoutTitle', score.title);
 			expect(res).toHaveProperty('description', score.description);
 			expect(res).toHaveProperty('score', score.score);
@@ -155,7 +155,7 @@ describe('MywodUtils', () => {
 			const movement = movements[2];
 			const session = movementScores[0];
 
-			const scores = MywodUtils.getScoresForMovement(movement, movementScores);
+			const scores = MyWodUtils.getScoresForMovement(movement, movementScores);
 
 			expect(scores.length).toEqual(1);
 			expect(scores[0]).toHaveProperty('score', 7);

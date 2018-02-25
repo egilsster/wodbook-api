@@ -2,18 +2,17 @@ import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
 
 import ExpressError from '../../src/utils/express.error';
-import { UserService } from '../../src/services/user';
+import { AuthService } from '../../src/services/auth';
 import { UserType } from '../../src/models/user';
-import { Mongoose } from 'mongoose';
 
-describe('UserService', () => {
+describe('AuthService', () => {
 	const data = {
-		'id': 'someid',
+		'id': 'someId',
 		'password': 'pass',
 		'email': 'some@email.com',
 		'admin': false
 	} as UserType;
-	let service: UserService;
+	let service: AuthService;
 	let _service: sinon.SinonMock;
 	let modelInstance;
 	let _modelInstance: sinon.SinonMock;
@@ -39,7 +38,7 @@ describe('UserService', () => {
 			}
 		};
 
-		service = new UserService(options);
+		service = new AuthService(options);
 		_service = sinon.mock(service);
 	});
 
@@ -56,12 +55,12 @@ describe('UserService', () => {
 	}
 
 	it('should create an instance without any options', () => {
-		const service = new UserService();
+		const service = new AuthService();
 		expect(service).toBeDefined();
 	});
 
 	describe('register', () => {
-		it('should register a user succesfully', async (done) => {
+		it('should register a user successfully', async (done) => {
 			try {
 				_modelInstance.expects('save').resolves(data);
 

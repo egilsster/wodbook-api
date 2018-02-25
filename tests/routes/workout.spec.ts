@@ -4,7 +4,7 @@ import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 
 import WorkoutRouter from '../../src/routes/workout';
-import WorkoutService from '../../src/services/workout';
+import { WorkoutService } from '../../src/services/workout';
 
 describe('workout endpoint', function () {
 	const user = {
@@ -114,7 +114,7 @@ describe('workout endpoint', function () {
 		beforeEach(function () {
 			createWorkoutPostBody = {
 				'data': {
-					'name': 'wodbook',
+					'name': 'wodBook',
 					'scores': [
 						'TBD'
 					],
@@ -167,15 +167,15 @@ describe('workout endpoint', function () {
 	describe('POST /workout/{id}', () => {
 		const payload = {
 			'data': {
-				'score': 'Spliff og donk'
+				'score': 'Very rare'
 			}
 		};
 
-		it('should return 201 if score is added succesfully', async (done) => {
-			const updatedworkout = workoutMongo;
-			updatedworkout.scores.push(payload.data.score);
+		it('should return 201 if score is added successfully', async (done) => {
+			const updatedWorkout = workoutMongo;
+			updatedWorkout.scores.push(payload.data.score);
 
-			_workoutService.expects('addScore').withArgs(user, workoutMongo.id, payload.data.score).resolves(updatedworkout);
+			_workoutService.expects('addScore').withArgs(user, workoutMongo.id, payload.data.score).resolves(updatedWorkout);
 
 			try {
 				const res = await request.post(`/${workoutMongo.id}`).send(payload);

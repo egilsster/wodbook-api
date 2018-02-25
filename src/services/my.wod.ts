@@ -11,10 +11,10 @@ import { MovementModel, MovementType } from '../models/movement';
 import { MovementScoreModel, MovementScoreType } from '../models/movement.score';
 import { WorkoutScoreModel, WorkoutScoreType } from '../models/workout.score';
 import ExpressError from '../utils/express.error';
-import { MywodUtils } from '../utils/mywod.utils';
+import { MyWodUtils } from '../utils/my.wod.utils';
 import { Logger } from '../utils/logger/logger';
 
-export class MywodService {
+export class MyWodService {
 	public static FILE_LOCATION = `${process.cwd()}/mywod`;
 	private logger: Logger;
 	private userModel: mongoose.Model<UserType>;
@@ -82,7 +82,7 @@ export class MywodService {
 		const scoresSorted = _.sortBy(workoutScores, ['title']);
 		for (const score of scoresSorted) {
 			try {
-				const scoreData = MywodUtils.parseWorkoutScore(score);
+				const scoreData = MyWodUtils.parseWorkoutScore(score);
 				const scoreModelInstance = new this.workoutScoreModel(scoreData);
 				scoreModelInstance.createdBy = user._id;
 				await scoreModelInstance.save();
@@ -117,7 +117,7 @@ export class MywodService {
 	}
 
 	private async saveScoresForMovement(user: UserType, movement: any, movementModelInstance: MovementType, movementScores: any[]) {
-		const scores = MywodUtils.getScoresForMovement(movement, movementScores);
+		const scores = MyWodUtils.getScoresForMovement(movement, movementScores);
 		for (const score of scores) {
 			try {
 				const scoreModelInstance = new this.movementScoreModel(score);
@@ -155,6 +155,6 @@ export class MywodService {
 	}
 
 	public resolvePath(filename: string) {
-		return path.resolve(process.cwd(), MywodService.FILE_LOCATION, filename);
+		return path.resolve(process.cwd(), MyWodService.FILE_LOCATION, filename);
 	}
 }

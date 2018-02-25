@@ -4,18 +4,18 @@ import * as HttpStatus from 'http-status-codes';
 
 import ExpressError from '../utils/express.error';
 import BaseRouter from './base';
-import { MywodService } from '../services/mywod';
+import { MyWodService } from '../services/my.wod';
 
-const storage = multer.diskStorage({ destination: MywodService.FILE_LOCATION });
+const storage = multer.diskStorage({ destination: MyWodService.FILE_LOCATION });
 const upload = multer({ storage });
 
 export default class MywodRouter extends BaseRouter {
 	public path: string = 'mywod';
-	private mywodService: MywodService;
+	private mywodService: MyWodService;
 
 	constructor(options: any = {}) {
 		super(options, 'router:mywod');
-		this.mywodService = options.mywodService || new MywodService(options);
+		this.mywodService = options.mywodService || new MyWodService(options);
 		this.initRoutes();
 	}
 

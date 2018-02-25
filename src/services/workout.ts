@@ -5,7 +5,7 @@ import ExpressError from '../utils/express.error';
 import { WorkoutScoreType, WorkoutScoreModel } from '../models/workout.score';
 import { Logger } from '../utils/logger/logger';
 
-export default class WorkoutService {
+export class WorkoutService {
 	private logger: Logger;
 	private workoutModel: mongoose.Model<WorkoutType>;
 	private workoutScoreModel: mongoose.Model<WorkoutScoreType>;
