@@ -10,7 +10,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 export default class Models {
 	public logger: Logger;
 	public mongoose: Mongoose;
-	public reconnectTimer: NodeJS.Timer;
+	public reconnectTimer: NodeJS.Timer | undefined;
 
 	constructor(public options: any = {}, providedMongoose?) {
 		this.logger = this.options.logger || new Logger('models:index');
@@ -71,7 +71,7 @@ export default class Models {
 		});
 
 		connection.on('reconnected', () => {
-			clearTimeout(this.reconnectTimer);
+			clearTimeout(this.reconnectTimer!);
 			this.logger.info(`Reconnected to: ${uri}`);
 		});
 

@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import * as sqlite from 'sqlite';
 
 import ExpressError from '../../src/utils/express.error';
-import { MywodService } from '../../src/services/mywod';
+import { MyWodService } from '../../src/services/my.wod';
 import { MongoError } from 'mongodb';
 
 describe('MywodService', () => {
@@ -18,7 +18,7 @@ describe('MywodService', () => {
 	let _sqlite: sinon.SinonMock;
 	let db, _db: sinon.SinonMock;
 	let _fs: sinon.SinonMock;
-	let service: MywodService, _service: sinon.SinonMock;
+	let service: MyWodService, _service: sinon.SinonMock;
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
@@ -55,7 +55,7 @@ describe('MywodService', () => {
 			}
 		};
 
-		service = new MywodService(options);
+		service = new MyWodService(options);
 		_service = sinon.mock(service);
 	});
 
@@ -78,7 +78,7 @@ describe('MywodService', () => {
 	}
 
 	it('should create an instance without any options', () => {
-		const service = new MywodService();
+		const service = new MyWodService();
 		expect(service).toBeDefined();
 	});
 

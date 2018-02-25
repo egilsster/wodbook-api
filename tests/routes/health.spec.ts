@@ -15,12 +15,13 @@ describe('Health endpoint', () => {
 		request = supertest(app);
 	});
 
-	it('serves /health', (done) => {
-		request.get('/')
-			.expect(200)
-			.end((err, res) => {
-				expect(err).toBeNull();
-				done();
-			});
+	it('should serve 200 OK from /health', async (done) => {
+		try {
+			const res = await request.get('/');
+			expect(res.status).toEqual(200);
+			done();
+		} catch (err) {
+			done(err);
+		}
 	});
 });

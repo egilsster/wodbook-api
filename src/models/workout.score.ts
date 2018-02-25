@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { BaseModel } from './base';
-import { MywodUtils } from '../utils/mywod.utils';
+import { MyWodUtils } from '../utils/my.wod.utils';
 
 export type WorkoutScoreType = mongoose.Document & {
 	workoutId: mongoose.Schema.Types.ObjectId;
@@ -39,8 +39,8 @@ export class WorkoutScoreModel extends BaseModel {
 		'measurement': {
 			'type': String,
 			'required': true,
-			'enum': Object.values(MywodUtils.WORKOUT_MEASUREMENTS),
-			'set': MywodUtils.mapWorkoutMeasurement
+			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS),
+			'set': MyWodUtils.mapWorkoutMeasurement
 		},
 		'notes': {
 			'type': String,
@@ -49,7 +49,7 @@ export class WorkoutScoreModel extends BaseModel {
 		'date': {
 			'type': Date,
 			'required': true,
-			'set': MywodUtils.mapDate
+			'set': MyWodUtils.mapDate
 		},
 		'createdBy': {
 			'type': mongoose.Schema.Types.ObjectId,

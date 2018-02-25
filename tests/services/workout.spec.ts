@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
 
 import ExpressError from '../../src/utils/express.error';
-import WorkoutService from '../../src/services/workout';
+import { WorkoutService } from '../../src/services/workout';
 
 describe('WorkoutService', () => {
 	const user = {

@@ -4,7 +4,6 @@ import BaseRouter from './base';
 
 export default class HealthRouter extends BaseRouter {
 	public path: string = 'health';
-	public router: express.Router;
 
 	constructor(options: any = {}) {
 		super(options, 'router:health');
@@ -19,6 +18,6 @@ export default class HealthRouter extends BaseRouter {
 	}
 
 	async get(_req: express.Request, res: express.Response) {
-		return res.sendStatus(HttpStatus.OK);
+		return res.status(HttpStatus.OK).send({ status: HttpStatus.OK });
 	}
 }

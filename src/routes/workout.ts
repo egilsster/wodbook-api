@@ -2,7 +2,7 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 
-import WorkoutService from '../services/workout';
+import { WorkoutService } from '../services/workout';
 import BaseRouter from './base';
 import requireJSON from '../middleware/require.json';
 

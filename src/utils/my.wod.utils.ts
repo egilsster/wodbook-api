@@ -1,4 +1,4 @@
-export class MywodUtils {
+export class MyWodUtils {
 	public static WORKOUT_MEASUREMENTS = {
 		'For Time:': 'time',
 		'For Distance:': 'distance',
@@ -24,11 +24,11 @@ export class MywodUtils {
 	}
 
 	public static mapWorkoutMeasurement(type: string) {
-		return MywodUtils.WORKOUT_MEASUREMENTS[type.trim()];
+		return MyWodUtils.WORKOUT_MEASUREMENTS[type.trim()];
 	}
 
 	public static mapMovementMeasurement(type: number) {
-		return MywodUtils.MOVEMENT_MEASUREMENTS[type];
+		return MyWodUtils.MOVEMENT_MEASUREMENTS[type];
 	}
 
 	/**

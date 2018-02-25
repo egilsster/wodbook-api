@@ -8,10 +8,11 @@ import jwtVerify from '../middleware/jwt.verify';
 import WorkoutRouter from '../routes/workout';
 import HealthRouter from '../routes/health';
 import ExpressError from './express.error';
-import MywodRouter from '../routes/mywod';
-import UserRouter from '../routes/user';
+import MyWodRouter from '../routes/my.wod';
+import { AuthRouter } from '../routes/auth';
 import MovementRouter from '../routes/movement';
 import { logContextInjector } from './logger/log.context.injector';
+import { UserRouter } from '../routes/user';
 
 const MONGO_ERROR_DUPLICATE_KEY_ON_INSERT = 11000;
 const MONGO_ERROR_DUPLICATE_KEY_ON_UPDATE = 11001;
@@ -41,20 +42,22 @@ export default class RouterUtils {
 		const healthRouter = new HealthRouter();
 		app.use('/health', healthRouter.router);
 
-		const userRouterInstance = new UserRouter();
-		app.use(`/${RouterUtils.LATEST_VERSION}/${userRouterInstance.path}`, userRouterInstance.router);
+		const authRouterInstance = new AuthRouter({ config });
+		app.use(`/${RouterUtils.LATEST_VERSION}/${authRouterInstance.path}`, authRouterInstance.router);
 
 		app.use(jwtVerify(config.webtokens.public));
 
 		// Private routes
-		const workoutRouterInstance = new WorkoutRouter();
-		app.use(`/${RouterUtils.LATEST_VERSION}/${workoutRouterInstance.path}`, workoutRouterInstance.router);
+		const privateRoutes = [
+			new UserRouter(),
+			new WorkoutRouter(),
+			new MovementRouter(),
+			new MyWodRouter()
+		];
 
-		const movementRouterInstance = new MovementRouter();
-		app.use(`/${RouterUtils.LATEST_VERSION}/${movementRouterInstance.path}`, movementRouterInstance.router);
-
-		const mywodRouterInstance = new MywodRouter();
-		app.use(`/${RouterUtils.LATEST_VERSION}/${mywodRouterInstance.path}`, mywodRouterInstance.router);
+		for (const instance of privateRoutes) {
+			app.use(`/${RouterUtils.LATEST_VERSION}/${instance.path}`, instance.router);
+		}
 
 		// If a route is not registered, return 404
 		app.use((_req: express.Request, _res: express.Response, next: express.NextFunction) => {

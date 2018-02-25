@@ -1,7 +1,5 @@
 import * as mongoose from 'mongoose';
-import * as HttpStatus from 'http-status-codes';
 import { UserModel, UserType } from '../models/user';
-import ExpressError from '../utils/express.error';
 
 export class UserService {
 	private userModel: mongoose.Model<UserType>;
@@ -10,27 +8,11 @@ export class UserService {
 		this.userModel = this.options.userModel || new UserModel().createModel();
 	}
 
-	async register(user: UserType) {
-		const model = new this.userModel(user);
-		return model.save();
+	async getUsers() {
+		return this.userModel.find();
 	}
 
-	async login(user: UserType) {
-		const {
-			email,
-			password
-		} = user;
-
-		const data = await this.userModel.findOne({ email });
-
-		if (!data) {
-			throw new ExpressError('Unauthorized', 'User not found', HttpStatus.UNAUTHORIZED);
-		}
-
-		if (data.password !== password) {
-			throw new ExpressError('Unauthorized', 'Password is incorrect', HttpStatus.UNAUTHORIZED);
-		}
-
-		return data;
+	async getUser(user: UserType) {
+		return this.userModel.findOne({ email: user.email });
 	}
 }

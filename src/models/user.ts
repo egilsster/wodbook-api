@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { BaseModel } from './base';
-import { MywodUtils } from '../utils/mywod.utils';
+import { MyWodUtils } from '../utils/my.wod.utils';
 
 const genders = ['female', 'male', 'other'];
 
@@ -53,12 +53,12 @@ export class UserModel extends BaseModel {
 			'type': String,
 			'required': false,
 			'enum': genders,
-			'set': MywodUtils.mapGender
+			'set': MyWodUtils.mapGender
 		},
 		'dateOfBirth': {
 			'type': Date,
 			'required': false,
-			'set': MywodUtils.mapDate
+			'set': MyWodUtils.mapDate
 		},
 		'height': {
 			'type': Number,
