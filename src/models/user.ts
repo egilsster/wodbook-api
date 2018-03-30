@@ -15,6 +15,7 @@ export type UserType = mongoose.Document & {
 	height: number;
 	weight: number;
 	boxName: string;
+	avatarUrl: string;
 	createdAt: Date;
 	modifiedAt: Date;
 };
@@ -72,6 +73,10 @@ export class UserModel extends BaseModel {
 			'type': String,
 			'required': false,
 			'trim': true
+		},
+		'avatarUrl': {
+			'type': String,
+			'required': false
 		}
 	};
 

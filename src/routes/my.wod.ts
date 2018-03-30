@@ -5,6 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import ExpressError from '../utils/express.error';
 import BaseRouter from './base';
 import { MyWodService } from '../services/my.wod';
+import { UserSerializer } from '../utils/serialization/user.serializer';
 
 const storage = multer.diskStorage({ destination: MyWodService.FILE_LOCATION });
 const upload = multer({ storage });
@@ -12,10 +13,12 @@ const upload = multer({ storage });
 export default class MywodRouter extends BaseRouter {
 	public path: string = 'mywod';
 	private mywodService: MyWodService;
+	private userSerializer: UserSerializer;
 
 	constructor(options: any = {}) {
 		super(options, 'router:mywod');
 		this.mywodService = options.mywodService || new MyWodService(options);
+		this.userSerializer = this.options.userSerializer || new UserSerializer(this.options);
 		this.initRoutes();
 	}
 
@@ -43,7 +46,7 @@ export default class MywodRouter extends BaseRouter {
 
 			return res.status(HttpStatus.OK).send({
 				'data': {
-					'user': user,
+					'user': this.userSerializer.serialize(user, req),
 					'workouts': workouts,
 					'movements': movements
 				}

@@ -16,3 +16,5 @@ docker-compose.cloud.yml
 # Misc
 mywod/
 data.mywod
+
+public/

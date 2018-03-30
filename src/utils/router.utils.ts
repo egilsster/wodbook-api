@@ -38,6 +38,8 @@ export default class RouterUtils {
 		// Static routes
 		app.use('/api-docs', (_req: express.Request, res: express.Response) => res.sendFile(path.resolve('./api-docs.yml')));
 
+		app.use('/public', express.static('public'));
+
 		// Public routes
 		const healthRouter = new HealthRouter();
 		app.use('/health', healthRouter.router);

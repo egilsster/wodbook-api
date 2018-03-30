@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as mongoose from 'mongoose';
 import * as sqlite from 'sqlite';
@@ -16,6 +16,7 @@ import { Logger } from '../utils/logger/logger';
 
 export class MyWodService {
 	public static FILE_LOCATION = `${process.cwd()}/mywod`;
+	public static AVATAR_LOCATION = `${process.cwd()}/public/avatars`;
 	private logger: Logger;
 	private userModel: mongoose.Model<UserType>;
 	private workoutModel: mongoose.Model<WorkoutType>;
@@ -55,7 +56,16 @@ export class MyWodService {
 		model.gender = data.gender;
 		model.dateOfBirth = data.dateOfBirth;
 		model.boxName = data.boxName;
+		model.avatarUrl = this.saveAvatar(model.id, data.avatar);
 		return model;
+	}
+
+	private saveAvatar(userId: string, avatar: Buffer) {
+		const filename = `${userId}.png`;
+		const filepath = path.join(MyWodService.AVATAR_LOCATION, filename);
+		fs.ensureDirSync(MyWodService.AVATAR_LOCATION);
+		fs.writeFileSync(filepath, avatar);
+		return `/public/avatars/${filename}`;
 	}
 
 	public async saveWorkouts(user: UserType, workouts: any[]) {
