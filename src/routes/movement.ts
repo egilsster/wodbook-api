@@ -29,7 +29,8 @@ export default class MovementRouter extends BaseRouter {
 			.post(this.update.bind(this));
 
 		this.router.route(`/:id/scores`)
-			.get(this.getScores.bind(this));
+			.get(this.getScores.bind(this))
+			.post(this.addScore.bind(this));
 
 		super.useLogger();
 	}
@@ -94,5 +95,21 @@ export default class MovementRouter extends BaseRouter {
 		res.send({
 			'data': data
 		});
+	}
+
+	async addScore(req: express.Request, res: express.Response) {
+		try {
+			const workoutId: string = req.params.id;
+			const userId: string = req['user'].id;
+			const score: any = req.body.data;
+			const data = await this.movementService.addScore(userId, workoutId, score);
+
+			return res.status(HttpStatus.CREATED).send({
+				'data': data
+			});
+		} catch (err) {
+			this.logger.error(err);
+			return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err);
+		}
 	}
 }
