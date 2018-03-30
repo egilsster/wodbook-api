@@ -3,7 +3,7 @@ import { UserType } from '../../models/user';
 
 const PUBLIC_USER_PROPERTIES = [
 	'firstName', 'lastName', 'email', 'updatedAt', 'createdAt',
-	'boxName', 'dateOfBirth', 'gender', 'height', 'weight'
+	'boxName', 'dateOfBirth', 'gender', 'height', 'weight', 'avatarUrl'
 ];
 
 export class UserSerializer {
