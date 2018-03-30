@@ -28,11 +28,15 @@ export default class MovementRouter extends BaseRouter {
 			.get(this.get.bind(this))
 			.post(this.update.bind(this));
 
+		this.router.route(`/:id/scores`)
+			.get(this.getScores.bind(this));
+
 		super.useLogger();
 	}
 
 	async list(req: express.Request, res: express.Response) {
-		const movements = await this.movementService.getMovements(req['user']);
+		const userId: string = req['user'].id;
+		const movements = await this.movementService.getMovements(userId);
 		res.status(200).send({
 			'data': movements
 		});
@@ -40,7 +44,8 @@ export default class MovementRouter extends BaseRouter {
 
 	async get(req: express.Request, res: express.Response) {
 		const movementId: string = req.params.id;
-		const data = await this.movementService.getMovement(req['user'], movementId);
+		const userId: string = req['user'].id;
+		const data = await this.movementService.getMovement(userId, movementId);
 
 		if (!data) {
 			return res.status(HttpStatus.NOT_FOUND).send({ 'msg': `Movement not found` });
@@ -54,7 +59,8 @@ export default class MovementRouter extends BaseRouter {
 	async create(req: express.Request, res: express.Response) {
 		try {
 			const movementData: any = req.body.data;
-			const data = await this.movementService.createMovement(req['user'], movementData);
+			movementData.createdBy = req['user'].id;
+			const data = await this.movementService.createMovement(movementData);
 
 			return res.status(HttpStatus.CREATED).send({
 				'data': data
@@ -67,15 +73,26 @@ export default class MovementRouter extends BaseRouter {
 
 	async update(req: express.Request, res: express.Response) {
 		const movementId: string = req.params.id;
+		const userId: string = req['user'].id;
 
 		try {
 			const { score } = req.body.data;
-			const data = await this.movementService.addScore(req['user'], movementId, score);
+			const data = await this.movementService.addScore(userId, movementId, score);
 			res.status(HttpStatus.CREATED).send({
 				'data': data
 			});
 		} catch (err) {
 			res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ 'msg': `Could not add score: ${err}` });
 		}
+	}
+
+	async getScores(req: express.Request, res: express.Response) {
+		const movementId: string = req.params.id;
+		const userId: string = req['user'].id;
+		const data = await this.movementService.getMovementScores(userId, movementId);
+
+		res.send({
+			'data': data
+		});
 	}
 }

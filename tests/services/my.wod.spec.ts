@@ -7,6 +7,7 @@ import * as sqlite from 'sqlite';
 import ExpressError from '../../src/utils/express.error';
 import { MyWodService } from '../../src/services/my.wod';
 import { MongoError } from 'mongodb';
+import { WorkoutService } from '../../src/services/workout';
 
 describe('MywodService', () => {
 	const user: any = {
@@ -19,17 +20,24 @@ describe('MywodService', () => {
 	let db, _db: sinon.SinonMock;
 	let _fs: sinon.SinonMock;
 	let service: MyWodService, _service: sinon.SinonMock;
+	let workoutService, _workoutService: sinon.SinonMock;
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
 		this._id = 'someId';
-		this.scores = [];
+		this.title = 'someTitle';
 		this.save = () => { };
 		return modelInstance;
 	};
 	MockModel.findOne = () => { };
 
 	beforeEach(() => {
+		const logger = {
+			info() { },
+			warn() { },
+			error() { }
+		};
+
 		_sqlite = sinon.mock(sqlite);
 		db = {
 			get() { },
@@ -42,17 +50,21 @@ describe('MywodService', () => {
 		_modelInstance = sinon.mock(modelInstance);
 		_model = sinon.mock(MockModel);
 
+		workoutService = new WorkoutService({
+			'workoutModel': _model,
+			'workoutScoreModel': _model,
+			'logger': logger
+		});
+		_workoutService = sinon.mock(workoutService);
+
 		const options = {
 			'userModel': MockModel,
 			'workoutModel': MockModel,
 			'workoutScoreModel': MockModel,
+			'workoutService': workoutService,
 			'movementModel': MockModel,
 			'movementScoreModel': MockModel,
-			'logger': {
-				info() { },
-				warn() { },
-				error() { }
-			}
+			'logger': logger
 		};
 
 		service = new MyWodService(options);
@@ -139,12 +151,14 @@ describe('MywodService', () => {
 			{
 				'id': 'id1',
 				'description': 'This is a sample custom WOD',
-				'title': 'w1'
+				'title': 'w1',
+				'scoreType': 'For Time:'
 			},
 			{
 				'id': 'id2',
 				'description': 'Great workout',
-				'title': 'w2'
+				'title': 'w2',
+				'scoreType': 'For Time:'
 			}
 		];
 
@@ -214,11 +228,8 @@ describe('MywodService', () => {
 		];
 
 		it('should save workout scores', async () => {
-			_modelInstance.expects('save').resolves();
-			_model.expects('findOne').resolves(modelInstance);
-			_modelInstance.expects('save').resolves();
-			_modelInstance.expects('save').resolves();
-			_model.expects('findOne').resolves(null);
+			_workoutService.expects('getWorkoutByTitle').twice().resolves();
+			_modelInstance.expects('save').twice().resolves();
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
@@ -226,8 +237,8 @@ describe('MywodService', () => {
 		});
 
 		it('should not care about failed score migration', async () => {
-			_modelInstance.expects('save').rejects();
-			_modelInstance.expects('save').rejects();
+			_workoutService.expects('getWorkoutByTitle').twice().resolves();
+			_modelInstance.expects('save').twice().rejects();
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
@@ -324,10 +335,10 @@ describe('MywodService', () => {
 		it('should not care if migration fails for a score', async (done) => {
 			try {
 				_modelInstance.expects('save').resolves();
-				_modelInstance.expects('save').rejects();
+				_modelInstance.expects('save').resolves();
 				_modelInstance.expects('save').rejects();
 				_modelInstance.expects('save').resolves();
-				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').rejects();
 
 				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
 				expect(savedMovements.length).toBe(3);

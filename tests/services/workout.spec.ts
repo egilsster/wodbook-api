@@ -3,6 +3,7 @@ import * as HttpStatus from 'http-status-codes';
 
 import ExpressError from '../../src/utils/express.error';
 import { WorkoutService } from '../../src/services/workout';
+import { QueryUtils } from '../../src/utils/query.utils';
 
 describe('WorkoutService', () => {
 	const user = {
@@ -32,11 +33,9 @@ describe('WorkoutService', () => {
 		this.scores = [];
 		this.measurement = 'time';
 		this.description = 'desc';
-		this.populate = () => { };
 		this.save = () => workout;
 		return modelInstance;
 	};
-	WorkoutModel.populate = () => { };
 	WorkoutModel.find = () => { };
 	WorkoutModel.findOne = () => { };
 
@@ -79,10 +78,9 @@ describe('WorkoutService', () => {
 	describe('getWorkouts', () => {
 		it('should return list of workouts', async () => {
 			const items = ['item1', 'item2'];
-			_model.expects('find').returns(WorkoutModel);
-			_model.expects('populate').resolves(items);
+			_model.expects('find').returns(items);
 
-			const res = await service.getWorkouts(user);
+			const res = await service.getWorkouts(user.id);
 			expect(res).toEqual(items);
 			verifyAll();
 		});
@@ -90,19 +88,17 @@ describe('WorkoutService', () => {
 
 	describe('getWorkout', () => {
 		it('should get single workout if workout exists', async () => {
-			_model.expects('findOne').withArgs({ '_id': workout.id, 'createdBy': user.id }).returns(WorkoutModel);
-			_model.expects('populate').withArgs('scores').resolves(workout);
+			_model.expects('findOne').withArgs(QueryUtils.forOne({ '_id': workout.id }, user.id)).returns(workout);
 
-			const res = await service.getWorkout(user, workout.id);
+			const res = await service.getWorkout(user.id, workout.id);
 			expect(res).toEqual(workout);
 			verifyAll();
 		});
 
 		it('should get nothing if workout does not exist', async () => {
-			_model.expects('findOne').withArgs({ '_id': 'notId', 'createdBy': user.id }).returns(WorkoutModel);
-			_model.expects('populate').withArgs('scores').resolves(null);
+			_model.expects('findOne').withArgs(QueryUtils.forOne({ '_id': 'notId' }, user.id)).returns(null);
 
-			const res = await service.getWorkout(user, 'notId');
+			const res = await service.getWorkout(user.id, 'notId');
 			expect(res).toEqual(null);
 			verifyAll();
 		});
@@ -110,18 +106,17 @@ describe('WorkoutService', () => {
 
 	describe('createWorkout', () => {
 		it('should return saved model when saved', async () => {
-			_service.expects('getWorkout').resolves(null);
 			_modelInstance.expects('save').resolves(workout);
 
-			const promise = service.createWorkout(user, workout);
+			const promise = service.createWorkout(workout);
 			await expect(promise).resolves.toEqual(workout);
 			verifyAll();
 		});
 
 		it('should throw exception if resource already exists', async () => {
-			_service.expects('getWorkout').resolves(workout);
+			_modelInstance.expects('save').throws();
 
-			const promise = service.createWorkout(user, workout);
+			const promise = service.createWorkout(workout);
 			await expect(promise).rejects.toHaveProperty('status', HttpStatus.CONFLICT);
 			verifyAll();
 		});
@@ -130,11 +125,9 @@ describe('WorkoutService', () => {
 	describe('addScore', () => {
 		it('should add score to a workout if it exists', async () => {
 			_service.expects('getWorkout').resolves(modelInstance);
-			_modelInstance.expects('save').resolves();
-			_modelInstance.expects('save').resolves();
-			_modelInstance.expects('populate').resolves('data');
+			_modelInstance.expects('save').resolves('data');
 
-			const promise = service.addScore(user, workout.id, score);
+			const promise = service.addScore(user.id, workout.id, score);
 			await expect(promise).resolves.toEqual('data');
 			verifyAll();
 		});
@@ -142,7 +135,7 @@ describe('WorkoutService', () => {
 		it('should throw exception if workout does not exist', async () => {
 			_service.expects('getWorkout').resolves();
 
-			const promise = service.addScore(user, workout.id, score);
+			const promise = service.addScore(user.id, workout.id, score);
 			await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
 			verifyAll();
 		});

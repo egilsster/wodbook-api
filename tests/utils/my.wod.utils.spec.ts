@@ -1,19 +1,6 @@
 import { MyWodUtils } from '../../src/utils/my.wod.utils';
 
 describe('MywodUtils', () => {
-	describe('mapDate', () => {
-		it('should parse date string to a date', () => {
-			const res = MyWodUtils.mapDate('01-01-2018');
-			expect(res.toISOString().startsWith('2018-01-01')).toBe(true);
-		});
-
-		it('should return date if parameter is not a string', () => {
-			const date = new Date();
-			const res = MyWodUtils.mapDate(date);
-			expect(res).toEqual(date);
-		});
-	});
-
 	describe('mapWorkoutMeasurement', () => {
 		it('should map workout based on myWOD string', () => {
 			expect(MyWodUtils.mapWorkoutMeasurement('For Time:')).toEqual('time');
@@ -80,7 +67,7 @@ describe('MywodUtils', () => {
 			expect(res).toHaveProperty('rx', Boolean(score.asPrescribed));
 			expect(res).toHaveProperty('measurement');
 			expect(res).toHaveProperty('notes', score.notes);
-			expect(res).toHaveProperty('date', score.date);
+			expect(res).toHaveProperty('createdAt', new Date(score.date));
 		});
 	});
 
@@ -159,10 +146,10 @@ describe('MywodUtils', () => {
 
 			expect(scores.length).toEqual(1);
 			expect(scores[0]).toHaveProperty('score', 7);
-			expect(scores[0]).toHaveProperty('measurement', 2);
+			expect(scores[0]).toHaveProperty('measurement', MyWodUtils.mapMovementMeasurement(2));
 			expect(scores[0]).toHaveProperty('sets', '1');
 			expect(scores[0]).toHaveProperty('notes');
-			expect(scores[0]).toHaveProperty('date', session.date);
+			expect(scores[0]).toHaveProperty('createdAt', new Date(session.date));
 		});
 	});
 });

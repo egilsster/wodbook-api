@@ -1,5 +1,5 @@
 export class MyWodUtils {
-	public static WORKOUT_MEASUREMENTS = {
+	public static WORKOUT_MEASUREMENTS_MAP = {
 		'For Time:': 'time',
 		'For Distance:': 'distance',
 		'For Load:': 'load',
@@ -16,18 +16,11 @@ export class MyWodUtils {
 	 */
 	public static MOVEMENT_MEASUREMENTS = ['weight', 'distance', 'reps', 'height'];
 
-	public static mapDate(date: string | Date) {
-		if (typeof date === 'string') {
-			date = new Date(date);
-		}
-		return date;
-	}
-
 	public static mapWorkoutMeasurement(type: string) {
-		return MyWodUtils.WORKOUT_MEASUREMENTS[type.trim()];
+		return MyWodUtils.WORKOUT_MEASUREMENTS_MAP[type.trim()];
 	}
 
-	public static mapMovementMeasurement(type: number) {
+	public static mapMovementMeasurement(type: number | string) {
 		return MyWodUtils.MOVEMENT_MEASUREMENTS[type];
 	}
 
@@ -62,10 +55,10 @@ export class MyWodUtils {
 			if (score.foreignMovementClientID === movementClientId && score.foreignMovementRecordID === movementId) {
 				scores.push({
 					'score': score.measurementAValue,
-					'measurement': movement.type,
+					'measurement': MyWodUtils.mapMovementMeasurement(movement.type),
 					'sets': score.sets,
 					'notes': score.notes,
-					'date': score.date
+					'createdAt': new Date(score.date)
 				});
 			}
 		}
@@ -75,13 +68,14 @@ export class MyWodUtils {
 
 	public static parseWorkoutScore(score: any) {
 		return {
+			'workoutId': score.workoutId,
 			'workoutTitle': score.title,
 			'description': score.description,
 			'score': score.score,
 			'rx': Boolean(score.asPrescribed),
-			'measurement': score.scoreType,
+			'measurement': MyWodUtils.mapWorkoutMeasurement(score.scoreType),
 			'notes': score.notes,
-			'date': score.date,
+			'createdAt': new Date(score.date)
 		};
 	}
 }

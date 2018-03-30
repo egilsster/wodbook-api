@@ -28,11 +28,16 @@ export default class WorkoutRouter extends BaseRouter {
 			.get(this.get.bind(this))
 			.post(this.update.bind(this));
 
+		this.router.route(`/:id/scores`)
+			.get(this.getScores.bind(this))
+			.post(this.addScore.bind(this));
+
 		super.useLogger();
 	}
 
 	async list(req: express.Request, res: express.Response) {
-		const workouts = await this.workoutService.getWorkouts(req['user']);
+		const userId: string = req['user'].id;
+		const workouts = await this.workoutService.getWorkouts(userId);
 		res.status(200).send({
 			'data': workouts
 		});
@@ -40,7 +45,8 @@ export default class WorkoutRouter extends BaseRouter {
 
 	async get(req: express.Request, res: express.Response) {
 		const workoutId: string = req.params.id;
-		const data = await this.workoutService.getWorkout(req['user'], workoutId);
+		const userId: string = req['user'].id;
+		const data = await this.workoutService.getWorkout(userId, workoutId);
 
 		if (!data) {
 			return res.status(HttpStatus.NOT_FOUND).send({ 'msg': `workout not found` });
@@ -54,7 +60,8 @@ export default class WorkoutRouter extends BaseRouter {
 	async create(req: express.Request, res: express.Response) {
 		try {
 			const workoutData: any = req.body.data;
-			const data = await this.workoutService.createWorkout(req['user'], workoutData);
+			workoutData.createdBy = req['user'].id;
+			const data = await this.workoutService.createWorkout(workoutData);
 
 			return res.status(HttpStatus.CREATED).send({
 				'data': data
@@ -67,15 +74,42 @@ export default class WorkoutRouter extends BaseRouter {
 
 	async update(req: express.Request, res: express.Response) {
 		const workoutId: string = req.params.id;
+		const userId: string = req['user'].id;
 
 		try {
 			const { score } = req.body.data;
-			const data = await this.workoutService.addScore(req['user'], workoutId, score);
+			const data = await this.workoutService.addScore(userId, workoutId, score);
 			res.status(HttpStatus.CREATED).send({
 				'data': data
 			});
 		} catch (err) {
 			res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ 'msg': `Could not add score: ${err}` });
+		}
+	}
+
+	async getScores(req: express.Request, res: express.Response) {
+		const workoutId: string = req.params.id;
+		const userId: string = req['user'].id;
+		const data = await this.workoutService.getWorkoutScores(userId, workoutId);
+
+		res.send({
+			'data': data
+		});
+	}
+
+	async addScore(req: express.Request, res: express.Response) {
+		try {
+			const workoutId: string = req.params.id;
+			const userId: string = req['user'].id;
+			const score: any = req.body.data;
+			const data = await this.workoutService.addScore(userId, workoutId, score);
+
+			return res.status(HttpStatus.CREATED).send({
+				'data': data
+			});
+		} catch (err) {
+			this.logger.error(err);
+			return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err);
 		}
 	}
 }

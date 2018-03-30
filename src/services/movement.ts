@@ -4,6 +4,7 @@ import { MovementModel, MovementType } from '../models/movement';
 import ExpressError from '../utils/express.error';
 import { MovementScoreType, MovementScoreModel } from '../models/movement.score';
 import { Logger } from '../utils/logger/logger';
+import { QueryUtils } from '../utils/query.utils';
 
 export class MovementService {
 	private logger: Logger;
@@ -16,37 +17,37 @@ export class MovementService {
 		this.movementScoreModel = this.options.movementScoreModel || new MovementScoreModel().createModel();
 	}
 
-	async getMovements(user: any) {
-		return this.movementModel.find({ 'createdBy': user.id }).populate('scores');
+	async getMovements(userId: string) {
+		return this.movementModel.find(QueryUtils.forMany(userId));
 	}
 
-	async getMovement(user: any, id: string) {
-		return this.movementModel.findOne({ '_id': id, 'createdBy': user.id }).populate('scores');
+	async getMovement(userId: string, id: string) {
+		return this.movementModel.findOne(QueryUtils.forOne({ '_id': id }, userId));
 	}
 
-	async createMovement(data: any, user: any) {
-		const movement = await this.getMovement(user, data.movement);
+	async getMovementScores(userId: string, id: string) {
+		return this.movementScoreModel.find(QueryUtils.forOne({ 'movementId': id }, userId));
+	}
 
-		if (movement) {
+	async createMovement(data: any) {
+		try {
+			const model = new this.movementModel(data);
+			return model.save();
+		} catch (err) {
 			this.logger.error(`Conflict, movement '${data.movement}' already exists`);
 			throw new ExpressError('Conflict', `movement: ${data.movement}, already exists`, HttpStatus.CONFLICT);
 		}
-
-		const model = new this.movementModel(data);
-		return model.save();
 	}
 
-	async addScore(user: any, movementId: string, score: MovementScoreType) {
-		const movementModel = await this.getMovement(user, movementId);
+	async addScore(userId: string, movementId: string, score: MovementScoreType) {
+		const movementModel = await this.getMovement(userId, movementId);
 
 		if (!movementModel) {
 			throw new ExpressError('Object not found', `Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 
+		score.movementId = movementModel.id;
 		const movementScoreModel = new this.movementScoreModel(score);
-		await movementScoreModel.save();
-		movementModel.scores.push(movementScoreModel._id);
-		await movementModel.save();
-		return movementModel.populate('scores');
+		return movementScoreModel.save();
 	}
 }
