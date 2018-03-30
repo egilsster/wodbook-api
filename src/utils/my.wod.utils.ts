@@ -1,5 +1,5 @@
 export class MyWodUtils {
-	public static WORKOUT_MEASUREMENTS_MAP = {
+	public static WORKOUT_MEASUREMENTS = {
 		'For Time:': 'time',
 		'For Distance:': 'distance',
 		'For Load:': 'load',
@@ -17,7 +17,7 @@ export class MyWodUtils {
 	public static MOVEMENT_MEASUREMENTS = ['weight', 'distance', 'reps', 'height'];
 
 	public static mapWorkoutMeasurement(type: string) {
-		return MyWodUtils.WORKOUT_MEASUREMENTS_MAP[type.trim()];
+		return MyWodUtils.WORKOUT_MEASUREMENTS[type.trim()];
 	}
 
 	public static mapMovementMeasurement(type: number | string) {

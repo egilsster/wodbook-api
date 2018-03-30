@@ -42,7 +42,7 @@ export class WorkoutScoreModel extends BaseModel {
 		'measurement': {
 			'type': String,
 			'required': true,
-			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS_MAP)
+			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS)
 		},
 		'notes': {
 			'type': String,
