@@ -18,3 +18,5 @@ services:
      - "27017:27017"
     networks:
       - wodbook_network
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
