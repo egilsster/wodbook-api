@@ -8,6 +8,7 @@ import ExpressError from '../../src/utils/express.error';
 import { MovementService } from '../../src/services/movement';
 import { MovementScoreType } from '../../src/models/movement.score';
 import { MovementType } from '../../src/models/movement';
+import { QueryUtils } from '../../src/utils/query.utils';
 
 describe('MovementService', () => {
 	const user = {
@@ -38,11 +39,9 @@ describe('MovementService', () => {
 		this.id = '5a4704ca46425f97c638bcaa';
 		this.name = 'Snatch';
 		this.scores = [];
-		this.populate = () => { };
 		this.save = () => movement;
 		return modelInstance;
 	};
-	MockModel.populate = () => { };
 	MockModel.find = () => { };
 	MockModel.findOne = () => { };
 
@@ -85,10 +84,9 @@ describe('MovementService', () => {
 	describe('getMovements', () => {
 		it('should return list of movements', async () => {
 			const items = ['item1', 'item2'];
-			_model.expects('find').returns(MockModel);
-			_model.expects('populate').resolves(items);
+			_model.expects('find').returns(items);
 
-			const res = await service.getMovements(user);
+			const res = await service.getMovements(user.id);
 			expect(res).toEqual(items);
 			verifyAll();
 		});
@@ -96,39 +94,56 @@ describe('MovementService', () => {
 
 	describe('getMovement', () => {
 		it('should get single movement if it exists', async () => {
-			_model.expects('findOne').withArgs({ '_id': movement.id, 'createdBy': user.id }).returns(MockModel);
-			_model.expects('populate').withArgs('scores').resolves(movement);
+			_model.expects('findOne').withArgs(QueryUtils.forOne({ '_id': movement.id }, user.id)).returns(movement);
 
-			const res = await service.getMovement(user, movement.id);
+			const res = await service.getMovement(user.id, movement.id);
 			expect(res).toEqual(movement);
 			verifyAll();
 		});
 
 		it('should get nothing if movement does not exist', async () => {
-			_model.expects('findOne').withArgs({ '_id': 'notId', 'createdBy': user.id }).returns(MockModel);
-			_model.expects('populate').resolves(null);
+			_model.expects('findOne').withArgs(QueryUtils.forOne({ '_id': 'notId' }, user.id)).returns(null);
 
-			const res = await service.getMovement(user, 'notId');
+			const res = await service.getMovement(user.id, 'notId');
 			expect(res).toEqual(null);
+			verifyAll();
+		});
+	});
+
+	describe('getMovementScores', () => {
+		it('should scores for movement if movement exists', async () => {
+			_service.expects('getMovement').withExactArgs(user.id, movement.id).resolves(movement);
+			_model.expects('find').withArgs(QueryUtils.forOne({ 'movementId': movement.id }, user.id)).returns([]);
+
+			const res = await service.getMovementScores(user.id, movement.id);
+			expect(res).toEqual([]);
+			verifyAll();
+		});
+
+		it('should throw error if movement does not exist', async () => {
+			const err = new ExpressError('Object not found', `Entity with identity '${movement.id}' does not exist`, HttpStatus.NOT_FOUND);
+			_service.expects('getMovement').withExactArgs(user.id, movement.id).resolves(null);
+
+			const promise = service.getMovementScores(user.id, movement.id);
+			await expect(promise).rejects.toEqual(err);
 			verifyAll();
 		});
 	});
 
 	describe('createMovement', () => {
 		it('should successfully create a movement', async () => {
-			_service.expects('getMovement').resolves(null);
 			_modelInstance.expects('save').returns(movement);
 
-			const promise = service.createMovement(movement, user);
+			const promise = service.createMovement(movement);
 			await expect(promise).resolves.toEqual(movement);
 			verifyAll();
 		});
 
 		it('should throw 409 Conflict if movement exists for this user', async () => {
-			_service.expects('getMovement').resolves(movement);
+			_modelInstance.expects('save').throws();
 
-			const promise = service.createMovement(movement, user);
-			await expect(promise).rejects.toHaveProperty('status', HttpStatus.CONFLICT);
+			const promise = service.createMovement(movement);
+			await expect(promise).rejects.toBeDefined();
 			verifyAll();
 		});
 	});
@@ -136,11 +151,9 @@ describe('MovementService', () => {
 	describe('addScore', () => {
 		it('should successfully add a score if movement exists', async () => {
 			_service.expects('getMovement').resolves(modelInstance);
-			_modelInstance.expects('save').resolves();
-			_modelInstance.expects('save').resolves();
-			_modelInstance.expects('populate').resolves('data');
+			_modelInstance.expects('save').resolves('data');
 
-			const promise = service.addScore(user, movement.id, score);
+			const promise = service.addScore(user.id, movement.id, score);
 			await expect(promise).resolves.toEqual('data');
 			verifyAll();
 		});
@@ -148,7 +161,7 @@ describe('MovementService', () => {
 		it('should throw 404 Not found if movement does not exist', async () => {
 			_service.expects('getMovement').resolves();
 
-			const promise = service.addScore(user, movement.id, score);
+			const promise = service.addScore(user.id, movement.id, score);
 			await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
 			verifyAll();
 		});

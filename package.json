@@ -27,8 +27,7 @@
       "ts",
       "js",
       "json"
-    ],
-    "mapCoverage": true
+    ]
   },
   "dependencies": {
     "@types/body-parser": "1.16.8",

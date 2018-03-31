@@ -1,13 +1,12 @@
 import * as mongoose from 'mongoose';
 import { BaseModel } from './base';
 import { MyWodUtils } from '../utils/my.wod.utils';
-import { WorkoutScoreType } from './workout.score';
 
 export type WorkoutType = mongoose.Document & {
 	title: string;
-	scores: WorkoutScoreType[];
 	measurement: string;
 	description: string;
+	global: boolean;
 	createdBy: mongoose.Schema.Types.ObjectId;
 	createdAt: Date;
 	modifiedAt: Date;
@@ -21,19 +20,18 @@ export class WorkoutModel extends BaseModel {
 			'required': true,
 			'trim': true
 		},
-		'scores': [{
-			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'WorkoutScore'
-		}],
 		'measurement': {
 			'type': String,
 			'required': true,
-			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS),
-			'set': MyWodUtils.mapWorkoutMeasurement
+			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS)
 		},
 		'description': {
 			'type': String,
 			'required': false
+		},
+		'global': {
+			'type': Boolean,
+			'default': false
 		},
 		'createdBy': {
 			'type': mongoose.Schema.Types.ObjectId,

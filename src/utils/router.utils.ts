@@ -10,7 +10,7 @@ import HealthRouter from '../routes/health';
 import ExpressError from './express.error';
 import MyWodRouter from '../routes/my.wod';
 import { AuthRouter } from '../routes/auth';
-import MovementRouter from '../routes/movement';
+import { MovementRouter } from '../routes/movement';
 import { logContextInjector } from './logger/log.context.injector';
 import { UserRouter } from '../routes/user';
 

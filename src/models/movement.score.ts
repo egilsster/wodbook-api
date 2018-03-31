@@ -7,7 +7,7 @@ export type MovementScoreType = mongoose.Document & {
 	measurement: string;
 	sets: number;
 	notes: string;
-	date: Date;
+	movementId: mongoose.Schema.Types.ObjectId;
 	createdBy: mongoose.Schema.Types.ObjectId;
 	createdAt: Date;
 	modifiedAt: Date;
@@ -23,8 +23,7 @@ export class MovementScoreModel extends BaseModel {
 		'measurement': {
 			'type': String,
 			'required': true,
-			'enum': MyWodUtils.MOVEMENT_MEASUREMENTS,
-			'set': MyWodUtils.mapMovementMeasurement
+			'enum': MyWodUtils.MOVEMENT_MEASUREMENTS
 		},
 		'sets': {
 			'type': Number,
@@ -35,10 +34,9 @@ export class MovementScoreModel extends BaseModel {
 			'type': String,
 			'required': false
 		},
-		'date': {
-			'type': Date,
-			'required': true,
-			'set': MyWodUtils.mapDate
+		'movementId': {
+			'type': mongoose.Schema.Types.ObjectId,
+			'ref': 'Movement'
 		},
 		'createdBy': {
 			'type': mongoose.Schema.Types.ObjectId,

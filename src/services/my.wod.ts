@@ -13,6 +13,7 @@ import { WorkoutScoreModel, WorkoutScoreType } from '../models/workout.score';
 import ExpressError from '../utils/express.error';
 import { MyWodUtils } from '../utils/my.wod.utils';
 import { Logger } from '../utils/logger/logger';
+import { WorkoutService } from './workout';
 
 export class MyWodService {
 	public static FILE_LOCATION = `${process.cwd()}/mywod`;
@@ -21,6 +22,7 @@ export class MyWodService {
 	private userModel: mongoose.Model<UserType>;
 	private workoutModel: mongoose.Model<WorkoutType>;
 	private workoutScoreModel: mongoose.Model<WorkoutScoreType>;
+	private workoutService: WorkoutService;
 	private movementModel: mongoose.Model<MovementType>;
 	private movementScoreModel: mongoose.Model<MovementScoreType>;
 
@@ -29,6 +31,7 @@ export class MyWodService {
 		this.userModel = this.options.userModel || new UserModel().createModel();
 		this.workoutModel = this.options.workoutModel || new WorkoutModel().createModel();
 		this.workoutScoreModel = this.options.workoutScoreModel || new WorkoutScoreModel().createModel();
+		this.workoutService = this.options.workoutService || new WorkoutService();
 		this.movementModel = this.options.movementModel || new MovementModel().createModel();
 		this.movementScoreModel = this.options.movementScoreModel || new MovementScoreModel().createModel();
 	}
@@ -76,10 +79,10 @@ export class MyWodService {
 					continue; // Ignore the sample wod made by myWOD
 				}
 				workout.createdBy = user._id;
-				workout.measurement = workout.scoreType;
+				workout.measurement = MyWodUtils.mapWorkoutMeasurement(workout.scoreType);
 				const workoutModelInstance = new this.workoutModel(workout);
 				await workoutModelInstance.save();
-				savedWorkouts.push(workoutModelInstance.title);
+				savedWorkouts.push(workout.title);
 			} catch (err) {
 				this.logger.info(`Error migrating workout ${workout.title}. Error: ${err}`);
 			}
@@ -92,16 +95,14 @@ export class MyWodService {
 		const scoresSorted = _.sortBy(workoutScores, ['title']);
 		for (const score of scoresSorted) {
 			try {
+				const workoutModel = await this.workoutService.getWorkoutByTitle(score.title, user.id);
+				if (workoutModel) {
+					score.workoutId = workoutModel.id;
+				}
 				const scoreData = MyWodUtils.parseWorkoutScore(score);
 				const scoreModelInstance = new this.workoutScoreModel(scoreData);
 				scoreModelInstance.createdBy = user._id;
 				await scoreModelInstance.save();
-
-				const workoutModel = await this.workoutModel.findOne({ 'title': score.title, 'createdBy': user._id });
-				if (workoutModel) {
-					workoutModel.scores.push(scoreModelInstance._id);
-					await workoutModel.save();
-				}
 			} catch (err) {
 				this.logger.info(`Could not migrate score for ${score.title}`);
 			}
@@ -109,20 +110,20 @@ export class MyWodService {
 	}
 
 	public async saveMovementsAndMovementScores(user: UserType, movements: any[], movementScores: any[]) {
-		const savedMovements: string[] = [];
-
+		const savedMovements: any[] = [];
 		for (const movement of movements) {
 			try {
 				movement.createdBy = user._id;
-				movement.measurement = movement.type;
+				movement.measurement = MyWodUtils.mapMovementMeasurement(movement.type);
 				const movementModelInstance = new this.movementModel(movement);
-				await this.saveScoresForMovement(user, movement, movementModelInstance, movementScores);
-				savedMovements.push(movementModelInstance.name);
 				await movementModelInstance.save();
+				savedMovements.push(movement.name);
+				await this.saveScoresForMovement(user, movement, movementModelInstance, movementScores);
 			} catch (err) {
 				this.logger.info(`Error migrating movement '${movement.name}'. Error: ${err}`);
 			}
 		}
+
 		return savedMovements;
 	}
 
@@ -130,10 +131,10 @@ export class MyWodService {
 		const scores = MyWodUtils.getScoresForMovement(movement, movementScores);
 		for (const score of scores) {
 			try {
+				score.movementId = movementModelInstance.id;
 				const scoreModelInstance = new this.movementScoreModel(score);
 				scoreModelInstance.createdBy = user._id;
 				await scoreModelInstance.save();
-				movementModelInstance.scores.push(scoreModelInstance._id);
 			} catch (err) {
 				this.logger.error(`Error migrating movement score '${score.score}' for '${movement.name}'`);
 			}

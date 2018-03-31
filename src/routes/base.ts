@@ -16,11 +16,6 @@ export default class BaseRouter {
 		next(err);
 	}
 
-	protected getUsernameFromRequest(req: Request) {
-		const user = req['user'] || {};
-		return user.username;
-	}
-
 	protected useLogger() {
 		this.router.use(this.logErrors.bind(this));
 	}

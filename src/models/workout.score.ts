@@ -10,7 +10,6 @@ export type WorkoutScoreType = mongoose.Document & {
 	rx: boolean;
 	measurement: string;
 	notes: string;
-	date: Date;
 	createdBy: mongoose.Schema.Types.ObjectId;
 	createdAt: Date;
 	modifiedAt: Date;
@@ -19,6 +18,10 @@ export type WorkoutScoreType = mongoose.Document & {
 export class WorkoutScoreModel extends BaseModel {
 	private static NAME = 'WorkoutScore';
 	private static DEFINITION = {
+		'workoutId': {
+			'type': mongoose.Schema.Types.ObjectId,
+			'ref': 'Workout'
+		},
 		'workoutTitle': {
 			'type': String,
 			'required': true,
@@ -39,17 +42,11 @@ export class WorkoutScoreModel extends BaseModel {
 		'measurement': {
 			'type': String,
 			'required': true,
-			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS),
-			'set': MyWodUtils.mapWorkoutMeasurement
+			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS)
 		},
 		'notes': {
 			'type': String,
 			'required': false
-		},
-		'date': {
-			'type': Date,
-			'required': true,
-			'set': MyWodUtils.mapDate
 		},
 		'createdBy': {
 			'type': mongoose.Schema.Types.ObjectId,

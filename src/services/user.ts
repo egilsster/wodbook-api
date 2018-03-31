@@ -13,6 +13,6 @@ export class UserService {
 	}
 
 	async getUser(user: UserType) {
-		return this.userModel.findOne({ email: user.email });
+		return this.userModel.findOne({ 'email': user.email });
 	}
 }
