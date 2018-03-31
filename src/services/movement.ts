@@ -3,16 +3,13 @@ import * as HttpStatus from 'http-status-codes';
 import { MovementModel, MovementType } from '../models/movement';
 import ExpressError from '../utils/express.error';
 import { MovementScoreType, MovementScoreModel } from '../models/movement.score';
-import { Logger } from '../utils/logger/logger';
 import { QueryUtils } from '../utils/query.utils';
 
 export class MovementService {
-	private logger: Logger;
 	private movementModel: mongoose.Model<MovementType>;
 	private movementScoreModel: mongoose.Model<MovementScoreType>;
 
 	constructor(private options: any = {}) {
-		this.logger = this.options.logger || new Logger('service:movement');
 		this.movementModel = this.options.movementModel || new MovementModel().createModel();
 		this.movementScoreModel = this.options.movementScoreModel || new MovementScoreModel().createModel();
 	}
@@ -34,13 +31,8 @@ export class MovementService {
 	}
 
 	async createMovement(data: any) {
-		try {
-			const model = new this.movementModel(data);
-			return model.save();
-		} catch (err) {
-			this.logger.error(`Conflict, movement '${data.movement}' already exists`);
-			throw new ExpressError('Conflict', `movement: ${data.movement}, already exists`, HttpStatus.CONFLICT);
-		}
+		const model = new this.movementModel(data);
+		return model.save();
 	}
 
 	async addScore(userId: string, movementId: string, score: MovementScoreType) {

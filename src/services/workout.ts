@@ -3,16 +3,13 @@ import * as HttpStatus from 'http-status-codes';
 import { WorkoutModel, WorkoutType } from '../models/workout';
 import ExpressError from '../utils/express.error';
 import { WorkoutScoreType, WorkoutScoreModel } from '../models/workout.score';
-import { Logger } from '../utils/logger/logger';
 import { QueryUtils } from '../utils/query.utils';
 
 export class WorkoutService {
-	private logger: Logger;
 	private workoutModel: mongoose.Model<WorkoutType>;
 	private workoutScoreModel: mongoose.Model<WorkoutScoreType>;
 
 	constructor(private options: any = {}) {
-		this.logger = options.logger || new Logger('service:workout');
 		this.workoutModel = this.options.workoutModel || new WorkoutModel().createModel();
 		this.workoutScoreModel = this.options.workoutScoreModel || new WorkoutScoreModel().createModel();
 	}
@@ -38,14 +35,8 @@ export class WorkoutService {
 	}
 
 	async createWorkout(data: any) {
-		try {
-			const model = new this.workoutModel(data);
-			return model.save();
-		} catch (err) {
-			// TODO Check error information to determine status & message
-			this.logger.error(`Conflict, workout '${data.workout}' already exists`);
-			throw new ExpressError('Conflict', `Workout: ${data.workout}, already exists`, HttpStatus.CONFLICT);
-		}
+		const model = new this.workoutModel(data);
+		return model.save();
 	}
 
 	async addScore(userId: string, workoutId: string, score: any) {

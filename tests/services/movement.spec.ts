@@ -143,7 +143,7 @@ describe('MovementService', () => {
 			_modelInstance.expects('save').throws();
 
 			const promise = service.createMovement(movement);
-			await expect(promise).rejects.toHaveProperty('status', HttpStatus.CONFLICT);
+			await expect(promise).rejects.toBeDefined();
 			verifyAll();
 		});
 	});

@@ -145,7 +145,7 @@ describe('WorkoutService', () => {
 			_modelInstance.expects('save').throws();
 
 			const promise = service.createWorkout(workout);
-			await expect(promise).rejects.toHaveProperty('status', HttpStatus.CONFLICT);
+			await expect(promise).rejects.toBeDefined();
 			verifyAll();
 		});
 	});
