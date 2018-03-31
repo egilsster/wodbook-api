@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as multer from 'multer';
 import * as HttpStatus from 'http-status-codes';
 
-import ExpressError from '../utils/express.error';
+import { ExpressError } from '../utils/express.error';
 import BaseRouter from './base';
 import { MyWodService } from '../services/my.wod';
 import { UserSerializer } from '../utils/serialization/user.serializer';
@@ -33,7 +33,7 @@ export default class MywodRouter extends BaseRouter {
 		const file = req.file;
 		try {
 			if (!file) {
-				throw new ExpressError('Bad request', 'The form contains no file', HttpStatus.BAD_REQUEST);
+				throw new ExpressError('The form contains no file', HttpStatus.BAD_REQUEST);
 			}
 
 			const contents = await this.mywodService.readContentsFromDatabase(file.filename);

@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 
 import WorkoutRouter from '../../src/routes/workout';
 import { WorkoutService } from '../../src/services/workout';
-import ExpressError from '../../src/utils/express.error';
+import { ExpressError } from '../../src/utils/express.error';
 import RouterUtils from '../../src/utils/router.utils';
 
 describe('Workout endpoint', () => {
@@ -196,7 +196,7 @@ describe('Workout endpoint', () => {
 		});
 
 		it('should return 404 if the specified workout does not exist', async (done) => {
-			const err = new ExpressError('Object not found', `Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
+			const err = new ExpressError(`Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
 			_workoutService.expects('getWorkoutScores').withExactArgs(user.id, workoutMongo.id).throws(err);
 
 			try {
@@ -230,7 +230,7 @@ describe('Workout endpoint', () => {
 		});
 
 		it('should return 404 if the specified workout does not exist', async (done) => {
-			const err = new ExpressError('Object not found', `Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
+			const err = new ExpressError(`Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
 			_workoutService.expects('addScore').withExactArgs(user.id, workoutMongo.id, score).rejects(err);
 
 			try {

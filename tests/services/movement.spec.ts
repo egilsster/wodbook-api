@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
 import * as sqlite from 'sqlite';
 
-import ExpressError from '../../src/utils/express.error';
+import { ExpressError } from '../../src/utils/express.error';
 import { MovementService } from '../../src/services/movement';
 import { MovementScoreType } from '../../src/models/movement.score';
 import { MovementType } from '../../src/models/movement';
@@ -121,7 +121,7 @@ describe('MovementService', () => {
 		});
 
 		it('should throw error if movement does not exist', async () => {
-			const err = new ExpressError('Object not found', `Entity with identity '${movement.id}' does not exist`, HttpStatus.NOT_FOUND);
+			const err = new ExpressError(`Entity with identity '${movement.id}' does not exist`, HttpStatus.NOT_FOUND);
 			_service.expects('getMovement').withExactArgs(user.id, movement.id).resolves(null);
 
 			const promise = service.getMovementScores(user.id, movement.id);
