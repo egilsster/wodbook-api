@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import { MovementService } from '../services/movement';
 import BaseRouter from './base';
 import requireJSON from '../middleware/require.json';
-import ExpressError from '../utils/express.error';
+import { ExpressError } from '../utils/express.error';
 
 export class MovementRouter extends BaseRouter {
 	public path: string = 'movements';
@@ -50,7 +50,7 @@ export class MovementRouter extends BaseRouter {
 		try {
 			const data = await this.movementService.getMovement(userId, movementId);
 			if (!data) {
-				throw new ExpressError('404 Not found', 'Movement not found', HttpStatus.NOT_FOUND);
+				throw new ExpressError('Movement not found', HttpStatus.NOT_FOUND);
 			}
 
 			return res.send({

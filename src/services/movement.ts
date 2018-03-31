@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as HttpStatus from 'http-status-codes';
 import { MovementModel, MovementType } from '../models/movement';
-import ExpressError from '../utils/express.error';
+import { ExpressError } from '../utils/express.error';
 import { MovementScoreType, MovementScoreModel } from '../models/movement.score';
 import { QueryUtils } from '../utils/query.utils';
 
@@ -25,7 +25,7 @@ export class MovementService {
 	async getMovementScores(userId: string, movementId: string) {
 		const movement = await this.getMovement(userId, movementId);
 		if (!movement) {
-			throw new ExpressError('Object not found', `Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
+			throw new ExpressError(`Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 		return this.movementScoreModel.find(QueryUtils.forOne({ 'movementId': movementId }, userId));
 	}
@@ -39,7 +39,7 @@ export class MovementService {
 		const movementModel = await this.getMovement(userId, movementId);
 
 		if (!movementModel) {
-			throw new ExpressError('Object not found', `Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
+			throw new ExpressError(`Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 
 		score.movementId = movementModel.id;

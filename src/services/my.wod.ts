@@ -10,7 +10,7 @@ import { WorkoutModel, WorkoutType } from '../models/workout';
 import { MovementModel, MovementType } from '../models/movement';
 import { MovementScoreModel, MovementScoreType } from '../models/movement.score';
 import { WorkoutScoreModel, WorkoutScoreType } from '../models/workout.score';
-import ExpressError from '../utils/express.error';
+import { ExpressError } from '../utils/express.error';
 import { MyWodUtils } from '../utils/my.wod.utils';
 import { Logger } from '../utils/logger/logger';
 import { WorkoutService } from './workout';
@@ -38,13 +38,13 @@ export class MyWodService {
 
 	public async saveAthlete(user: any, data: any) {
 		if (data.email !== user.email) {
-			throw new ExpressError('Emails do not match', 'This myWOD backup does not belong to this email address', HttpStatus.FORBIDDEN);
+			throw new ExpressError('This myWOD backup does not belong to this email address', HttpStatus.FORBIDDEN);
 		}
 
 		let model = await this.userModel.findOne({ email: user.email });
 
 		if (!model) {
-			throw new ExpressError('Not found', 'Could not detect a user logged in', HttpStatus.NOT_FOUND);
+			throw new ExpressError('Could not detect a user logged in', HttpStatus.NOT_FOUND);
 		}
 
 		model = this.updateUser(model, data);

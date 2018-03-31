@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as HttpStatus from 'http-status-codes';
 import { WorkoutModel, WorkoutType } from '../models/workout';
-import ExpressError from '../utils/express.error';
+import { ExpressError } from '../utils/express.error';
 import { WorkoutScoreType, WorkoutScoreModel } from '../models/workout.score';
 import { QueryUtils } from '../utils/query.utils';
 
@@ -29,7 +29,7 @@ export class WorkoutService {
 	async getWorkoutScores(userId: string, workoutId: string) {
 		const workout = await this.getWorkout(userId, workoutId);
 		if (!workout) {
-			throw new ExpressError('Object not found', `Entity with identity '${workoutId}' does not exist`, HttpStatus.NOT_FOUND);
+			throw new ExpressError(`Entity with identity '${workoutId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 		return this.workoutScoreModel.find(QueryUtils.forOne({ 'workoutId': workoutId }, userId));
 	}
@@ -43,7 +43,7 @@ export class WorkoutService {
 		const workoutModel = await this.getWorkout(userId, workoutId);
 
 		if (!workoutModel) {
-			throw new ExpressError('Object not found', `Entity with identity '${workoutId}' does not exist`, HttpStatus.NOT_FOUND);
+			throw new ExpressError(`Entity with identity '${workoutId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
 
 		score.createdBy = userId;

@@ -1,6 +1,9 @@
+import * as HttpStatus from 'http-status-codes';
 
-export default class ExpressError extends Error {
-	constructor(public title: string, public detail: string, public status: number) {
-		super(title);
+export class ExpressError extends Error {
+	public title: string;
+	constructor(public detail: string, public status: number) {
+		super(HttpStatus.getStatusText(status));
+		this.title = `${status} ${this.message}`;
 	}
 }

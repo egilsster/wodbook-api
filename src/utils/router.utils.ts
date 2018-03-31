@@ -7,15 +7,13 @@ import * as expressWinston from 'express-winston';
 import jwtVerify from '../middleware/jwt.verify';
 import WorkoutRouter from '../routes/workout';
 import HealthRouter from '../routes/health';
-import ExpressError from './express.error';
+import { ExpressError } from './express.error';
 import MyWodRouter from '../routes/my.wod';
 import { AuthRouter } from '../routes/auth';
 import { MovementRouter } from '../routes/movement';
 import { logContextInjector } from './logger/log.context.injector';
 import { UserRouter } from '../routes/user';
-
-const MONGO_ERROR_DUPLICATE_KEY_ON_INSERT = 11000;
-const MONGO_ERROR_DUPLICATE_KEY_ON_UPDATE = 11001;
+import { ErrorUtils } from './error.utils';
 
 export default class RouterUtils {
 	public static readonly LATEST_VERSION: string = 'v1';
@@ -63,7 +61,7 @@ export default class RouterUtils {
 
 		// If a route is not registered, return 404
 		app.use((_req: express.Request, _res: express.Response, next: express.NextFunction) => {
-			next(new ExpressError('Not Found', 'The requested route does not exist', HttpStatus.NOT_FOUND));
+			next(new ExpressError('The requested route does not exist', HttpStatus.NOT_FOUND));
 		});
 
 		app.use(RouterUtils.errorHandler);
@@ -73,29 +71,13 @@ export default class RouterUtils {
 		if (res.headersSent) {
 			return next(err);
 		}
-		if (err.name === 'MongoError') {
-			err = RouterUtils.handleMongoError(err);
+		let status: number;
+		const expressErr = ErrorUtils.ensureExpressError(err);
+		if (Array.isArray(expressErr)) {
+			status = expressErr[0].status;
+		} else {
+			status = expressErr.status;
 		}
-		let status = HttpStatus.INTERNAL_SERVER_ERROR;
-		if (err instanceof ExpressError) {
-			status = err.status;
-		} else if (err.name === 'ValidationError') {
-			status = HttpStatus.UNPROCESSABLE_ENTITY;
-		}
-		res.status(status).send(err);
-	}
-
-	/**
-	 * This method convert a MongoError to an ExpressError when a "unique constraint validation error" is thrown from MongoDB
-	 * If its not a MongoError (check is by err.name === 'MongoError' because the type is Error) it will just throw it to the next level
-	 * for a complete list of mongo error codes see: https://github.com/mongodb/mongo/blob/master/src/mongo/base/error_codes.err
-	 * 11000 and 11001 are unique constraint validation error (for single field and compound fields) Insert and Update respectively
-	 * @param {Error} err the error assumed to be from MongoDB
-	 */
-	public static handleMongoError(err) {
-		if (err.code === MONGO_ERROR_DUPLICATE_KEY_ON_INSERT || err.code === MONGO_ERROR_DUPLICATE_KEY_ON_UPDATE) {
-			return new ExpressError('Conflict', `A Resource with the same unique identity already exists. Inner Message: ${err.message}`, HttpStatus.CONFLICT);
-		}
-		return err;
+		res.status(status).send(expressErr);
 	}
 }

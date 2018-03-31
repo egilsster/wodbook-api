@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 
 import { MovementRouter } from '../../src/routes/movement';
 import { MovementService } from '../../src/services/movement';
-import ExpressError from '../../src/utils/express.error';
+import { ExpressError } from '../../src/utils/express.error';
 import RouterUtils from '../../src/utils/router.utils';
 
 describe('Movement endpoint', () => {
@@ -192,7 +192,7 @@ describe('Movement endpoint', () => {
 		});
 
 		it('should return 404 if the specified movement does not exist', async (done) => {
-			const err = new ExpressError('Object not found', `Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
+			const err = new ExpressError(`Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
 			_movementService.expects('getMovementScores').withExactArgs(user.id, movementMongo.id).throws(err);
 
 			try {
@@ -226,7 +226,7 @@ describe('Movement endpoint', () => {
 		});
 
 		it('should return 404 if the specified movement does not exist', async (done) => {
-			const err = new ExpressError('Object not found', `Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
+			const err = new ExpressError(`Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
 			_movementService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).rejects(err);
 
 			try {

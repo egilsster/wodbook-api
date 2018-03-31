@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import { WorkoutService } from '../services/workout';
 import BaseRouter from './base';
 import requireJSON from '../middleware/require.json';
-import ExpressError from '../utils/express.error';
+import { ExpressError } from '../utils/express.error';
 
 export default class WorkoutRouter extends BaseRouter {
 	public path: string = 'workouts';
@@ -50,7 +50,7 @@ export default class WorkoutRouter extends BaseRouter {
 		try {
 			const data = await this.workoutService.getWorkout(userId, workoutId);
 			if (!data) {
-				throw new ExpressError('404 Not found', 'Workout not found', HttpStatus.NOT_FOUND);
+				throw new ExpressError('Workout not found', HttpStatus.NOT_FOUND);
 			}
 
 			return res.send({

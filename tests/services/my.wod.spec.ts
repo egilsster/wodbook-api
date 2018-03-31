@@ -4,9 +4,7 @@ import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
 import * as sqlite from 'sqlite';
 
-import ExpressError from '../../src/utils/express.error';
 import { MyWodService } from '../../src/services/my.wod';
-import { MongoError } from 'mongodb';
 import { WorkoutService } from '../../src/services/workout';
 
 describe('MywodService', () => {

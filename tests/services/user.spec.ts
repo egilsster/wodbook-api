@@ -1,7 +1,6 @@
 import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
 
-import ExpressError from '../../src/utils/express.error';
 import { UserService } from '../../src/services/user';
 
 describe('UserService', () => {

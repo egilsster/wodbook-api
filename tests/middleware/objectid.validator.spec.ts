@@ -1,5 +1,5 @@
 import * as HttpStatus from 'http-status-codes';
-import ExpressError from '../../src/utils/express.error';
+import { ExpressError } from '../../src/utils/express.error';
 import { validateObjectId } from '../../src/middleware/objectid.validator';
 
 describe('validateObjectId', () => {
@@ -48,6 +48,6 @@ describe('validateObjectId', () => {
 		validateObjectId(req, res, _next);
 
 		expect(_next).toHaveBeenCalledTimes(1);
-		expect(_next).toBeCalledWith(new ExpressError('Invalid Id', 'The Id specified is not valid', HttpStatus.BAD_REQUEST));
+		expect(_next).toBeCalledWith(new ExpressError('The Id specified is not valid', HttpStatus.BAD_REQUEST));
 	});
 });

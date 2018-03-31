@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser';
 
 import BaseRouter from './base';
 import { UserService } from '../services/user';
-import ExpressError from '../utils/express.error';
+import { ExpressError } from '../utils/express.error';
 import { UserSerializer } from '../utils/serialization/user.serializer';
 
 export class UserRouter extends BaseRouter {
@@ -33,7 +33,7 @@ export class UserRouter extends BaseRouter {
 			const user = await this.userService.getUser(req['user']);
 
 			if (!user) {
-				throw new ExpressError('Not found', 'No user found with this email or password', HttpStatus.NOT_FOUND);
+				throw new ExpressError('No user found with this email or password', HttpStatus.NOT_FOUND);
 			}
 
 			return res.status(HttpStatus.OK).json({

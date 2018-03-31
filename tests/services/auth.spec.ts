@@ -1,7 +1,6 @@
 import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
 
-import ExpressError from '../../src/utils/express.error';
 import { AuthService } from '../../src/services/auth';
 import { UserType } from '../../src/models/user';
 
@@ -60,54 +59,38 @@ describe('AuthService', () => {
 	});
 
 	describe('register', () => {
-		it('should register a user successfully', async (done) => {
-			try {
-				_modelInstance.expects('save').resolves(data);
+		it('should register a user successfully', async () => {
+			_modelInstance.expects('save').resolves(data);
 
-				const res = await service.register(data);
-				expect(res).toEqual(data);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			const promise = service.register(data);
+			await expect(promise).resolves.toEqual(data);
+			verifyAll();
 		});
 	});
 
 	describe('login', () => {
-		it('should successfully login if user exists', async (done) => {
-			try {
-				_model.expects('findOne').withArgs({ email: data.email }).resolves(data);
+		it('should successfully login if user exists', async () => {
+			_model.expects('findOne').withArgs({ email: data.email }).resolves(data);
 
-				const res = await service.login(data);
-				expect(res).toEqual(data);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			const promise = service.login(data);
+			await expect(promise).resolves.toEqual(data);
+			verifyAll();
 		});
 
-		it('should throw unauthorized exception if user does not exist', async (done) => {
-			try {
-				_model.expects('findOne').resolves();
+		it('should throw unauthorized exception if user does not exist', async () => {
+			_model.expects('findOne').resolves();
 
-				const promise = service.login(data);
-				await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			const promise = service.login(data);
+			await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
+			verifyAll();
 		});
 
-		it('should throw unauthorized exception if user exists but password does not match', async (done) => {
-			try {
-				_model.expects('findOne').resolves({ email: data.email, password: 'anotherPassword' });
+		it('should throw unauthorized exception if user exists but password does not match', async () => {
+			_model.expects('findOne').resolves({ email: data.email, password: 'anotherPassword' });
 
-				const promise = service.login(data);
-				await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			const promise = service.login(data);
+			await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
+			verifyAll();
 		});
 	});
 });

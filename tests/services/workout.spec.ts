@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
 
-import ExpressError from '../../src/utils/express.error';
+import { ExpressError } from '../../src/utils/express.error';
 import { WorkoutService } from '../../src/services/workout';
 import { QueryUtils } from '../../src/utils/query.utils';
 
@@ -104,7 +104,7 @@ describe('WorkoutService', () => {
 
 	describe('getWorkoutByTitle', () => {
 		it('should query model by workout title', async () => {
-			_model.expects('findOne').withArgs(QueryUtils.forOne({'title': workout.title}, user.id)).returns(workout);
+			_model.expects('findOne').withArgs(QueryUtils.forOne({ 'title': workout.title }, user.id)).returns(workout);
 
 			const res = await service.getWorkoutByTitle(workout.title, user.id);
 			expect(res).toEqual(workout);
@@ -123,7 +123,7 @@ describe('WorkoutService', () => {
 		});
 
 		it('should throw error if workout does not exist', async () => {
-			const err = new ExpressError('Object not found', `Entity with identity '${workout.id}' does not exist`, HttpStatus.NOT_FOUND);
+			const err = new ExpressError(`Entity with identity '${workout.id}' does not exist`, HttpStatus.NOT_FOUND);
 			_service.expects('getWorkout').withExactArgs(user.id, workout.id).resolves(null);
 
 			const promise = service.getWorkoutScores(user.id, workout.id);
