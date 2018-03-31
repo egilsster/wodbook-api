@@ -5,6 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import { WorkoutService } from '../services/workout';
 import BaseRouter from './base';
 import requireJSON from '../middleware/require.json';
+import ExpressError from '../utils/express.error';
 
 export default class WorkoutRouter extends BaseRouter {
 	public path: string = 'workouts';
@@ -25,8 +26,7 @@ export default class WorkoutRouter extends BaseRouter {
 			.post(requireJSON.bind(this), this.create.bind(this));
 
 		this.router.route(`/:id`)
-			.get(this.get.bind(this))
-			.post(this.update.bind(this));
+			.get(this.get.bind(this));
 
 		this.router.route(`/:id/scores`)
 			.get(this.getScores.bind(this))
@@ -38,26 +38,30 @@ export default class WorkoutRouter extends BaseRouter {
 	async list(req: express.Request, res: express.Response) {
 		const userId: string = req['user'].id;
 		const workouts = await this.workoutService.getWorkouts(userId);
-		res.status(200).send({
+		return res.status(200).send({
 			'data': workouts
 		});
 	}
 
-	async get(req: express.Request, res: express.Response) {
+	async get(req: express.Request, res: express.Response, next: express.NextFunction) {
 		const workoutId: string = req.params.id;
 		const userId: string = req['user'].id;
-		const data = await this.workoutService.getWorkout(userId, workoutId);
 
-		if (!data) {
-			return res.status(HttpStatus.NOT_FOUND).send({ 'msg': `workout not found` });
+		try {
+			const data = await this.workoutService.getWorkout(userId, workoutId);
+			if (!data) {
+				throw new ExpressError('404 Not found', 'Workout not found', HttpStatus.NOT_FOUND);
+			}
+
+			return res.send({
+				'data': data
+			});
+		} catch (err) {
+			next(err);
 		}
-
-		res.send({
-			'data': data
-		});
 	}
 
-	async create(req: express.Request, res: express.Response) {
+	async create(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const workoutData: any = req.body.data;
 			workoutData.createdBy = req['user'].id;
@@ -67,43 +71,25 @@ export default class WorkoutRouter extends BaseRouter {
 				'data': data
 			});
 		} catch (err) {
-			this.logger.error(err);
-			return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err);
+			next(err);
 		}
 	}
 
-	async update(req: express.Request, res: express.Response) {
-		const workoutId: string = req.params.id;
-		const userId: string = req['user'].id;
-
-		try {
-			const { score } = req.body.data;
-			const data = await this.workoutService.addScore(userId, workoutId, score);
-			res.status(HttpStatus.CREATED).send({
-				'data': data
-			});
-		} catch (err) {
-			this.logger.error(err);
-			res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ 'msg': `Could not add score: ${err}` });
-		}
-	}
-
-	async getScores(req: express.Request, res: express.Response) {
+	async getScores(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const workoutId: string = req.params.id;
 			const userId: string = req['user'].id;
 			const data = await this.workoutService.getWorkoutScores(userId, workoutId);
 
-			res.send({
+			return res.send({
 				'data': data
 			});
 		} catch (err) {
-			this.logger.error(err);
-			return res.status(err.status).send(err);
+			next(err);
 		}
 	}
 
-	async addScore(req: express.Request, res: express.Response) {
+	async addScore(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const workoutId: string = req.params.id;
 			const userId: string = req['user'].id;
@@ -114,8 +100,7 @@ export default class WorkoutRouter extends BaseRouter {
 				'data': data
 			});
 		} catch (err) {
-			this.logger.error(err);
-			return res.status(err.status).send(err);
+			next(err);
 		}
 	}
 }

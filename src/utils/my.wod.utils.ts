@@ -24,6 +24,13 @@ export class MyWodUtils {
 		return MyWodUtils.MOVEMENT_MEASUREMENTS[type];
 	}
 
+	public static mapDate(date: string | Date) {
+		if (typeof date === 'string') {
+			return new Date(date);
+		}
+		return date;
+	}
+
 	/**
 	 * myWOD app uses numerical values for genders. I want to have it
 	 * as a string value so I map it to its correct value here.

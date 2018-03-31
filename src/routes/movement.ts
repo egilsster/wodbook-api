@@ -5,8 +5,9 @@ import * as HttpStatus from 'http-status-codes';
 import { MovementService } from '../services/movement';
 import BaseRouter from './base';
 import requireJSON from '../middleware/require.json';
+import ExpressError from '../utils/express.error';
 
-export default class MovementRouter extends BaseRouter {
+export class MovementRouter extends BaseRouter {
 	public path: string = 'movements';
 	private movementService: MovementService;
 
@@ -25,8 +26,7 @@ export default class MovementRouter extends BaseRouter {
 			.post(requireJSON.bind(this), this.create.bind(this));
 
 		this.router.route(`/:id`)
-			.get(this.get.bind(this))
-			.post(this.update.bind(this));
+			.get(this.get.bind(this));
 
 		this.router.route(`/:id/scores`)
 			.get(this.getScores.bind(this))
@@ -38,26 +38,30 @@ export default class MovementRouter extends BaseRouter {
 	async list(req: express.Request, res: express.Response) {
 		const userId: string = req['user'].id;
 		const movements = await this.movementService.getMovements(userId);
-		res.status(200).send({
+		return res.status(200).send({
 			'data': movements
 		});
 	}
 
-	async get(req: express.Request, res: express.Response) {
+	async get(req: express.Request, res: express.Response, next: express.NextFunction) {
 		const movementId: string = req.params.id;
 		const userId: string = req['user'].id;
-		const data = await this.movementService.getMovement(userId, movementId);
 
-		if (!data) {
-			return res.status(HttpStatus.NOT_FOUND).send({ 'msg': `Movement not found` });
+		try {
+			const data = await this.movementService.getMovement(userId, movementId);
+			if (!data) {
+				throw new ExpressError('404 Not found', 'Movement not found', HttpStatus.NOT_FOUND);
+			}
+
+			return res.send({
+				'data': data
+			});
+		} catch (err) {
+			next(err);
 		}
-
-		res.send({
-			'data': data
-		});
 	}
 
-	async create(req: express.Request, res: express.Response) {
+	async create(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const movementData: any = req.body.data;
 			movementData.createdBy = req['user'].id;
@@ -67,37 +71,26 @@ export default class MovementRouter extends BaseRouter {
 				'data': data
 			});
 		} catch (err) {
-			this.logger.error(err);
-			return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err);
+			next(err);
 		}
 	}
 
-	async update(req: express.Request, res: express.Response) {
+	async getScores(req: express.Request, res: express.Response, next: express.NextFunction) {
 		const movementId: string = req.params.id;
 		const userId: string = req['user'].id;
 
 		try {
-			const { score } = req.body.data;
-			const data = await this.movementService.addScore(userId, movementId, score);
-			res.status(HttpStatus.CREATED).send({
+			const data = await this.movementService.getMovementScores(userId, movementId);
+
+			return res.send({
 				'data': data
 			});
 		} catch (err) {
-			res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ 'msg': `Could not add score: ${err}` });
+			next(err);
 		}
 	}
 
-	async getScores(req: express.Request, res: express.Response) {
-		const movementId: string = req.params.id;
-		const userId: string = req['user'].id;
-		const data = await this.movementService.getMovementScores(userId, movementId);
-
-		res.send({
-			'data': data
-		});
-	}
-
-	async addScore(req: express.Request, res: express.Response) {
+	async addScore(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const workoutId: string = req.params.id;
 			const userId: string = req['user'].id;
@@ -108,8 +101,7 @@ export default class MovementRouter extends BaseRouter {
 				'data': data
 			});
 		} catch (err) {
-			this.logger.error(err);
-			return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err);
+			next(err);
 		}
 	}
 }

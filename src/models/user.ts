@@ -59,7 +59,7 @@ export class UserModel extends BaseModel {
 		'dateOfBirth': {
 			'type': Date,
 			'required': false,
-			'set': (d) => new Date(d)
+			'set': MyWodUtils.mapDate
 		},
 		'height': {
 			'type': Number,

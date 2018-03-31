@@ -18,6 +18,19 @@ describe('MywodUtils', () => {
 		});
 	});
 
+	describe('mapDate', () => {
+		it('should parse date string to a date', () => {
+			const res = MyWodUtils.mapDate('01-01-2018');
+			expect(res.toISOString().startsWith('2018-01-01')).toBe(true);
+		});
+
+		it('should return date if parameter is not a string', () => {
+			const date = new Date();
+			const res = MyWodUtils.mapDate(date);
+			expect(res).toEqual(date);
+		});
+	});
+
 	describe('mapGender', () => {
 		it('should map valid numerical values to its appropriate string value', () => {
 			const genders = ['female', 'male', 'other'];
