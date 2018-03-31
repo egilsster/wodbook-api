@@ -12,8 +12,7 @@ describe('WorkoutService', () => {
 	};
 	const workout = {
 		'title': 'Amanda',
-		'id': '5a4704ca46425f97c638bcaa',
-		'scores': [],
+		'id': '5a4704ca46425f97c638bcaa'
 	};
 	const score: any = {
 		'workoutTitle': workout.id,
@@ -30,7 +29,6 @@ describe('WorkoutService', () => {
 	let _model: sinon.SinonMock;
 	let WorkoutModel: any = function () {
 		this.title = 'Amanda';
-		this.scores = [];
 		this.measurement = 'time';
 		this.description = 'desc';
 		this.save = () => workout;
@@ -100,6 +98,36 @@ describe('WorkoutService', () => {
 
 			const res = await service.getWorkout(user.id, 'notId');
 			expect(res).toEqual(null);
+			verifyAll();
+		});
+	});
+
+	describe('getWorkoutByTitle', () => {
+		it('should query model by workout title', async () => {
+			_model.expects('findOne').withArgs(QueryUtils.forOne({'title': workout.title}, user.id)).returns(workout);
+
+			const res = await service.getWorkoutByTitle(workout.title, user.id);
+			expect(res).toEqual(workout);
+			verifyAll();
+		});
+	});
+
+	describe('getWorkoutScores', () => {
+		it('should scores for workout if workout exists', async () => {
+			_service.expects('getWorkout').withExactArgs(user.id, workout.id).resolves(workout);
+			_model.expects('find').withArgs(QueryUtils.forOne({ 'workoutId': workout.id }, user.id)).returns([]);
+
+			const res = await service.getWorkoutScores(user.id, workout.id);
+			expect(res).toEqual([]);
+			verifyAll();
+		});
+
+		it('should throw error if workout does not exist', async () => {
+			const err = new ExpressError('Object not found', `Entity with identity '${workout.id}' does not exist`, HttpStatus.NOT_FOUND);
+			_service.expects('getWorkout').withExactArgs(user.id, workout.id).resolves(null);
+
+			const promise = service.getWorkoutScores(user.id, workout.id);
+			await expect(promise).rejects.toEqual(err);
 			verifyAll();
 		});
 	});

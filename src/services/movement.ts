@@ -25,8 +25,12 @@ export class MovementService {
 		return this.movementModel.findOne(QueryUtils.forOne({ '_id': id }, userId));
 	}
 
-	async getMovementScores(userId: string, id: string) {
-		return this.movementScoreModel.find(QueryUtils.forOne({ 'movementId': id }, userId));
+	async getMovementScores(userId: string, movementId: string) {
+		const movement = await this.getMovement(userId, movementId);
+		if (!movement) {
+			throw new ExpressError('Object not found', `Entity with identity '${movementId}' does not exist`, HttpStatus.NOT_FOUND);
+		}
+		return this.movementScoreModel.find(QueryUtils.forOne({ 'movementId': movementId }, userId));
 	}
 
 	async createMovement(data: any) {

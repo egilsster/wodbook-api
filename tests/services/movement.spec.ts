@@ -110,6 +110,26 @@ describe('MovementService', () => {
 		});
 	});
 
+	describe('getMovementScores', () => {
+		it('should scores for movement if movement exists', async () => {
+			_service.expects('getMovement').withExactArgs(user.id, movement.id).resolves(movement);
+			_model.expects('find').withArgs(QueryUtils.forOne({ 'movementId': movement.id }, user.id)).returns([]);
+
+			const res = await service.getMovementScores(user.id, movement.id);
+			expect(res).toEqual([]);
+			verifyAll();
+		});
+
+		it('should throw error if movement does not exist', async () => {
+			const err = new ExpressError('Object not found', `Entity with identity '${movement.id}' does not exist`, HttpStatus.NOT_FOUND);
+			_service.expects('getMovement').withExactArgs(user.id, movement.id).resolves(null);
+
+			const promise = service.getMovementScores(user.id, movement.id);
+			await expect(promise).rejects.toEqual(err);
+			verifyAll();
+		});
+	});
+
 	describe('createMovement', () => {
 		it('should successfully create a movement', async () => {
 			_modelInstance.expects('save').returns(movement);

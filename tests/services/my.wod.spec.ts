@@ -228,8 +228,10 @@ describe('MywodService', () => {
 		];
 
 		it('should save workout scores', async () => {
-			_workoutService.expects('getWorkoutByTitle').twice().resolves();
-			_modelInstance.expects('save').twice().resolves();
+			_workoutService.expects('getWorkoutByTitle').resolves({ 'id': 'workoutId' });
+			_modelInstance.expects('save').resolves();
+			_workoutService.expects('getWorkoutByTitle').resolves();
+			_modelInstance.expects('save').resolves();
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
@@ -325,6 +327,22 @@ describe('MywodService', () => {
 
 				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
 				expect(savedMovements.length).toBe(3);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should not care if migration for a movements fails', async (done) => {
+			try {
+				_modelInstance.expects('save').rejects();
+				_modelInstance.expects('save').rejects();
+				_modelInstance.expects('save').resolves();
+				_modelInstance.expects('save').resolves();
+
+				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
+				expect(savedMovements.length).toBe(1);
 				verifyAll();
 				done();
 			} catch (err) {

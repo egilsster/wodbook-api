@@ -27,8 +27,7 @@
       "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
       "args": [
         "${workspaceRoot}/node_modules/jest/bin/jest.js",
-        "--runInBand",
-        "routes/workout"
+        "--runInBand"
       ],
       "sourceMaps": true,
       "outFiles": [
