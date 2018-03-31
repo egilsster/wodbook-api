@@ -83,18 +83,24 @@ export default class WorkoutRouter extends BaseRouter {
 				'data': data
 			});
 		} catch (err) {
+			this.logger.error(err);
 			res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ 'msg': `Could not add score: ${err}` });
 		}
 	}
 
 	async getScores(req: express.Request, res: express.Response) {
-		const workoutId: string = req.params.id;
-		const userId: string = req['user'].id;
-		const data = await this.workoutService.getWorkoutScores(userId, workoutId);
+		try {
+			const workoutId: string = req.params.id;
+			const userId: string = req['user'].id;
+			const data = await this.workoutService.getWorkoutScores(userId, workoutId);
 
-		res.send({
-			'data': data
-		});
+			res.send({
+				'data': data
+			});
+		} catch (err) {
+			this.logger.error(err);
+			return res.status(err.status).send(err);
+		}
 	}
 
 	async addScore(req: express.Request, res: express.Response) {
@@ -109,7 +115,7 @@ export default class WorkoutRouter extends BaseRouter {
 			});
 		} catch (err) {
 			this.logger.error(err);
-			return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(err);
+			return res.status(err.status).send(err);
 		}
 	}
 }

@@ -5,6 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 
 import WorkoutRouter from '../../src/routes/workout';
 import { WorkoutService } from '../../src/services/workout';
+import ExpressError from '../../src/utils/express.error';
 
 describe('workout endpoint', function () {
 	const user = {
@@ -202,6 +203,88 @@ describe('workout endpoint', function () {
 				expect(res.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
 				expect(res.body).toBeDefined();
 				expect(res.body.msg).toBeDefined();
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+	});
+
+	describe('GET /workout/{id}/scores', () => {
+		const scores = ['score1', 'score2'];
+
+		it('should return 200 with a non-empty list of scores for a workout if it has scores registered', async (done) => {
+			_workoutService.expects('getWorkoutScores').withExactArgs(user.id, workoutMongo.id).resolves(scores);
+
+			try {
+				const res = await request.get(`/${workoutMongo.id}/scores`);
+				expect(res.status).toBe(HttpStatus.OK);
+				expect(res.body).toHaveProperty('data', scores);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should return 200 with an empty list of scores for a workout if it has no scores', async (done) => {
+			_workoutService.expects('getWorkoutScores').withExactArgs(user.id, workoutMongo.id).resolves([]);
+
+			try {
+				const res = await request.get(`/${workoutMongo.id}/scores`);
+				expect(res.status).toBe(HttpStatus.OK);
+				expect(res.body).toHaveProperty('data', []);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should return 404 if the specified workout does not exist', async (done) => {
+			const err = new ExpressError('Object not found', `Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
+			_workoutService.expects('getWorkoutScores').withExactArgs(user.id, workoutMongo.id).rejects(err);
+
+			try {
+				const res = await request.get(`/${workoutMongo.id}/scores`);
+				expect(res.status).toBe(HttpStatus.NOT_FOUND);
+				expect(res.body).toHaveProperty('status', err.status);
+				expect(res.body).toHaveProperty('detail', err.detail);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+	});
+
+	describe('POST /workout/{id}/scores', () => {
+		const score = { 'workoutId': 'workoutId' };
+
+		it('should return 201 if score is successfully added to workout', async (done) => {
+			_workoutService.expects('addScore').withExactArgs(user.id, workoutMongo.id, score).resolves(score);
+
+			try {
+				const res = await request.post(`/${workoutMongo.id}/scores`).send({ 'data': score });
+				expect(res.status).toBe(HttpStatus.CREATED);
+				expect(res.body).toHaveProperty('data', score);
+				verifyAll();
+				done();
+			} catch (err) {
+				done(err);
+			}
+		});
+
+		it('should return 404 if the specified workout does not exist', async (done) => {
+			const err = new ExpressError('Object not found', `Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
+			_workoutService.expects('addScore').withExactArgs(user.id, workoutMongo.id, score).rejects(err);
+
+			try {
+				const res = await request.post(`/${workoutMongo.id}/scores`).send({ 'data': score });
+				expect(res.status).toBe(HttpStatus.NOT_FOUND);
+				expect(res.body).toHaveProperty('status', err.status);
+				expect(res.body).toHaveProperty('detail', err.detail);
 				verifyAll();
 				done();
 			} catch (err) {
