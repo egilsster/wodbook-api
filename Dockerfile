@@ -21,6 +21,9 @@ USER root
 
 WORKDIR /usr/src/app
 
+RUN mkdir mywod
+RUN chown nobody:nobody -R /usr/src/app/mywod
+
 USER nobody
 
 COPY --from=builder /usr/src/app .
