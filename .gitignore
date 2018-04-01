@@ -1,20 +1,17 @@
 # Build related
 npm-debug.log*
-coverage/
-node_modules
 .npmrc
 package-lock.json
 version.txt
-dist/
+npm-versions.txt
+node_modules/
+coverage/
+build/
 
 # OS X Files
 .DS_Store
 
-# Docker build-related files
-docker-compose.cloud.yml
-
 # Misc
-mywod/
 data.mywod
-
+mywod/
 public/

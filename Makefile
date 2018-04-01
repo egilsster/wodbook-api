@@ -12,6 +12,10 @@ build-image:
 build-test-image:
 	docker build -t test-image --target test .
 
+build-ci:
+	$(MAKE) build-image
+	docker tag $(SERVICE_NAME):latest $(SERVICE_NAME):$(shell cat ./version.txt)
+
 test:
 ifeq (,${CIRCLE_BUILD_NUM})
 	$(MAKE) test-local
@@ -33,7 +37,7 @@ test-ci:
 	$(CODECLIMATE) < coverage/lcov.info
 
 depcheck:
-	$(DEPCHECK) --ignores codeclimate-test-reporter,depcheck,tslint,nsp,ts-jest,@types/*
+	$(DEPCHECK) --json --ignores codeclimate-test-reporter,depcheck,tslint,nsp,ts-jest,request-promise,@types/*
 
 check-security:
 	$(MOD_BIN)/nsp check

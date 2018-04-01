@@ -15,4 +15,5 @@ exclude_paths:
   - coverage
   - node_modules
   - tests
+  - component_tests
   - "**/*.js"
