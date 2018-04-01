@@ -12,6 +12,10 @@ build-image:
 build-test-image:
 	docker build -t test-image --target test .
 
+build-ci:
+	$(MAKE) build-image
+	docker tag $(SERVICE_NAME):latest $(SERVICE_NAME):$(shell cat ./version.txt)
+
 test:
 ifeq (,${CIRCLE_BUILD_NUM})
 	$(MAKE) test-local

@@ -1,0 +1,39 @@
+version: "2.1"
+
+services:
+  sut:
+    image: test-image
+    environment:
+      - API_URL=http://wodbook-api:43210
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/wodbook-test
+    user: root
+    depends_on:
+      wodbook-api:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    command: npm run component-test
+
+  wodbook-api:
+    image: wodbook-api:${VER}
+    container_name: wodbook-api
+    restart: on-failure
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/wodbook-test
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017/wodbook --quiet | grep -q "1"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+      - "27017:27017"
+    command: --smallfiles
