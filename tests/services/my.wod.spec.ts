@@ -226,8 +226,9 @@ describe('MywodService', () => {
 		];
 
 		it('should save workout scores', async () => {
-			_workoutService.expects('getWorkoutByTitle').twice().resolves({ 'id': 'workoutId' });
-			_modelInstance.expects('save').twice().resolves();
+			_workoutService.expects('getWorkoutByTitle').resolves({ 'id': 'workoutId' });
+			_modelInstance.expects('save').once().resolves();
+			_workoutService.expects('getWorkoutByTitle').resolves();
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
