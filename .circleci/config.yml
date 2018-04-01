@@ -56,11 +56,6 @@ jobs:
             done
           when: always
       - run:
-          name: Save installed npm package versions
-          command: |
-            docker run wodbook-api:latest npm list &> npm-versions.txt
-          when: always
-      - run:
           name: Build test image
           command: make build-test-image
       - run:
@@ -69,9 +64,6 @@ jobs:
       - store_artifacts:
           path: ./version.txt
           destination: version
-      - store_artifacts:
-          path: ./npm-versions.txt
-          destination: npm-versions
       - store_artifacts:
           path: ./coverage
           destination: coverage
