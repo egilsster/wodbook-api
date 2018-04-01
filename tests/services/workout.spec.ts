@@ -36,6 +36,7 @@ describe('WorkoutService', () => {
 	};
 	WorkoutModel.find = () => { };
 	WorkoutModel.findOne = () => { };
+	WorkoutModel.ensureIndexes = () => { };
 
 	beforeEach(() => {
 		modelInstance = new WorkoutModel();
@@ -113,7 +114,7 @@ describe('WorkoutService', () => {
 	});
 
 	describe('getWorkoutScores', () => {
-		it('should scores for workout if workout exists', async () => {
+		it('should get scores for workout if workout exists', async () => {
 			_service.expects('getWorkout').withExactArgs(user.id, workout.id).resolves(workout);
 			_model.expects('find').withArgs(QueryUtils.forOne({ 'workoutId': workout.id }, user.id)).returns([]);
 

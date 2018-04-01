@@ -227,9 +227,8 @@ describe('MywodService', () => {
 
 		it('should save workout scores', async () => {
 			_workoutService.expects('getWorkoutByTitle').resolves({ 'id': 'workoutId' });
-			_modelInstance.expects('save').resolves();
+			_modelInstance.expects('save').once().resolves();
 			_workoutService.expects('getWorkoutByTitle').resolves();
-			_modelInstance.expects('save').resolves();
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
@@ -237,7 +236,7 @@ describe('MywodService', () => {
 		});
 
 		it('should not care about failed score migration', async () => {
-			_workoutService.expects('getWorkoutByTitle').twice().resolves();
+			_workoutService.expects('getWorkoutByTitle').twice().resolves({ 'id': 'workoutId' });
 			_modelInstance.expects('save').twice().rejects();
 
 			const promise = service.saveWorkoutScores(user, scores);

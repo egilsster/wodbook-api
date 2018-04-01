@@ -35,6 +35,7 @@ export class WorkoutService {
 	}
 
 	async createWorkout(data: any) {
+		await this.workoutModel.ensureIndexes();
 		const model = new this.workoutModel(data);
 		return model.save();
 	}

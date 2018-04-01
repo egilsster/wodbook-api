@@ -4,8 +4,6 @@ import { MyWodUtils } from '../utils/my.wod.utils';
 
 export type WorkoutScoreType = mongoose.Document & {
 	workoutId: mongoose.Schema.Types.ObjectId;
-	workoutTitle: string; // Sometimes the score is added to a nonexisting workout
-	description: string;
 	score: string;
 	rx: boolean;
 	measurement: string;
@@ -21,15 +19,6 @@ export class WorkoutScoreModel extends BaseModel {
 		'workoutId': {
 			'type': mongoose.Schema.Types.ObjectId,
 			'ref': 'Workout'
-		},
-		'workoutTitle': {
-			'type': String,
-			'required': true,
-			'trim': true
-		},
-		'description': {
-			'type': String,
-			'required': false
 		},
 		'score': {
 			'type': String,
