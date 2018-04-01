@@ -96,9 +96,10 @@ export class MyWodService {
 		for (const score of scoresSorted) {
 			try {
 				const workoutModel = await this.workoutService.getWorkoutByTitle(score.title, user.id);
-				if (workoutModel) {
-					score.workoutId = workoutModel.id;
+				if (!workoutModel) {
+					continue; // Do not save scores that do not belong to a registered workout
 				}
+				score.workoutId = workoutModel.id;
 				const scoreData = MyWodUtils.parseWorkoutScore(score);
 				const scoreModelInstance = new this.workoutScoreModel(scoreData);
 				scoreModelInstance.createdBy = user._id;
