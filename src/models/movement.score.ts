@@ -8,7 +8,7 @@ export type MovementScoreType = mongoose.Document & {
 	sets: number;
 	notes: string;
 	movementId: mongoose.Schema.Types.ObjectId;
-	createdBy: mongoose.Schema.Types.ObjectId;
+	createdBy: string;
 	createdAt: Date;
 	modifiedAt: Date;
 };

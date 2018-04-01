@@ -40,7 +40,7 @@ export class WorkoutService {
 		return model.save();
 	}
 
-	async addScore(userId: string, workoutId: string, score: any) {
+	async addScore(userId: string, workoutId: string, score: WorkoutScoreType) {
 		const workoutModel = await this.getWorkout(userId, workoutId);
 
 		if (!workoutModel) {

@@ -44,6 +44,7 @@ describe('MovementService', () => {
 	};
 	MockModel.find = () => { };
 	MockModel.findOne = () => { };
+	MockModel.ensureIndexes = () => { };
 
 	beforeEach(() => {
 		modelInstance = new MockModel();
