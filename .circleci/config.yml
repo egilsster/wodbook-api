@@ -34,6 +34,9 @@ jobs:
           name: Build Docker Image
           command: VER=$(cat ./version.txt) make build-ci
       - run:
+          name: Build test image
+          command: make build-test-image
+      - run:
           name: Component Test (initialize service)
           command: |
             VER=$(cat ./version.txt) docker-compose -f docker-compose.component-test.yml up -d wodbook-api
