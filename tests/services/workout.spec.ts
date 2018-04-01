@@ -36,6 +36,7 @@ describe('WorkoutService', () => {
 	};
 	WorkoutModel.find = () => { };
 	WorkoutModel.findOne = () => { };
+	WorkoutModel.ensureIndexes = () => { };
 
 	beforeEach(() => {
 		modelInstance = new WorkoutModel();
