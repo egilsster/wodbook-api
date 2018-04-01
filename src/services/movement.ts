@@ -31,6 +31,7 @@ export class MovementService {
 	}
 
 	async createMovement(data: any) {
+		await this.movementModel.ensureIndexes();
 		const model = new this.movementModel(data);
 		return model.save();
 	}
@@ -43,7 +44,9 @@ export class MovementService {
 		}
 
 		score.movementId = movementModel.id;
+		score.createdBy = userId;
 		const movementScoreModel = new this.movementScoreModel(score);
+
 		return movementScoreModel.save();
 	}
 }

@@ -8,7 +8,7 @@ export type WorkoutScoreType = mongoose.Document & {
 	rx: boolean;
 	measurement: string;
 	notes: string;
-	createdBy: mongoose.Schema.Types.ObjectId;
+	createdBy: string;
 	createdAt: Date;
 	modifiedAt: Date;
 };
