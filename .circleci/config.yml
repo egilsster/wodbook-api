@@ -20,6 +20,7 @@ jobs:
           background: true
           command: |
              docker pull node:8-alpine
+             docker pull mongo:latest
       - run:
           name: Upgrade Docker Compose
           command: |
