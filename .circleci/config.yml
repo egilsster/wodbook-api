@@ -58,7 +58,7 @@ jobs:
       - run:
           name: Save installed npm package versions
           command: |
-            docker run $SERVICE_NAME:latest npm list &> npm-versions.txt
+            docker run wodbook-api:latest npm list &> npm-versions.txt
           when: always
       - run:
           name: Build test image

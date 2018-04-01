@@ -3,6 +3,7 @@ npm-debug.log*
 .npmrc
 package-lock.json
 version.txt
+npm-versions.txt
 node_modules/
 coverage/
 build/
