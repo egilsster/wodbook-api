@@ -1,5 +1,6 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, Db } from 'mongodb';
 import * as _ from 'lodash';
+import users from '../data/users';
 
 export default class MongoInit {
 	constructor(private uri: string, private dbName: string) { }
@@ -16,10 +17,25 @@ export default class MongoInit {
 
 	public async setup() {
 		try {
-			await this.teardown();
-			await Promise.all([]);
+			const client = await MongoClient.connect(this.uri);
+			const db = client.db(this.dbName);
+			db.dropDatabase();
+
+			await Promise.all([
+				this.initCollection(db, 'users', users)
+			]);
 		} catch (err) {
 			console.error(err);
+			throw err;
+		}
+	}
+
+	public async initCollection(db: Db, collectionName: string, data: object[]) {
+		try {
+			const collection = await db.collection(collectionName);
+			const res = await collection.insertMany(data);
+			return;
+		} catch (err) {
 			throw err;
 		}
 	}
