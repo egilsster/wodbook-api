@@ -1,9 +1,9 @@
 ﻿import * as http from 'http';
 import * as express from 'express';
+import * as config from 'config';
 import { Connection } from 'mongoose';
 
 import RouterUtils from './utils/router.utils';
-import ConfigService from './services/config';
 import Models from './models';
 import { Logger } from './utils/logger/logger';
 
@@ -13,7 +13,7 @@ export default class Server {
 	public app: express.Express;
 	private server: http.Server;
 
-	constructor(public config: ConfigService = new ConfigService(), public routers?, public middleware?, public models?: Models, options: any = {}) {
+	constructor(public routers?, public middleware?, public models?: Models, options: any = {}) {
 		this.app = express();
 		this.app.disable('x-powered-by');
 		this.logger = options.logger || new Logger('server');
@@ -22,10 +22,11 @@ export default class Server {
 	}
 
 	public async start() {
-		const config = await ConfigService.getConfig();
+		const mongoConfig: any = config.get('mongo');
+		const serverConfig: any = config.get('server');
 
 		this.models = new Models({
-			'uri': config.mongo.uri
+			'uri': mongoConfig.uri
 		});
 
 		this.models.connect((err: any, connection: Connection) => {
@@ -35,10 +36,10 @@ export default class Server {
 			}
 
 			this.routerUtils.registerMiddleware(this.app, this.logger);
-			this.routerUtils.registerRoutes(this.app, config);
+			this.routerUtils.registerRoutes(this.app);
 
-			this.server.listen(config.servicePort, () => {
-				this.logger.info(`Listening on port ${config.servicePort}`);
+			this.server.listen(serverConfig.port, () => {
+				this.logger.info(`Listening on port ${serverConfig.port}`);
 			});
 
 			connection.once('disconnected', () => {

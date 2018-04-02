@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 import * as bodyParser from 'body-parser';
+import * as config from 'config';
 
 import BaseRouter from './base';
 import { JwtUtils } from '../utils/jwt.utils';
@@ -46,10 +47,11 @@ export class AuthRouter extends BaseRouter {
 	async register(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const user = await this.authService.register(req.body.data);
+			const webtokens: any = config.get('webtokens');
 
 			return res.status(HttpStatus.CREATED).json({
 				'data': {
-					token: JwtUtils.signToken(this.getPayload(user), 'publicKey')
+					token: JwtUtils.signToken(this.getPayload(user), webtokens.public)
 				}
 			});
 		} catch (err) {
