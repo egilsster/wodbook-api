@@ -21,15 +21,11 @@ export default class Models {
 	connect(callback) {
 		const connection = this.mongoose.connection;
 		let uri = this.options.uri;
-		const serverOptions = {
+		const mongooseOptions: any = {
 			'autoReconnect': true,
 			'keepAlive': KEEP_ALIVE,
 			'connectTimeoutMS': CONN_TO
 		};
-		const mongooseOptions: any = {
-			'useMongoClient': true
-		};
-		_.merge(mongooseOptions, serverOptions);
 
 		// Only use the TLS/SSL config when running in the cloud
 		if (this.options.sslAuth) {

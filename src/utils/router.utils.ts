@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 import * as bearerToken from 'express-bearer-token';
 import * as expressWinston from 'express-winston';
+import * as config from 'config';
 
 import jwtVerify from '../middleware/jwt.verify';
 import WorkoutRouter from '../routes/workout';
@@ -32,7 +33,7 @@ export default class RouterUtils {
 		}));
 	}
 
-	public registerRoutes(app: express.Application, config: any) {
+	public registerRoutes(app: express.Application) {
 		// Static routes
 		app.use('/api-docs', (_req: express.Request, res: express.Response) => res.sendFile(path.resolve('./api-docs.yml')));
 
@@ -42,10 +43,11 @@ export default class RouterUtils {
 		const healthRouter = new HealthRouter();
 		app.use('/health', healthRouter.router);
 
-		const authRouterInstance = new AuthRouter({ config });
+		const authRouterInstance = new AuthRouter();
 		app.use(`/${RouterUtils.LATEST_VERSION}/${authRouterInstance.path}`, authRouterInstance.router);
 
-		app.use(jwtVerify(config.webtokens.public));
+		const webtokens: any = config.get('webtokens');
+		app.use(jwtVerify(webtokens.public));
 
 		// Private routes
 		const privateRoutes = [
