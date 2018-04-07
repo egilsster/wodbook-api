@@ -22,8 +22,8 @@ export default class Server {
 	}
 
 	public async start() {
-		const mongoConfig: any = config.get('mongo');
-		const serverConfig: any = config.get('server');
+		const mongoConfig = config.get<MongoConfig>('mongo');
+		const serverConfig = config.get<ServerConfig>('server');
 
 		this.models = new Models({
 			'uri': mongoConfig.uri
