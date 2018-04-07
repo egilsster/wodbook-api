@@ -46,7 +46,7 @@ export default class RouterUtils {
 		const authRouterInstance = new AuthRouter();
 		app.use(`/${RouterUtils.LATEST_VERSION}/${authRouterInstance.path}`, authRouterInstance.router);
 
-		const webtokens: any = config.get('webtokens');
+		const webtokens = config.get<WebTokenConfig>('webtokens');
 		app.use(jwtVerify(webtokens.public));
 
 		// Private routes

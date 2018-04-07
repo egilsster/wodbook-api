@@ -47,7 +47,7 @@ export class AuthRouter extends BaseRouter {
 	async register(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const user = await this.authService.register(req.body.data);
-			const webtokens: any = config.get('webtokens');
+			const webtokens = config.get<WebTokenConfig>('webtokens');
 
 			return res.status(HttpStatus.CREATED).json({
 				'data': {
