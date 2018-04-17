@@ -1,6 +1,14 @@
 .git/
 .circleci/
+.vscode/
 
 build/
 coverage/
 node_modules/
+public/
+mywod/
+
+data.mywod
+package-lock.json
+yarn.lock
+version.txt
