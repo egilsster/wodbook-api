@@ -2,12 +2,6 @@
   "server": {
     "port": 43210
   },
-  "mongo": {
-    "user": "someuser",
-    "uri": "mongodb://127.0.0.1:27017/wodbook",
-    "keepAlive": "5000",
-    "connectTimeoutMS": "30000"
-  },
   "webtokens": {
     "public": "cHVibGljS2V5"
   }

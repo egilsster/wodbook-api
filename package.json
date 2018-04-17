@@ -17,7 +17,8 @@
     "build": "tsc",
     "test": "NODE_ENV=test jest",
     "test:coverage": "NODE_ENV=test jest --coverage",
-    "component-test": "jest --config component-test.config.json --runInBand --forceExit"
+    "component-test": "jest --config component-test.config.json --runInBand --forceExit",
+    "deploy": "now --docker"
   },
   "jest": {
     "transform": {
@@ -29,6 +30,13 @@
       "js",
       "json"
     ]
+  },
+  "now": {
+    "alias": "wodbook",
+    "name": "wodbook",
+    "env": {
+      "MONGO_URI": "@db"
+    }
   },
   "dependencies": {
     "@types/body-parser": "1.16.8",

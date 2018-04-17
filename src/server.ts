@@ -22,11 +22,10 @@ export default class Server {
 	}
 
 	public async start() {
-		const mongoConfig = config.get<MongoConfig>('mongo');
 		const serverConfig = config.get<ServerConfig>('server');
 
 		this.models = new Models({
-			'uri': mongoConfig.uri
+			'uri': process.env.MONGO_URI
 		});
 
 		this.models.connect((err: any, connection: Connection) => {

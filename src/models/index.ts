@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-import { Mongoose } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { Logger } from '../utils/logger/logger';
 
@@ -9,7 +7,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 
 export default class Models {
 	public logger: Logger;
-	public mongoose: Mongoose;
+	public mongoose: mongoose.Mongoose;
 	public reconnectTimer: NodeJS.Timer | undefined;
 
 	constructor(public options: any = {}, providedMongoose?) {
@@ -21,19 +19,11 @@ export default class Models {
 	connect(callback) {
 		const connection = this.mongoose.connection;
 		let uri = this.options.uri;
-		const mongooseOptions: any = {
+		const mongooseOptions: mongoose.ConnectionOptions = {
 			'autoReconnect': true,
 			'keepAlive': KEEP_ALIVE,
 			'connectTimeoutMS': CONN_TO
 		};
-
-		// Only use the TLS/SSL config when running in the cloud
-		if (this.options.sslAuth) {
-			uri += '&authMechanism=MONGODB-X509';
-			mongooseOptions.authSource = '$external';
-			mongooseOptions.sslCA = [this.options.sslAuth.sslCA];
-			_.merge(mongooseOptions, this.options.sslAuth);
-		}
 
 		let callbackCalled = false;
 		let retryCount = MAX_RECONNECT_ATTEMPTS;

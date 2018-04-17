@@ -4,7 +4,6 @@ jobs:
     machine: true
     working_directory: ~/wodbook-api
     environment:
-      SERVICE_NAME: wodbook-api
       DOCKER_URL: https://download.docker.com/linux/static/edge/x86_64/docker-17.06.0-ce.tgz
       DOCKER_COMPOSE_URL: https://github.com/docker/compose/releases/download/1.13.0/docker-compose-Linux-x86_64
     steps:

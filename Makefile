@@ -7,10 +7,10 @@ CODECLIMATE = $(MOD_BIN)/codeclimate-test-reporter
 VER ?= latest
 
 build-image:
-	docker build -t $(SERVICE_NAME) --target production .
+	docker build -f Dockerfile.multi -t $(SERVICE_NAME) --target production .
 
 build-test-image:
-	docker build -t test-image --target test .
+	docker build -f Dockerfile.multi -t test-image --target test .
 
 build-ci:
 	$(MAKE) build-image

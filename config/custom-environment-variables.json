@@ -1,11 +1,5 @@
 {
   "server": {
     "port": "PORT"
-  },
-  "mongo": {
-    "user": "MONGO_USER",
-    "uri": "MONGO_URI",
-    "keepAlive": "MONGO_KEEP_ALIVE",
-    "connectTimeoutMS": "MONGO_CONN_TIMEOUT"
   }
 }
