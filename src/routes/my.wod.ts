@@ -10,7 +10,7 @@ import { UserSerializer } from '../utils/serialization/user.serializer';
 const storage = multer.diskStorage({ destination: MyWodService.FILE_LOCATION });
 const upload = multer({ storage });
 
-export default class MywodRouter extends BaseRouter {
+export class MyWodRouter extends BaseRouter {
 	public path: string = 'mywod';
 	private mywodService: MyWodService;
 	private userSerializer: UserSerializer;

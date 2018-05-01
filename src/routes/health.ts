@@ -2,7 +2,7 @@
 import * as HttpStatus from 'http-status-codes';
 import BaseRouter from './base';
 
-export default class HealthRouter extends BaseRouter {
+export class HealthRouter extends BaseRouter {
 	public path: string = 'health';
 
 	constructor(options: any = {}) {

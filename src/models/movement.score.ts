@@ -7,7 +7,7 @@ export type MovementScoreType = mongoose.Document & {
 	measurement: string;
 	sets: number;
 	notes: string;
-	movementId: mongoose.Schema.Types.ObjectId;
+	parentId: mongoose.Schema.Types.ObjectId;
 	createdBy: string;
 	createdAt: Date;
 	modifiedAt: Date;
@@ -34,7 +34,7 @@ export class MovementScoreModel extends BaseModel {
 			'type': String,
 			'required': false
 		},
-		'movementId': {
+		'parentId': {
 			'type': mongoose.Schema.Types.ObjectId,
 			'ref': 'Movement'
 		},

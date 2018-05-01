@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 import { MongoError } from 'mongodb';
-import RouterUtils from '../../src/utils/router.utils';
+import { RouterUtils } from '../../src/utils/router.utils';
 import { ExpressError } from '../../src/utils/express.error';
 
 describe('RouterUtils', () => {
@@ -72,7 +72,7 @@ describe('RouterUtils', () => {
 	describe('registerRoutes', () => {
 		it('should register routes to app', () => {
 			_app.expects('use').atLeast(5);
-			routerUtils.registerRoutes(app, config);
+			routerUtils.registerRoutes(app);
 			verifyAll();
 		});
 	});

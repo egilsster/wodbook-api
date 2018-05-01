@@ -13,7 +13,7 @@ import { WorkoutScoreModel, WorkoutScoreType } from '../models/workout.score';
 import { ExpressError } from '../utils/express.error';
 import { MyWodUtils } from '../utils/my.wod.utils';
 import { Logger } from '../utils/logger/logger';
-import { WorkoutService } from './workout';
+import { TrainingService } from './training';
 
 export class MyWodService {
 	public static FILE_LOCATION = `${process.cwd()}/mywod`;
@@ -22,7 +22,7 @@ export class MyWodService {
 	private userModel: mongoose.Model<UserType>;
 	private workoutModel: mongoose.Model<WorkoutType>;
 	private workoutScoreModel: mongoose.Model<WorkoutScoreType>;
-	private workoutService: WorkoutService;
+	private workoutService: TrainingService;
 	private movementModel: mongoose.Model<MovementType>;
 	private movementScoreModel: mongoose.Model<MovementScoreType>;
 
@@ -31,7 +31,7 @@ export class MyWodService {
 		this.userModel = this.options.userModel || new UserModel().createModel();
 		this.workoutModel = this.options.workoutModel || new WorkoutModel().createModel();
 		this.workoutScoreModel = this.options.workoutScoreModel || new WorkoutScoreModel().createModel();
-		this.workoutService = this.options.workoutService || new WorkoutService();
+		this.workoutService = this.options.workoutService || new TrainingService(this.workoutModel, this.workoutScoreModel);
 		this.movementModel = this.options.movementModel || new MovementModel().createModel();
 		this.movementScoreModel = this.options.movementScoreModel || new MovementScoreModel().createModel();
 	}
@@ -95,7 +95,7 @@ export class MyWodService {
 		const scoresSorted = _.sortBy(workoutScores, ['title']);
 		for (const score of scoresSorted) {
 			try {
-				const workoutModel = await this.workoutService.getWorkoutByTitle(score.title, user.id);
+				const workoutModel = await this.workoutService.getByFilter(user.id, { 'title': score.title });
 				if (!workoutModel) {
 					continue; // Do not save scores that do not belong to a registered workout
 				}

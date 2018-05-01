@@ -6,17 +6,17 @@ import * as expressWinston from 'express-winston';
 import * as config from 'config';
 
 import jwtVerify from '../middleware/jwt.verify';
-import WorkoutRouter from '../routes/workout';
-import HealthRouter from '../routes/health';
+import { WorkoutRouter } from '../routes/workout';
+import { HealthRouter } from '../routes/health';
 import { ExpressError } from './express.error';
-import MyWodRouter from '../routes/my.wod';
+import { MyWodRouter } from '../routes/my.wod';
 import { AuthRouter } from '../routes/auth';
 import { MovementRouter } from '../routes/movement';
 import { logContextInjector } from './logger/log.context.injector';
 import { UserRouter } from '../routes/user';
 import { ErrorUtils } from './error.utils';
 
-export default class RouterUtils {
+export class RouterUtils {
 	public static readonly LATEST_VERSION: string = 'v1';
 
 	constructor(public options: any = {}) { }

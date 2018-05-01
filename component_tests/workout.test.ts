@@ -219,7 +219,7 @@ describe('Workout component tests', () => {
 				expect(res2.body.data).toHaveProperty('_id');
 				expect(res2.body.data).toHaveProperty('createdAt');
 				expect(res2.body.data).toHaveProperty('updatedAt');
-				expect(res2.body.data).toHaveProperty('workoutId', workoutId);
+				expect(res2.body.data).toHaveProperty('parentId', workoutId);
 				expect(res2.body.data).toHaveProperty('score', '4:20');
 				expect(res2.body.data).toHaveProperty('rx', true);
 
@@ -236,7 +236,7 @@ describe('Workout component tests', () => {
 				expect(res3.body.data[0]).toHaveProperty('_id');
 				expect(res3.body.data[0]).toHaveProperty('createdAt');
 				expect(res3.body.data[0]).toHaveProperty('updatedAt');
-				expect(res3.body.data[0]).toHaveProperty('workoutId');
+				expect(res3.body.data[0]).toHaveProperty('parentId');
 				expect(res3.body.data[0]).toHaveProperty('score');
 				expect(res3.body.data[0]).toHaveProperty('rx');
 				done();

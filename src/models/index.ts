@@ -5,7 +5,7 @@ const CONN_TO = 30000;
 const KEEP_ALIVE = 5000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 
-export default class Models {
+export class Models {
 	public logger: Logger;
 	public mongoose: mongoose.Mongoose;
 	public reconnectTimer: NodeJS.Timer | undefined;

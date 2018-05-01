@@ -3,11 +3,13 @@ import { validateObjectId } from '../middleware/objectid.validator';
 import { Logger } from '../utils/logger/logger';
 
 export default class BaseRouter {
+	public path: string;
 	public logger: Logger;
 	public router: Router;
 
-	constructor(public options: any = {}, loggerName: string) {
-		this.logger = options.logger || new Logger(loggerName);
+	constructor(public options: any = {}, moduleName: string) {
+		this.path = moduleName;
+		this.logger = options.logger || new Logger(`router:${moduleName}`);
 		this.router = Router();
 	}
 

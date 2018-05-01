@@ -3,8 +3,8 @@ import * as express from 'express';
 import * as config from 'config';
 import { Connection } from 'mongoose';
 
-import RouterUtils from './utils/router.utils';
-import Models from './models';
+import { RouterUtils } from './utils/router.utils';
+import { Models } from './models';
 import { Logger } from './utils/logger/logger';
 
 export default class Server {
