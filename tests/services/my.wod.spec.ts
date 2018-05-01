@@ -5,7 +5,7 @@ import * as HttpStatus from 'http-status-codes';
 import * as sqlite from 'sqlite';
 
 import { MyWodService } from '../../src/services/my.wod';
-import { WorkoutService } from '../../src/services/workout';
+import { TrainingService } from '../../src/services/training';
 
 describe('MywodService', () => {
 	const user: any = {
@@ -18,7 +18,7 @@ describe('MywodService', () => {
 	let db, _db: sinon.SinonMock;
 	let _fs: sinon.SinonMock;
 	let service: MyWodService, _service: sinon.SinonMock;
-	let workoutService, _workoutService: sinon.SinonMock;
+	let trainingService, _trainingService: sinon.SinonMock;
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
 	let MockModel: any = function () {
@@ -48,18 +48,14 @@ describe('MywodService', () => {
 		_modelInstance = sinon.mock(modelInstance);
 		_model = sinon.mock(MockModel);
 
-		workoutService = new WorkoutService({
-			'workoutModel': _model,
-			'workoutScoreModel': _model,
-			'logger': logger
-		});
-		_workoutService = sinon.mock(workoutService);
+		trainingService = new TrainingService(MockModel, MockModel);
+		_trainingService = sinon.mock(trainingService);
 
 		const options = {
 			'userModel': MockModel,
 			'workoutModel': MockModel,
 			'workoutScoreModel': MockModel,
-			'workoutService': workoutService,
+			'workoutService': trainingService,
 			'movementModel': MockModel,
 			'movementScoreModel': MockModel,
 			'logger': logger
@@ -226,9 +222,9 @@ describe('MywodService', () => {
 		];
 
 		it('should save workout scores', async () => {
-			_workoutService.expects('getWorkoutByTitle').resolves({ 'id': 'workoutId' });
+			_trainingService.expects('getByFilter').resolves({ 'id': 'workoutId' });
 			_modelInstance.expects('save').once().resolves();
-			_workoutService.expects('getWorkoutByTitle').resolves();
+			_trainingService.expects('getByFilter').resolves();
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
@@ -236,7 +232,7 @@ describe('MywodService', () => {
 		});
 
 		it('should not care about failed score migration', async () => {
-			_workoutService.expects('getWorkoutByTitle').twice().resolves({ 'id': 'workoutId' });
+			_trainingService.expects('getByFilter').twice().resolves({ 'id': 'workoutId' });
 			_modelInstance.expects('save').twice().rejects();
 
 			const promise = service.saveWorkoutScores(user, scores);

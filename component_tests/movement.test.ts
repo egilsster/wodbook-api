@@ -207,7 +207,7 @@ describe('Movement component tests', () => {
 				expect(res2.body.data).toHaveProperty('_id');
 				expect(res2.body.data).toHaveProperty('createdAt', new Date(scoreDate).toISOString());
 				expect(res2.body.data).toHaveProperty('updatedAt');
-				expect(res2.body.data).toHaveProperty('movementId', movementId);
+				expect(res2.body.data).toHaveProperty('parentId', movementId);
 				expect(res2.body.data).toHaveProperty('score', '200kg');
 
 				const res3 = await request.get(`movements/${movementId}/scores`, {
@@ -223,7 +223,7 @@ describe('Movement component tests', () => {
 				expect(res3.body.data[0]).toHaveProperty('_id');
 				expect(res3.body.data[0]).toHaveProperty('createdAt');
 				expect(res3.body.data[0]).toHaveProperty('updatedAt');
-				expect(res3.body.data[0]).toHaveProperty('movementId');
+				expect(res3.body.data[0]).toHaveProperty('parentId');
 				expect(res3.body.data[0]).toHaveProperty('score');
 				done();
 			} catch (err) {

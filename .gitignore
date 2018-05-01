@@ -2,6 +2,7 @@
 npm-debug.log*
 .npmrc
 package-lock.json
+yarn.lock
 version.txt
 npm-versions.txt
 node_modules/

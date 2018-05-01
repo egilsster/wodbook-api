@@ -2,18 +2,22 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 
-import { MovementService } from '../services/movement';
 import BaseRouter from './base';
 import requireJSON from '../middleware/require.json';
 import { ExpressError } from '../utils/express.error';
+import { TrainingService } from '../services/training';
+import { MovementModel } from '../models/movement';
+import { MovementScoreModel } from '../models/movement.score';
 
 export class MovementRouter extends BaseRouter {
 	public path: string = 'movements';
-	private movementService: MovementService;
+	private trainingService: TrainingService;
 
 	constructor(options: any = {}) {
 		super(options, 'router:movement');
-		this.movementService = options.movementService || new MovementService(options);
+		const model = this.options.movementModel || new MovementModel().createModel();
+		const scoreModel = this.options.movementScoreModel || new MovementScoreModel().createModel();
+		this.trainingService = options.trainingService || new TrainingService(model, scoreModel);
 		this.initRoutes();
 	}
 
@@ -37,7 +41,7 @@ export class MovementRouter extends BaseRouter {
 
 	async list(req: express.Request, res: express.Response) {
 		const userId: string = req['user'].id;
-		const movements = await this.movementService.getMovements(userId);
+		const movements = await this.trainingService.getMany(userId);
 		return res.status(200).send({
 			'data': movements
 		});
@@ -48,7 +52,7 @@ export class MovementRouter extends BaseRouter {
 		const userId: string = req['user'].id;
 
 		try {
-			const data = await this.movementService.getMovement(userId, movementId);
+			const data = await this.trainingService.getOne(userId, movementId);
 			if (!data) {
 				throw new ExpressError('Movement not found', HttpStatus.NOT_FOUND);
 			}
@@ -65,7 +69,7 @@ export class MovementRouter extends BaseRouter {
 		try {
 			const movementData: any = req.body.data;
 			movementData.createdBy = req['user'].id;
-			const data = await this.movementService.createMovement(movementData);
+			const data = await this.trainingService.create(movementData);
 
 			return res.status(HttpStatus.CREATED).send({
 				'data': data
@@ -80,7 +84,7 @@ export class MovementRouter extends BaseRouter {
 		const userId: string = req['user'].id;
 
 		try {
-			const data = await this.movementService.getMovementScores(userId, movementId);
+			const data = await this.trainingService.getScores(userId, movementId);
 
 			return res.send({
 				'data': data
@@ -95,7 +99,7 @@ export class MovementRouter extends BaseRouter {
 			const workoutId: string = req.params.id;
 			const userId: string = req['user'].id;
 			const score: any = req.body.data;
-			const data = await this.movementService.addScore(userId, workoutId, score);
+			const data = await this.trainingService.addScore(userId, workoutId, score);
 
 			return res.status(HttpStatus.CREATED).send({
 				'data': data

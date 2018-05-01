@@ -4,25 +4,46 @@ import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 
 import { MovementRouter } from '../../src/routes/movement';
-import { MovementService } from '../../src/services/movement';
+import { TrainingService } from '../../src/services/training';
 import { ExpressError } from '../../src/utils/express.error';
-import RouterUtils from '../../src/utils/router.utils';
+import { RouterUtils } from '../../src/utils/router.utils';
 
 describe('Movement endpoint', () => {
 	const user = {
 		'id': 'userId',
 		'email': 'user@email.com'
 	};
+	const movement: any = {
+		'id': '5a4704ca46425f97c638bcaa',
+		'name': 'Snatch',
+		'scores': [],
+		'measurement': 'weight',
+		'createdBy': user.id,
+		'createdAt': new Date(),
+		'modifiedAt': new Date()
+	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let movementRouter: MovementRouter;
 	let movementMongo;
-	let movementService: MovementService;
-	let _movementService: sinon.SinonMock;
+	let trainingService: TrainingService;
+	let _trainingService: sinon.SinonMock;
 	let app: express.Application;
 
+	let modelInstance, _modelInstance: sinon.SinonMock;
+	let MockModel: any = function () {
+		this.id = '5a4704ca46425f97c638bcaa';
+		this.name = 'Snatch';
+		this.scores = [];
+		this.save = () => movement;
+		return modelInstance;
+	};
+	MockModel.find = () => { };
+	MockModel.findOne = () => { };
+	MockModel.ensureIndexes = () => { };
+
 	beforeEach(() => {
-		movementService = new MovementService();
-		_movementService = sinon.mock(movementService);
+		trainingService = new TrainingService(MockModel, MockModel);
+		_trainingService = sinon.mock(trainingService);
 
 		movementMongo = {
 			'id': '5a4704ca46425f97c638bcaa',
@@ -37,7 +58,7 @@ describe('Movement endpoint', () => {
 		};
 
 		movementRouter = new MovementRouter({
-			movementService,
+			trainingService,
 			logger
 		});
 		movementRouter.initRoutes();
@@ -53,11 +74,11 @@ describe('Movement endpoint', () => {
 	});
 
 	afterEach(() => {
-		_movementService.restore();
+		_trainingService.restore();
 	});
 
 	function verifyAll() {
-		_movementService.verify();
+		_trainingService.verify();
 	}
 
 	it('should create instance of router when no options are given', () => {
@@ -67,7 +88,7 @@ describe('Movement endpoint', () => {
 
 	describe('GET /movements query parameters', () => {
 		it('200 GET /movements without query parameters returns a list of movements', (done) => {
-			_movementService.expects('getMovements').returns([movementMongo]);
+			_trainingService.expects('getMany').returns([movementMongo]);
 			request.get('/')
 				.expect(HttpStatus.OK)
 				.end((err, res) => {
@@ -82,7 +103,7 @@ describe('Movement endpoint', () => {
 
 	describe('GET /movements/{id}', () => {
 		it('200 Get specific movement.', (done) => {
-			_movementService.expects('getMovement').withArgs(user.id, movementMongo.id).resolves(movementMongo);
+			_trainingService.expects('getOne').withArgs(user.id, movementMongo.id).resolves(movementMongo);
 
 			request.get(`/${movementMongo.id}`)
 				.expect(HttpStatus.OK)
@@ -96,7 +117,7 @@ describe('Movement endpoint', () => {
 		});
 
 		it('404 The specified movement does not exist', (done) => {
-			_movementService.expects('getMovement').withArgs(user.id, movementMongo.id).resolves(null);
+			_trainingService.expects('getOne').withArgs(user.id, movementMongo.id).resolves(null);
 			request.get(`/${movementMongo.id}`)
 				.expect(HttpStatus.NOT_FOUND)
 				.end((err, res) => {
@@ -108,10 +129,10 @@ describe('Movement endpoint', () => {
 	});
 
 	describe('POST /movements', () => {
-		let createMovementPostBody;
+		let createPostBody;
 
 		beforeEach(() => {
-			createMovementPostBody = {
+			createPostBody = {
 				'data': {
 					'createdBy': user.id,
 					'name': 'wodBook'
@@ -131,11 +152,11 @@ describe('Movement endpoint', () => {
 		});
 
 		it('201 Successful movement creation', async (done) => {
-			_movementService.expects('createMovement').withArgs(createMovementPostBody.data).returns(movementMongo);
+			_trainingService.expects('create').withArgs(createPostBody.data).returns(movementMongo);
 
 			try {
 				const res = await request.post('/')
-					.send(createMovementPostBody);
+					.send(createPostBody);
 				expect(res.status).toBe(HttpStatus.CREATED);
 				expect(res.body.data).toEqual(movementMongo);
 				verifyAll();
@@ -146,11 +167,11 @@ describe('Movement endpoint', () => {
 		});
 
 		it('should return 500 if movement could not be created', async (done) => {
-			_movementService.expects('createMovement').withArgs(createMovementPostBody.data).rejects();
+			_trainingService.expects('create').withArgs(createPostBody.data).rejects();
 
 			try {
 				const res = await request.post('/')
-					.send(createMovementPostBody);
+					.send(createPostBody);
 				expect(res.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
 				verifyAll();
 				done();
@@ -164,7 +185,7 @@ describe('Movement endpoint', () => {
 		const scores = ['score1', 'score2'];
 
 		it('should return 200 with a non-empty list of scores for a movement if it has scores registered', async (done) => {
-			_movementService.expects('getMovementScores').withExactArgs(user.id, movementMongo.id).resolves(scores);
+			_trainingService.expects('getScores').withExactArgs(user.id, movementMongo.id).resolves(scores);
 
 			try {
 				const res = await request.get(`/${movementMongo.id}/scores`);
@@ -178,7 +199,7 @@ describe('Movement endpoint', () => {
 		});
 
 		it('should return 200 with an empty list of scores for a movement if it has no scores', async (done) => {
-			_movementService.expects('getMovementScores').withExactArgs(user.id, movementMongo.id).resolves([]);
+			_trainingService.expects('getScores').withExactArgs(user.id, movementMongo.id).resolves([]);
 
 			try {
 				const res = await request.get(`/${movementMongo.id}/scores`);
@@ -193,7 +214,7 @@ describe('Movement endpoint', () => {
 
 		it('should return 404 if the specified movement does not exist', async (done) => {
 			const err = new ExpressError(`Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_movementService.expects('getMovementScores').withExactArgs(user.id, movementMongo.id).throws(err);
+			_trainingService.expects('getScores').withExactArgs(user.id, movementMongo.id).throws(err);
 
 			try {
 				const res = await request.get(`/${movementMongo.id}/scores`);
@@ -212,7 +233,7 @@ describe('Movement endpoint', () => {
 		const score = { 'movementId': 'movementId' };
 
 		it('should return 201 if score is successfully added to movement', async (done) => {
-			_movementService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).resolves(score);
+			_trainingService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).resolves(score);
 
 			try {
 				const res = await request.post(`/${movementMongo.id}/scores`).send({ 'data': score });
@@ -227,7 +248,7 @@ describe('Movement endpoint', () => {
 
 		it('should return 404 if the specified movement does not exist', async (done) => {
 			const err = new ExpressError(`Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_movementService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).rejects(err);
+			_trainingService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).rejects(err);
 
 			try {
 				const res = await request.post(`/${movementMongo.id}/scores`).send({ 'data': score });

@@ -3,7 +3,7 @@ import { BaseModel } from './base';
 import { MyWodUtils } from '../utils/my.wod.utils';
 
 export type WorkoutScoreType = mongoose.Document & {
-	workoutId: mongoose.Schema.Types.ObjectId;
+	parentId: mongoose.Schema.Types.ObjectId;
 	score: string;
 	rx: boolean;
 	measurement: string;
@@ -16,7 +16,7 @@ export type WorkoutScoreType = mongoose.Document & {
 export class WorkoutScoreModel extends BaseModel {
 	private static NAME = 'WorkoutScore';
 	private static DEFINITION = {
-		'workoutId': {
+		'parentId': {
 			'type': mongoose.Schema.Types.ObjectId,
 			'ref': 'Workout'
 		},

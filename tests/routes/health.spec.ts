@@ -1,7 +1,7 @@
 import * as supertest from 'supertest';
 import * as express from 'express';
 
-import HealthRouter from '../../src/routes/health';
+import { HealthRouter } from '../../src/routes/health';
 
 describe('Health endpoint', () => {
 	let app: express.Application;
