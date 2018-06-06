@@ -1,5 +1,5 @@
 import * as sinon from 'sinon';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 
 import { UserService } from '../../src/services/user';
 

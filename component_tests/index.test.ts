@@ -1,5 +1,5 @@
 import * as request from 'request-promise';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import CompTestInit from './init';
 
 describe('Wodbook General Tests', () => {
