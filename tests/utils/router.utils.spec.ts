@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import * as express from 'express';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import { MongoError } from 'mongodb';
 import { RouterUtils } from '../../src/utils/router.utils';
 import { ExpressError } from '../../src/utils/express.error';

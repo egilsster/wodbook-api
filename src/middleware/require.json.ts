@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import { ExpressError } from '../utils/express.error';
 
 export default function requireJSON(req: express.Request, _res: express.Response, next: express.NextFunction) {

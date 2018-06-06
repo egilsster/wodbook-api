@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import * as sqlite from 'sqlite';
 
 import { MyWodService } from '../../src/services/my.wod';

@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import * as bodyParser from 'body-parser';
 
 import BaseRouter from './base';

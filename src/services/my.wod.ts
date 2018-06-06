@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as mongoose from 'mongoose';
 import * as sqlite from 'sqlite';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import * as _ from 'lodash';
 
 import { UserModel, UserType } from '../models/user';
