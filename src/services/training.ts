@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import { ExpressError } from '../utils/express.error';
 import { QueryUtils } from '../utils/query.utils';
 import { MovementScoreType } from '../models/movement.score';

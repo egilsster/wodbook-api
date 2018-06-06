@@ -1,7 +1,7 @@
 import * as supertest from 'supertest';
 import * as sinon from 'sinon';
 import * as express from 'express';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 
 import { WorkoutRouter } from '../../src/routes/workout';
 import { TrainingService } from '../../src/services/training';

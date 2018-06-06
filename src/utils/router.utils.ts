@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as express from 'express';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 import * as bearerToken from 'express-bearer-token';
 import * as expressWinston from 'express-winston';
 import * as config from 'config';

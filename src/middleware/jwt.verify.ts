@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken';
-import * as HttpStatus from 'http-status-codes';
+const HttpStatus = require('http-status-codes');
 
 export default (cert) => {
 	return (req, res, next) => {
