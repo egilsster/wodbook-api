@@ -55,7 +55,7 @@
     "@types/supertest": "^2.0.4",
     "@types/winston": "^2.3.7",
     "body-parser": "^1.18.2",
-    "config": "^1.30.0",
+    "config": "^2.0.0",
     "continuation-local-storage": "^3.2.1",
     "express": "^4.16.2",
     "express-bearer-token": "^2.1.1",
