@@ -5,7 +5,7 @@ import JwtVerify from '../../src/middleware/jwt.verify';
 
 describe('JwtVerify', () => {
 	const secret = 'testing';
-	const jwtVerify = JwtVerify(btoa(secret));
+	const jwtVerify = JwtVerify(Buffer.from(secret).toString('base64'));
 	const payload = { 'email': 'user@email.com' };
 	let token: string;
 	let res;
@@ -41,7 +41,7 @@ describe('JwtVerify', () => {
 	});
 
 	it('should call sendStatus with 401 Unauthorized if JWT is not valid', () => {
-		const invalidToken = jwt.sign(payload, btoa('incorrectSeceret'));
+		const invalidToken = jwt.sign(payload, Buffer.from('incorrectSecret').toString('base64'));
 		const req = { token: invalidToken };
 		_res.expects('sendStatus').calledWith(HttpStatus.UNAUTHORIZED);
 
