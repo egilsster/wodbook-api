@@ -68,7 +68,7 @@
     "request-promise": "^4.2.2",
     "sqlite": "^3.0.0",
     "typescript": "^2.7.2",
-    "winston": "^2.4.0"
+    "winston": "^3.0.1"
   },
   "devDependencies": {
     "codeclimate-test-reporter": "^0.5.0",
