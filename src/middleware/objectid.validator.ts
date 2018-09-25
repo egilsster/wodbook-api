@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import * as _ from 'lodash';
 import { ExpressError } from '../utils/express.error';
 

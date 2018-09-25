@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import * as sqlite from 'sqlite';
 
 import { MyWodService } from '../../src/services/my.wod';
@@ -21,13 +21,11 @@ describe('MywodService', () => {
 	let trainingService, _trainingService: sinon.SinonMock;
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
-	let MockModel: any = function () {
-		this._id = 'someId';
-		this.title = 'someTitle';
-		this.save = () => { };
-		return modelInstance;
-	};
-	MockModel.findOne = () => { };
+	class MockModel {
+		constructor() { return modelInstance; }
+		save() { return null; }
+		static findOne() { return null; }
+	}
 
 	beforeEach(() => {
 		const logger = {
@@ -66,22 +64,13 @@ describe('MywodService', () => {
 	});
 
 	afterEach(() => {
-		_sqlite.restore();
-		_db.restore();
-		_fs.restore();
-		_model.restore();
-		_service.restore();
-		_modelInstance.restore();
-	});
-
-	function verifyAll() {
 		_sqlite.verify();
 		_db.verify();
 		_fs.verify();
 		_model.verify();
 		_service.verify();
 		_modelInstance.verify();
-	}
+	});
 
 	it('should create an instance without any options', () => {
 		const service = new MyWodService();
@@ -108,7 +97,6 @@ describe('MywodService', () => {
 
 				const promise = service.saveAthlete(user, userData);
 				await expect(promise).resolves.toEqual(userData);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -119,7 +107,6 @@ describe('MywodService', () => {
 			try {
 				const promise = service.saveAthlete({ 'email': 'another@email.com' }, userData);
 				await expect(promise).rejects.toHaveProperty('status', HttpStatus.FORBIDDEN);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -132,7 +119,6 @@ describe('MywodService', () => {
 
 				const promise = service.saveAthlete(user, userData);
 				await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -163,7 +149,6 @@ describe('MywodService', () => {
 				const res = await service.saveWorkouts(user, workouts);
 				expect(res).toBeInstanceOf(Array);
 				expect(res.length).toBe(1);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -177,7 +162,6 @@ describe('MywodService', () => {
 				const res = await service.saveWorkouts(user, workouts);
 				expect(res).toBeInstanceOf(Array);
 				expect(res.length).toBe(0);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -228,7 +212,6 @@ describe('MywodService', () => {
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
-			verifyAll();
 		});
 
 		it('should not care about failed score migration', async () => {
@@ -237,7 +220,6 @@ describe('MywodService', () => {
 
 			const promise = service.saveWorkoutScores(user, scores);
 			await expect(promise).resolves.toBeUndefined();
-			verifyAll();
 		});
 	});
 
@@ -320,7 +302,6 @@ describe('MywodService', () => {
 
 				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
 				expect(savedMovements.length).toBe(3);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -336,7 +317,6 @@ describe('MywodService', () => {
 
 				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
 				expect(savedMovements.length).toBe(1);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -353,7 +333,6 @@ describe('MywodService', () => {
 
 				const savedMovements = await service.saveMovementsAndMovementScores(user, movements, movementScores);
 				expect(savedMovements.length).toBe(3);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -378,7 +357,6 @@ describe('MywodService', () => {
 				expect(res).toHaveProperty('movements');
 				expect(res).toHaveProperty('movementScores');
 				expect(res).toHaveProperty('workoutScores');
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -394,7 +372,6 @@ describe('MywodService', () => {
 			_fs.expects('unlinkSync').withArgs(fullPath);
 
 			service.deleteDatabaseFile(filename);
-			verifyAll();
 		});
 	});
 
@@ -407,7 +384,6 @@ describe('MywodService', () => {
 			const res = service.resolvePath(filename);
 			expect(res).toEqual('fullPath');
 			_pathResolve.restore();
-			verifyAll();
 		});
 	});
 });

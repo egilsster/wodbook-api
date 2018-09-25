@@ -1,13 +1,8 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as sinon from 'sinon';
-const HttpStatus = require('http-status-codes');
-import * as sqlite from 'sqlite';
+import * as HttpStatus from 'http-status-codes';
 
 import { ExpressError } from '../../src/utils/express.error';
 import { TrainingService } from '../../src/services/training';
-import { MovementScoreType } from '../../src/models/movement.score';
-import { MovementType } from '../../src/models/movement';
 import { QueryUtils } from '../../src/utils/query.utils';
 
 describe('TrainingService', () => {
@@ -35,47 +30,28 @@ describe('TrainingService', () => {
 	let service: TrainingService, _service: sinon.SinonMock;
 	let modelInstance, _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
-	let MockModel: any = function () {
-		this.id = '5a4704ca46425f97c638bcaa';
-		this.name = 'Snatch';
-		this.scores = [];
-		this.save = () => movement;
-		return modelInstance;
-	};
-	MockModel.find = () => { };
-	MockModel.findOne = () => { };
-	MockModel.ensureIndexes = () => { };
+	class MockModel {
+		constructor() { return modelInstance; }
+		save() { return null; }
+		static find() { return null; }
+		static findOne() { return null; }
+		static ensureIndexes() { return null; }
+	}
 
 	beforeEach(() => {
 		modelInstance = new MockModel();
 		_modelInstance = sinon.mock(modelInstance);
 		_model = sinon.mock(MockModel);
 
-		const options = {
-			'movementModel': MockModel,
-			'movementScoreModel': MockModel,
-			'logger': {
-				info() { },
-				warn() { },
-				error() { }
-			}
-		};
-
 		service = new TrainingService(MockModel, MockModel);
 		_service = sinon.mock(service);
 	});
 
 	afterEach(() => {
-		_model.restore();
-		_service.restore();
-		_modelInstance.restore();
-	});
-
-	function verifyAll() {
 		_model.verify();
 		_service.verify();
 		_modelInstance.verify();
-	}
+	});
 
 	describe('getMany', () => {
 		it('should return list of items', async () => {
@@ -84,7 +60,6 @@ describe('TrainingService', () => {
 
 			const res = await service.getMany(user.id);
 			expect(res).toEqual(items);
-			verifyAll();
 		});
 	});
 
@@ -94,7 +69,6 @@ describe('TrainingService', () => {
 
 			const res = await service.getOne(user.id, movement.id);
 			expect(res).toEqual(movement);
-			verifyAll();
 		});
 
 		it('should get nothing if item does not exist', async () => {
@@ -102,7 +76,6 @@ describe('TrainingService', () => {
 
 			const res = await service.getOne(user.id, 'notId');
 			expect(res).toEqual(null);
-			verifyAll();
 		});
 	});
 
@@ -113,7 +86,6 @@ describe('TrainingService', () => {
 
 			const res = await service.getByFilter(user.id, filter);
 			expect(res).toEqual(movement);
-			verifyAll();
 		});
 	});
 
@@ -124,7 +96,6 @@ describe('TrainingService', () => {
 
 			const res = await service.getScores(user.id, movement.id);
 			expect(res).toEqual([]);
-			verifyAll();
 		});
 
 		it('should throw error if item does not exist', async () => {
@@ -133,7 +104,6 @@ describe('TrainingService', () => {
 
 			const promise = service.getScores(user.id, movement.id);
 			await expect(promise).rejects.toEqual(err);
-			verifyAll();
 		});
 	});
 
@@ -143,7 +113,6 @@ describe('TrainingService', () => {
 
 			const promise = service.create(movement);
 			await expect(promise).resolves.toEqual(movement);
-			verifyAll();
 		});
 
 		it('should throw 409 Conflict if item exists for this user', async () => {
@@ -151,7 +120,6 @@ describe('TrainingService', () => {
 
 			const promise = service.create(movement);
 			await expect(promise).rejects.toBeDefined();
-			verifyAll();
 		});
 	});
 
@@ -162,7 +130,6 @@ describe('TrainingService', () => {
 
 			const promise = service.addScore(user.id, movement.id, score);
 			await expect(promise).resolves.toEqual('data');
-			verifyAll();
 		});
 
 		it('should throw 404 Not found if item does not exist', async () => {
@@ -170,7 +137,6 @@ describe('TrainingService', () => {
 
 			const promise = service.addScore(user.id, movement.id, score);
 			await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
-			verifyAll();
 		});
 	});
 });

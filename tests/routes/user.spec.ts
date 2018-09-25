@@ -1,14 +1,12 @@
 import * as supertest from 'supertest';
 import * as sinon from 'sinon';
 import * as express from 'express';
-const HttpStatus = require('http-status-codes');
-import * as jwt from 'jsonwebtoken';
+import * as HttpStatus from 'http-status-codes';
 
 import { UserService } from '../../src/services/user';
 import { UserRouter } from '../../src/routes/user';
-import { JwtUtils } from '../../src/utils/jwt.utils';
 
-describe('User endpoint', function () {
+describe('User endpoint', () => {
 	const user = {
 		'id': 'userId',
 		'email': 'user@email.com'
@@ -20,7 +18,7 @@ describe('User endpoint', function () {
 	let _userService: sinon.SinonMock;
 	let app: express.Application;
 
-	beforeEach(function () {
+	beforeEach(() => {
 		userService = new UserService();
 		_userService = sinon.mock(userService);
 
@@ -53,7 +51,7 @@ describe('User endpoint', function () {
 		});
 		userRouter.initRoutes();
 		app = express();
-		app.use((req, res, next) => {
+		app.use((req, _res, next) => {
 			req['user'] = user;
 			next();
 		});
@@ -61,20 +59,16 @@ describe('User endpoint', function () {
 		request = supertest(app);
 	});
 
-	afterEach(function () {
-		_userService.restore();
-	});
-
-	function verifyAll() {
+	afterEach(() => {
 		_userService.verify();
-	}
+	});
 
 	it('should create instance of router when no options are given', () => {
 		const router = new UserRouter();
 		expect(router).toBeDefined();
 	});
 
-	describe('GET /me', function () {
+	describe('GET /me', () => {
 		it('should get 200 OK when user on the request exists', async (done) => {
 			_userService.expects('getUser').resolves(userMongo);
 
@@ -98,7 +92,6 @@ describe('User endpoint', function () {
 				expect(user).not.toHaveProperty('id');
 				expect(user).not.toHaveProperty('password');
 				expect(user).not.toHaveProperty('admin');
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -111,7 +104,6 @@ describe('User endpoint', function () {
 			try {
 				const res = await request.get('/me');
 				expect(res.status).toEqual(HttpStatus.NOT_FOUND);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);

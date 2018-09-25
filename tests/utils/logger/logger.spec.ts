@@ -1,4 +1,3 @@
-import * as sinon from 'sinon';
 import * as winston from 'winston';
 import * as _ from 'lodash';
 import * as cls from 'continuation-local-storage';

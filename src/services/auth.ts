@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import { UserModel, UserType } from '../models/user';
 import { ExpressError } from '../utils/express.error';
 

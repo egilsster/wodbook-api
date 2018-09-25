@@ -1,5 +1,5 @@
 import * as sinon from 'sinon';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import * as jwt from 'jsonwebtoken';
 import JwtVerify from '../../src/middleware/jwt.verify';
 
@@ -23,13 +23,9 @@ describe('JwtVerify', () => {
 	});
 
 	afterEach(() => {
-		_res.restore();
+		_res.verify();
 		_next.reset();
 	});
-
-	function verifyAll() {
-		_res.verify();
-	}
 
 	it('should call next if JWT is valid', () => {
 		const req = { token };
@@ -37,7 +33,6 @@ describe('JwtVerify', () => {
 
 		expect(_next.callCount).toBe(1);
 		expect(req).toHaveProperty('user');
-		verifyAll();
 	});
 
 	it('should call sendStatus with 401 Unauthorized if JWT is not valid', () => {

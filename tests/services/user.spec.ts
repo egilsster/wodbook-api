@@ -1,5 +1,4 @@
 import * as sinon from 'sinon';
-const HttpStatus = require('http-status-codes');
 
 import { UserService } from '../../src/services/user';
 
@@ -13,22 +12,20 @@ describe('UserService', () => {
 	let modelInstance;
 	let _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
-	let UserModel: any = function () {
-		this.id = 'userId';
-		this.email = 'user@email.com';
-		this.save = () => user;
-		return modelInstance;
-	};
-	UserModel.find = () => { };
-	UserModel.findOne = () => { };
+	class MockModel {
+		constructor() { return modelInstance; }
+		save() { return null; }
+		static find() { return null; }
+		static findOne() { return null; }
+	}
 
 	beforeEach(() => {
-		modelInstance = new UserModel();
+		modelInstance = new MockModel();
 		_modelInstance = sinon.mock(modelInstance);
-		_model = sinon.mock(UserModel);
+		_model = sinon.mock(MockModel);
 
 		const options = {
-			'userModel': UserModel,
+			'userModel': MockModel,
 			'logger': {
 				info() { },
 				warn() { },
@@ -41,16 +38,10 @@ describe('UserService', () => {
 	});
 
 	afterEach(() => {
-		_model.restore();
-		_service.restore();
-		_modelInstance.restore();
-	});
-
-	function verifyAll() {
 		_model.verify();
 		_service.verify();
 		_modelInstance.verify();
-	}
+	});
 
 	it('should create an instance without any options', () => {
 		const service = new UserService();
@@ -64,7 +55,6 @@ describe('UserService', () => {
 
 			const res = await service.getUsers();
 			expect(res).toEqual(items);
-			verifyAll();
 		});
 	});
 
@@ -74,7 +64,6 @@ describe('UserService', () => {
 
 			const res = await service.getUser(user);
 			expect(res).toEqual(user);
-			verifyAll();
 		});
 	});
 });

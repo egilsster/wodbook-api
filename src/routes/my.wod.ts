@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as multer from 'multer';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 
 import { ExpressError } from '../utils/express.error';
 import BaseRouter from './base';
