@@ -1,4 +1,4 @@
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 
 export class ExpressError extends Error {
 	public title: string;

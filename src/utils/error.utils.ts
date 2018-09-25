@@ -1,4 +1,4 @@
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import { ExpressError } from '../utils/express.error';
 
 const MONGO_ERROR_DUPLICATE_KEY_ON_INSERT = 11000;

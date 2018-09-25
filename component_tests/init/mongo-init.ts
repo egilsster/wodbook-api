@@ -1,5 +1,4 @@
 import { MongoClient, Db } from 'mongodb';
-import * as _ from 'lodash';
 import users from '../data/users';
 
 export default class MongoInit {
@@ -33,7 +32,7 @@ export default class MongoInit {
 	public async initCollection(db: Db, collectionName: string, data: object[]) {
 		try {
 			const collection = await db.collection(collectionName);
-			const res = await collection.insertMany(data);
+			await collection.insertMany(data);
 			return;
 		} catch (err) {
 			throw err;

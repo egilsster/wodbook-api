@@ -1,7 +1,7 @@
 {
   "testEnvironment": "node",
   "transform": {
-    "^.+\\.ts$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    "^.+\\.ts$": "ts-jest"
   },
   "testRegex": "(component_tests)/.*\\.test\\.(ts)$",
   "moduleFileExtensions": [

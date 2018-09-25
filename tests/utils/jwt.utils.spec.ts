@@ -6,7 +6,7 @@ describe('JwtUtils', () => {
 		it('should return a token that expires in 12h', () => {
 			const token = JwtUtils.signToken({ 'user': 'test' }, 'secret');
 
-			const decoded = jwt.decode(token);
+			const decoded = jwt.decode(token) || {};
 			const expiresIn = (decoded['exp'] - decoded['iat']) / 60 / 60;
 			expect(expiresIn).toEqual(12);
 		});
@@ -14,7 +14,7 @@ describe('JwtUtils', () => {
 		it('should return token with payload', () => {
 			const token = JwtUtils.signToken({ 'user': 'test' }, 'secret');
 
-			const decoded = jwt.decode(token);
+			const decoded = jwt.decode(token) || {};
 			expect(decoded).toHaveProperty('user', 'test');
 		});
 	});

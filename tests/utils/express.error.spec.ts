@@ -1,4 +1,4 @@
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import { ExpressError } from '../../src/utils/express.error';
 
 describe('ExpressError', () => {

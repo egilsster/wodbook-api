@@ -1,5 +1,5 @@
 import * as request from 'request-promise';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import CompTestInit from './init';
 import tokens from './data/tokens';
 

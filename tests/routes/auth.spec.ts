@@ -1,14 +1,13 @@
 import * as supertest from 'supertest';
 import * as sinon from 'sinon';
 import * as express from 'express';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import * as jwt from 'jsonwebtoken';
 
 import { AuthService } from '../../src/services/auth';
 import { AuthRouter } from '../../src/routes/auth';
-import { JwtUtils } from '../../src/utils/jwt.utils';
 
-describe('Auth endpoint', function () {
+describe('Auth endpoint', () => {
 	const user = {
 		'id': 'userId',
 		'email': 'user@email.com'
@@ -21,7 +20,7 @@ describe('Auth endpoint', function () {
 	let app: express.Application;
 	let token: string;
 
-	beforeAll(function () {
+	beforeAll(() => {
 		authService = new AuthService();
 		_authService = sinon.mock(authService);
 
@@ -55,7 +54,7 @@ describe('Auth endpoint', function () {
 		authRouter.initRoutes();
 		token = jwt.sign(user, cert);
 		app = express();
-		app.use((req, res, next) => {
+		app.use((req, _res, next) => {
 			req['token'] = token;
 			next();
 		});
@@ -64,12 +63,8 @@ describe('Auth endpoint', function () {
 	});
 
 	afterEach(() => {
-		_authService.restore();
-	});
-
-	function verifyAll() {
 		_authService.verify();
-	}
+	});
 
 	it('should create instance of router when no options are given', () => {
 		const router = new AuthRouter();
@@ -93,7 +88,6 @@ describe('Auth endpoint', function () {
 				expect(res.body).toBeDefined();
 				expect(res.body.data).toBeDefined();
 				expect(res.body.data).toHaveProperty('token');
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -119,7 +113,6 @@ describe('Auth endpoint', function () {
 				expect(res.body).toBeDefined();
 				expect(res.body.data).toBeDefined();
 				expect(res.body.data).toHaveProperty('token');
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);

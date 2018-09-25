@@ -1,5 +1,5 @@
 ﻿import * as express from 'express';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 import BaseRouter from './base';
 
 export class HealthRouter extends BaseRouter {

@@ -1,7 +1,7 @@
 import * as supertest from 'supertest';
 import * as sinon from 'sinon';
 import * as express from 'express';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 
 import { MovementRouter } from '../../src/routes/movement';
 import { TrainingService } from '../../src/services/training';
@@ -13,33 +13,20 @@ describe('Movement endpoint', () => {
 		'id': 'userId',
 		'email': 'user@email.com'
 	};
-	const movement: any = {
-		'id': '5a4704ca46425f97c638bcaa',
-		'name': 'Snatch',
-		'scores': [],
-		'measurement': 'weight',
-		'createdBy': user.id,
-		'createdAt': new Date(),
-		'modifiedAt': new Date()
-	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let movementRouter: MovementRouter;
 	let movementMongo;
 	let trainingService: TrainingService;
 	let _trainingService: sinon.SinonMock;
 	let app: express.Application;
-
-	let modelInstance, _modelInstance: sinon.SinonMock;
-	let MockModel: any = function () {
-		this.id = '5a4704ca46425f97c638bcaa';
-		this.name = 'Snatch';
-		this.scores = [];
-		this.save = () => movement;
-		return modelInstance;
-	};
-	MockModel.find = () => { };
-	MockModel.findOne = () => { };
-	MockModel.ensureIndexes = () => { };
+	let modelInstance;
+	class MockModel {
+		constructor() { return modelInstance; }
+		save() { return null; }
+		static find() { return null; }
+		static findOne() { return null; }
+		static ensureIndexes() { return null; }
+	}
 
 	beforeEach(() => {
 		trainingService = new TrainingService(MockModel, MockModel);
@@ -64,7 +51,7 @@ describe('Movement endpoint', () => {
 		movementRouter.initRoutes();
 
 		app = express();
-		app.use((req, res, next) => {
+		app.use((req, _res, next) => {
 			req['user'] = user;
 			next();
 		});
@@ -74,12 +61,8 @@ describe('Movement endpoint', () => {
 	});
 
 	afterEach(() => {
-		_trainingService.restore();
-	});
-
-	function verifyAll() {
 		_trainingService.verify();
-	}
+	});
 
 	it('should create instance of router when no options are given', () => {
 		const router = new MovementRouter();
@@ -95,7 +78,6 @@ describe('Movement endpoint', () => {
 					done(err);
 					expect(res.body.data).toBeDefined();
 					expect(res.body.data).toEqual([movementMongo]);
-					verifyAll();
 					done();
 				});
 		});
@@ -111,7 +93,6 @@ describe('Movement endpoint', () => {
 					done(err);
 					expect(res.body).toBeDefined();
 					expect(res.body.data).toEqual(movementMongo);
-					verifyAll();
 					done();
 				});
 		});
@@ -120,9 +101,8 @@ describe('Movement endpoint', () => {
 			_trainingService.expects('getOne').withArgs(user.id, movementMongo.id).resolves(null);
 			request.get(`/${movementMongo.id}`)
 				.expect(HttpStatus.NOT_FOUND)
-				.end((err, res) => {
+				.end((err, _res) => {
 					done(err);
-					verifyAll();
 					done();
 				});
 		});
@@ -144,9 +124,8 @@ describe('Movement endpoint', () => {
 			request.post('/')
 				.send('This is a string')
 				.expect(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-				.end((err, res) => {
+				.end((err, _res) => {
 					done(err);
-					verifyAll();
 					done();
 				});
 		});
@@ -159,7 +138,6 @@ describe('Movement endpoint', () => {
 					.send(createPostBody);
 				expect(res.status).toBe(HttpStatus.CREATED);
 				expect(res.body.data).toEqual(movementMongo);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -173,7 +151,6 @@ describe('Movement endpoint', () => {
 				const res = await request.post('/')
 					.send(createPostBody);
 				expect(res.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -191,7 +168,6 @@ describe('Movement endpoint', () => {
 				const res = await request.get(`/${movementMongo.id}/scores`);
 				expect(res.status).toBe(HttpStatus.OK);
 				expect(res.body).toHaveProperty('data', scores);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -205,7 +181,6 @@ describe('Movement endpoint', () => {
 				const res = await request.get(`/${movementMongo.id}/scores`);
 				expect(res.status).toBe(HttpStatus.OK);
 				expect(res.body).toHaveProperty('data', []);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -221,7 +196,6 @@ describe('Movement endpoint', () => {
 				expect(res.status).toBe(HttpStatus.NOT_FOUND);
 				expect(res.body).toHaveProperty('status', err.status);
 				expect(res.body).toHaveProperty('detail', err.detail);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -239,7 +213,6 @@ describe('Movement endpoint', () => {
 				const res = await request.post(`/${movementMongo.id}/scores`).send({ 'data': score });
 				expect(res.status).toBe(HttpStatus.CREATED);
 				expect(res.body).toHaveProperty('data', score);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);
@@ -255,7 +228,6 @@ describe('Movement endpoint', () => {
 				expect(res.status).toBe(HttpStatus.NOT_FOUND);
 				expect(res.body).toHaveProperty('status', err.status);
 				expect(res.body).toHaveProperty('detail', err.detail);
-				verifyAll();
 				done();
 			} catch (err) {
 				done(err);

@@ -1,5 +1,5 @@
 import * as sinon from 'sinon';
-const HttpStatus = require('http-status-codes');
+import * as HttpStatus from 'http-status-codes';
 
 import { AuthService } from '../../src/services/auth';
 import { UserType } from '../../src/models/user';
@@ -16,12 +16,11 @@ describe('AuthService', () => {
 	let modelInstance;
 	let _modelInstance: sinon.SinonMock;
 	let _model: sinon.SinonMock;
-	let MockModel: any = function () {
-		this.email = 'some@email.com';
-		this.save = () => data;
-		return modelInstance;
-	};
-	MockModel.findOne = () => { };
+	class MockModel {
+		constructor() { return modelInstance; }
+		save() { return null; }
+		static findOne() { return null; }
+	}
 
 	beforeEach(() => {
 		modelInstance = new MockModel();
@@ -42,16 +41,10 @@ describe('AuthService', () => {
 	});
 
 	afterEach(() => {
-		_model.restore();
-		_service.restore();
-		_modelInstance.restore();
-	});
-
-	function verifyAll() {
 		_model.verify();
 		_service.verify();
 		_modelInstance.verify();
-	}
+	});
 
 	it('should create an instance without any options', () => {
 		const service = new AuthService();
@@ -64,7 +57,6 @@ describe('AuthService', () => {
 
 			const promise = service.register(data);
 			await expect(promise).resolves.toEqual(data);
-			verifyAll();
 		});
 	});
 
@@ -74,7 +66,6 @@ describe('AuthService', () => {
 
 			const promise = service.login(data);
 			await expect(promise).resolves.toEqual(data);
-			verifyAll();
 		});
 
 		it('should throw unauthorized exception if user does not exist', async () => {
@@ -82,7 +73,6 @@ describe('AuthService', () => {
 
 			const promise = service.login(data);
 			await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
-			verifyAll();
 		});
 
 		it('should throw unauthorized exception if user exists but password does not match', async () => {
@@ -90,7 +80,6 @@ describe('AuthService', () => {
 
 			const promise = service.login(data);
 			await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
-			verifyAll();
 		});
 	});
 });
