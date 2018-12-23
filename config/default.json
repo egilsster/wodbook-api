@@ -1,8 +1,0 @@
-{
-  "server": {
-    "port": 43210
-  },
-  "webtokens": {
-    "public": "cHVibGljS2V5"
-  }
-}

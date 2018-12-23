@@ -10,8 +10,8 @@ import { RouterUtils } from '../../src/utils/router.utils';
 
 describe('Workout endpoint', () => {
 	const user = {
-		'id': 'userId',
-		'email': 'user@email.com'
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let workoutRouter: WorkoutRouter;
@@ -26,7 +26,7 @@ describe('Workout endpoint', () => {
 		save() { return null; }
 		static find() { return null; }
 		static findOne() { return null; }
-		static ensureIndexes() { return null; }
+		static createIndexes() { return null; }
 	}
 
 	beforeEach(() => {
@@ -34,8 +34,8 @@ describe('Workout endpoint', () => {
 		_trainingService = sinon.mock(trainingService);
 
 		workoutMongo = {
-			'id': '5a4704ca46425f97c638bcaa',
-			'name': 'Fran'
+			id: '5a4704ca46425f97c638bcaa',
+			name: 'Fran'
 		};
 
 		const logger = {
@@ -114,13 +114,13 @@ describe('Workout endpoint', () => {
 
 		beforeEach(() => {
 			createPostBody = {
-				'data': {
-					'createdBy': user.id,
-					'name': 'wodBook',
-					'scores': [
+				data: {
+					createdBy: user.id,
+					name: 'wodBook',
+					scores: [
 						'TBD'
 					],
-					'type': 'bull'
+					type: 'bull'
 				}
 			};
 		});
@@ -209,13 +209,13 @@ describe('Workout endpoint', () => {
 	});
 
 	describe('POST /workouts/{id}/scores', () => {
-		const score = { 'workoutId': 'workoutId' };
+		const score = { workoutId: 'workoutId' };
 
 		it('should return 201 if score is successfully added to workout', async (done) => {
 			_trainingService.expects('addScore').withExactArgs(user.id, workoutMongo.id, score).resolves(score);
 
 			try {
-				const res = await request.post(`/${workoutMongo.id}/scores`).send({ 'data': score });
+				const res = await request.post(`/${workoutMongo.id}/scores`).send({ data: score });
 				expect(res.status).toBe(HttpStatus.CREATED);
 				expect(res.body).toHaveProperty('data', score);
 				done();
@@ -229,7 +229,7 @@ describe('Workout endpoint', () => {
 			_trainingService.expects('addScore').withExactArgs(user.id, workoutMongo.id, score).rejects(err);
 
 			try {
-				const res = await request.post(`/${workoutMongo.id}/scores`).send({ 'data': score });
+				const res = await request.post(`/${workoutMongo.id}/scores`).send({ data: score });
 				expect(res.status).toBe(HttpStatus.NOT_FOUND);
 				expect(res.body).toHaveProperty('status', err.status);
 				expect(res.body).toHaveProperty('detail', err.detail);

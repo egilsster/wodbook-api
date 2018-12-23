@@ -41,7 +41,7 @@ export class TrainingRouter extends BaseRouter {
 		const userId: string = req['user'].id;
 		const item = await this.trainingService.getMany(userId);
 		return res.status(200).send({
-			'data': item
+			data: item
 		});
 	}
 
@@ -56,7 +56,7 @@ export class TrainingRouter extends BaseRouter {
 			}
 
 			return res.send({
-				'data': data
+				data: data
 			});
 		} catch (err) {
 			next(err);
@@ -70,7 +70,7 @@ export class TrainingRouter extends BaseRouter {
 			const data = await this.trainingService.create(itemPayload);
 
 			return res.status(HttpStatus.CREATED).send({
-				'data': data
+				data: data
 			});
 		} catch (err) {
 			next(err);
@@ -84,7 +84,7 @@ export class TrainingRouter extends BaseRouter {
 			const data = await this.trainingService.getScores(userId, itemId);
 
 			return res.send({
-				'data': data
+				data: data
 			});
 		} catch (err) {
 			next(err);
@@ -99,7 +99,7 @@ export class TrainingRouter extends BaseRouter {
 			const data = await this.trainingService.addScore(userId, itemId, score);
 
 			return res.status(HttpStatus.CREATED).send({
-				'data': data
+				data: data
 			});
 		} catch (err) {
 			next(err);

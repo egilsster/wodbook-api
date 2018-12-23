@@ -4,8 +4,7 @@ export default class CompTestInit {
 	private mongoInit: MongoInit;
 
 	constructor() {
-		let uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/wodbook-test';
-		this.mongoInit = new MongoInit(uri, 'wodbook-test');
+		this.mongoInit = new MongoInit();
 	}
 
 	public async before() {

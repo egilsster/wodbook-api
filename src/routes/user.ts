@@ -37,7 +37,7 @@ export class UserRouter extends BaseRouter {
 			}
 
 			return res.status(HttpStatus.OK).json({
-				'data': this.serializer.serialize(user, req)
+				data: this.serializer.serialize(user, req)
 			});
 		} catch (err) {
 			next(err);

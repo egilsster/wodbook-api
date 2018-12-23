@@ -1,20 +1,22 @@
 import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 import * as bodyParser from 'body-parser';
-import * as config from 'config';
 
 import BaseRouter from './base';
 import { JwtUtils } from '../utils/jwt.utils';
 import { AuthService } from '../services/auth';
 import { UserType } from '../models/user';
+import { ConfigService } from '../services/config';
 
 export class AuthRouter extends BaseRouter {
 	public path: string = 'auth';
 	private authService: AuthService;
+	private configService: ConfigService;
 
 	constructor(options: any = {}) {
 		super(options, 'router:auth');
-		this.authService = this.options.authService || new AuthService(this.options);
+		this.authService = options.authService || new AuthService(options);
+		this.configService = options.configService || new ConfigService();
 		this.initRoutes();
 	}
 
@@ -35,7 +37,7 @@ export class AuthRouter extends BaseRouter {
 			const user = await this.authService.login(req.body.data);
 
 			return res.status(HttpStatus.OK).json({
-				'data': {
+				data: {
 					token: JwtUtils.signToken(this.getPayload(user), 'publicKey')
 				}
 			});
@@ -47,11 +49,11 @@ export class AuthRouter extends BaseRouter {
 	async register(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
 			const user = await this.authService.register(req.body.data);
-			const webtokens = config.get<WebTokenConfig>('webtokens');
+			const config = this.configService.getConfig();
 
 			return res.status(HttpStatus.CREATED).json({
-				'data': {
-					token: JwtUtils.signToken(this.getPayload(user), webtokens.public)
+				data: {
+					token: JwtUtils.signToken(this.getPayload(user), config.jwtConfig.publicKey)
 				}
 			});
 		} catch (err) {

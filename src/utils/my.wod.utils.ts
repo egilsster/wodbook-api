@@ -61,11 +61,11 @@ export class MyWodUtils {
 		for (const score of movementScores) {
 			if (score.foreignMovementClientID === movementClientId && score.foreignMovementRecordID === movementId) {
 				scores.push({
-					'score': score.measurementAValue,
-					'measurement': MyWodUtils.mapMovementMeasurement(movement.type),
-					'sets': score.sets,
-					'notes': score.notes,
-					'createdAt': new Date(score.date)
+					score: score.measurementAValue,
+					measurement: MyWodUtils.mapMovementMeasurement(movement.type),
+					sets: score.sets,
+					notes: score.notes,
+					createdAt: new Date(score.date)
 				});
 			}
 		}
@@ -75,14 +75,14 @@ export class MyWodUtils {
 
 	public static parseWorkoutScore(score: any) {
 		return {
-			'workoutId': score.workoutId,
-			'workoutTitle': score.title,
-			'description': score.description,
-			'score': score.score,
-			'rx': Boolean(score.asPrescribed),
-			'measurement': MyWodUtils.mapWorkoutMeasurement(score.scoreType),
-			'notes': score.notes,
-			'createdAt': new Date(score.date)
+			workoutId: score.workoutId,
+			workoutTitle: score.title,
+			description: score.description,
+			score: score.score,
+			rx: Boolean(score.asPrescribed),
+			measurement: MyWodUtils.mapWorkoutMeasurement(score.scoreType),
+			notes: score.notes,
+			createdAt: new Date(score.date)
 		};
 	}
 }

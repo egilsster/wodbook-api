@@ -6,7 +6,7 @@ describe('QueryUtils', () => {
 	describe('forMany', () => {
 		it('should build query with userId', () => {
 			const expected = {
-				'$or': [{ 'createdBy': userId }, { 'global': true }]
+				$or: [{ createdBy: userId }, { global: true }]
 			};
 
 			const res = QueryUtils.forMany(userId);
@@ -17,8 +17,8 @@ describe('QueryUtils', () => {
 
 	describe('forOne', () => {
 		it('should build query with filter and userId', () => {
-			const filter = { 'title': 'Fran' };
-			const expected = { '$and': [filter, { '$or': [{ 'createdBy': userId }, { 'global': true }] }] };
+			const filter = { title: 'Fran' };
+			const expected = { $and: [filter, { $or: [{ createdBy: userId }, { global: true }] }] };
 
 			const res = QueryUtils.forOne(filter, userId);
 

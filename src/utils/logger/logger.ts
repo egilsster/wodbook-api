@@ -4,7 +4,7 @@ import * as cls from 'continuation-local-storage';
 
 // the static context that gets added to each message
 let STATIC_CONTEXT = {
-	'type': 'wodbook-api',
+	type: 'wodbook-api',
 	// 'serverInfo': {
 	// 	'version': version.version,
 	// 	'shortSHA': version.SHA

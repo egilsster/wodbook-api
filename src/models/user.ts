@@ -23,60 +23,60 @@ export type UserType = mongoose.Document & {
 export class UserModel extends BaseModel {
 	private static NAME = 'User';
 	private static DEFINITION = {
-		'email': {
-			'type': String,
-			'lowercase': true,
-			'required': true,
-			'trim': true,
-			'unique': true
+		email: {
+			type: String,
+			lowercase: true,
+			required: true,
+			trim: true,
+			unique: true
 			// 'validate': [validateFunc, 'Invalid email']
 		},
-		'password': {
-			'type': String,
-			'required': true,
-			'trim': true
+		password: {
+			type: String,
+			required: true,
+			trim: true
 		},
-		'admin': {
-			'type': Boolean,
-			'default': false
+		admin: {
+			type: Boolean,
+			default: false
 		},
-		'firstName': {
-			'type': String,
-			'required': false,
-			'trim': true
+		firstName: {
+			type: String,
+			required: false,
+			trim: true
 		},
-		'lastName': {
-			'type': String,
-			'required': false,
-			'trim': true
+		lastName: {
+			type: String,
+			required: false,
+			trim: true
 		},
-		'gender': {
-			'type': String,
-			'required': false,
-			'enum': genders,
-			'set': MyWodUtils.mapGender
+		gender: {
+			type: String,
+			required: false,
+			enum: genders,
+			set: MyWodUtils.mapGender
 		},
-		'dateOfBirth': {
-			'type': Date,
-			'required': false,
-			'set': MyWodUtils.mapDate
+		dateOfBirth: {
+			type: Date,
+			required: false,
+			set: MyWodUtils.mapDate
 		},
-		'height': {
-			'type': Number,
-			'required': false
+		height: {
+			type: Number,
+			required: false
 		},
-		'weight': {
-			'type': Number,
-			'required': false
+		weight: {
+			type: Number,
+			required: false
 		},
-		'boxName': {
-			'type': String,
-			'required': false,
-			'trim': true
+		boxName: {
+			type: String,
+			required: false,
+			trim: true
 		},
-		'avatarUrl': {
-			'type': String,
-			'required': false
+		avatarUrl: {
+			type: String,
+			required: false
 		}
 	};
 

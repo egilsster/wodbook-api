@@ -9,8 +9,8 @@ import { AuthRouter } from '../../src/routes/auth';
 
 describe('Auth endpoint', () => {
 	const user = {
-		'id': 'userId',
-		'email': 'user@email.com'
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let authRouter: AuthRouter;

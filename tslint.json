@@ -22,7 +22,8 @@
     "no-unused-expression": true,
     "no-invalid-template-strings": true,
     "object-literal-key-quotes": [
-      false
+      true,
+      "as-needed"
     ],
     "prefer-method-signature": true,
     "prefer-template": true,

@@ -8,8 +8,8 @@ import { UserRouter } from '../../src/routes/user';
 
 describe('User endpoint', () => {
 	const user = {
-		'id': 'userId',
-		'email': 'user@email.com'
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let userRouter: UserRouter;

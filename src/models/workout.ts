@@ -15,31 +15,31 @@ export type WorkoutType = mongoose.Document & {
 export class WorkoutModel extends BaseModel {
 	private static NAME = 'Workout';
 	private static DEFINITION = {
-		'title': {
-			'type': String,
-			'required': true,
-			'trim': true
+		title: {
+			type: String,
+			required: true,
+			trim: true
 		},
-		'measurement': {
-			'type': String,
-			'required': true,
-			'enum': Object.values(MyWodUtils.WORKOUT_MEASUREMENTS)
+		measurement: {
+			type: String,
+			required: true,
+			enum: Object.values(MyWodUtils.WORKOUT_MEASUREMENTS)
 		},
-		'description': {
-			'type': String,
-			'required': false
+		description: {
+			type: String,
+			required: false
 		},
-		'global': {
-			'type': Boolean,
-			'default': false
+		global: {
+			type: Boolean,
+			default: false
 		},
-		'createdBy': {
-			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'User'
+		createdBy: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'User'
 		}
 	};
 
 	constructor(options: any = {}) {
-		super(WorkoutModel.NAME, WorkoutModel.DEFINITION, { ...options, indices: { 'title': 1, 'createdBy': 1 }, unique: { 'unique': true } });
+		super(WorkoutModel.NAME, WorkoutModel.DEFINITION, { ...options, indices: { title: 1, createdBy: 1 }, unique: { unique: true } });
 	}
 }

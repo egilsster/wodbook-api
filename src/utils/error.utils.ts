@@ -77,7 +77,7 @@ export class ErrorUtils {
 	// #region helper utilities
 	public static guessStatusCode(err: any) {
 		let status = HttpStatus.INTERNAL_SERVER_ERROR;
-		if (err.$isValidatorError) {
+		if (['ValidatorError', 'ValidationError'].includes(err.name)) {
 			status = HttpStatus.UNPROCESSABLE_ENTITY;
 		}
 		return status;

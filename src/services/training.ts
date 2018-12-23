@@ -19,7 +19,7 @@ export class TrainingService {
 	}
 
 	async getOne(userId: string, id: string) {
-		return this.model.findOne(QueryUtils.forOne({ '_id': id }, userId));
+		return this.model.findOne(QueryUtils.forOne({ _id: id }, userId));
 	}
 
 	async getByFilter(userId: string, filter: object) {
@@ -31,11 +31,11 @@ export class TrainingService {
 		if (!mdl) {
 			throw new ExpressError(`Entity with identity '${parentId}' does not exist`, HttpStatus.NOT_FOUND);
 		}
-		return this.scoreModel.find(QueryUtils.forOne({ 'parentId': parentId }, userId));
+		return this.scoreModel.find(QueryUtils.forOne({ parentId: parentId }, userId));
 	}
 
 	async create(data: any) {
-		await this.model.ensureIndexes();
+		await this.model.createIndexes();
 		const model = new this.model(data);
 		return model.save();
 	}

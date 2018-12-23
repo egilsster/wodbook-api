@@ -3,12 +3,14 @@ import * as HttpStatus from 'http-status-codes';
 import CompTestInit from './init';
 import tokens from './data/tokens';
 
+const baseUrl = `${(process.env.API_URL || 'http://127.0.0.1:43210')}/v1`;
+
 describe('Movement component tests', () => {
 	const reqOpts: request.RequestPromiseOptions = {
 		json: true,
 		resolveWithFullResponse: true, // Get the full response instead of just the body
 		simple: false, // Get a rejection only if the request failed for technical reasons
-		baseUrl: `${(process.env.API_URL || 'http://127.0.0.1:43210')}/v1`
+		baseUrl: baseUrl
 	};
 
 	let init: CompTestInit;
@@ -35,21 +37,21 @@ describe('Movement component tests', () => {
 	describe('creating movements', () => {
 		it('should create a new movement. This should return Created (201)', async (done) => {
 			const movement = {
-				'name': 'Snatch',
-				'measurement': 'weight'
+				name: 'Snatch',
+				measurement: 'weight'
 			};
 
 			try {
 				const res1 = await request.post(`movements`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'name': movement.name,
-							'measurement': movement.measurement,
+					body: {
+						data: {
+							name: movement.name,
+							measurement: movement.measurement,
 						}
 					}
 				});
@@ -66,9 +68,9 @@ describe('Movement component tests', () => {
 
 				const res2 = await request.get(`movements/${movementId}`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					}
 				});
 
@@ -89,21 +91,21 @@ describe('Movement component tests', () => {
 
 		it('should get 409 Conflict if creating the same movement more than once', async (done) => {
 			const movement = {
-				'name': 'Thruster',
-				'measurement': 'weight',
+				name: 'Thruster',
+				measurement: 'weight',
 			};
 
 			try {
 				const payload = {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'name': movement.name,
-							'measurement': movement.measurement,
+					body: {
+						data: {
+							name: movement.name,
+							measurement: movement.measurement,
 						}
 					}
 				};
@@ -133,14 +135,14 @@ describe('Movement component tests', () => {
 			try {
 				const res = await request.post(`movements`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'name': 'Invalid',
-							'measurement': 'spliff'
+					body: {
+						data: {
+							name: 'Invalid',
+							measurement: 'spliff'
 						}
 					}
 				});
@@ -157,8 +159,8 @@ describe('Movement component tests', () => {
 	describe('movement scores', () => {
 		it('should create a new movement and add a score for it', async (done) => {
 			const movement = {
-				'name': 'Deadlift',
-				'measurement': 'weight',
+				name: 'Deadlift',
+				measurement: 'weight',
 			};
 
 			const scoreDate = '2012-12-24';
@@ -166,14 +168,14 @@ describe('Movement component tests', () => {
 			try {
 				const res1 = await request.post(`movements`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'name': movement.name,
-							'measurement': movement.measurement,
+					body: {
+						data: {
+							name: movement.name,
+							measurement: movement.measurement,
 						}
 					}
 				});
@@ -190,15 +192,15 @@ describe('Movement component tests', () => {
 
 				const res2 = await request.post(`movements/${movementId}/scores`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'score': '200kg',
-							'measurement': 'weight',
-							'createdAt': scoreDate
+					body: {
+						data: {
+							score: '200kg',
+							measurement: 'weight',
+							createdAt: scoreDate
 						}
 					}
 				});
@@ -212,9 +214,9 @@ describe('Movement component tests', () => {
 
 				const res3 = await request.get(`movements/${movementId}/scores`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					}
 				});
 
@@ -235,21 +237,21 @@ describe('Movement component tests', () => {
 	describe('user separated movements', () => {
 		it('should not return movements created by other users', async (done) => {
 			const movement = {
-				'name': 'Bench press',
-				'measurement': 'weight',
+				name: 'Bench press',
+				measurement: 'weight',
 			};
 
 			try {
 				const res1 = await request.post(`movements`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'name': movement.name,
-							'measurement': movement.measurement,
+					body: {
+						data: {
+							name: movement.name,
+							measurement: movement.measurement,
 						}
 					}
 				});
@@ -266,9 +268,9 @@ describe('Movement component tests', () => {
 
 				const res2 = await request.get(`movements/${movementId}`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					}
 				});
 
@@ -283,9 +285,9 @@ describe('Movement component tests', () => {
 
 				const res3 = await request.get(`movements/${movementId}`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.admin}`
+						Authorization: `Bearer ${tokens.admin}`
 					}
 				});
 

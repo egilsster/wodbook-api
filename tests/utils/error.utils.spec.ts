@@ -13,16 +13,16 @@ describe('ErrorUtils', () => {
 
 		it('should return array of express errors if the error contains a truthy errors property', () => {
 			const manyErrors = {
-				'errors': {
-					'key1': {
-						'name': 'errName1',
-						'message': 'errMessage1',
-						'$isValidatorError': true
+				errors: {
+					key1: {
+						name: 'errName1',
+						message: 'errMessage1',
+						$isValidatorError: true
 					},
-					'key2': {
-						'name': 'errName2',
-						'message': 'errMessage2',
-						'$isValidatorError': false
+					key2: {
+						name: 'errName2',
+						message: 'errMessage2',
+						$isValidatorError: false
 					}
 				}
 			};
@@ -92,16 +92,16 @@ describe('ErrorUtils', () => {
 	describe('convertMongooseErrorToExpressErrors', () => {
 		it('should convert mongoose errors to list of ExpressError', () => {
 			const mongooseErrors = {
-				'errors': {
-					'key1': {
-						'name': 'errName1',
-						'message': 'errMessage1',
-						'$isValidatorError': true
+				errors: {
+					key1: {
+						name: 'errName1',
+						message: 'errMessage1',
+						$isValidatorError: true
 					},
-					'key2': {
-						'name': 'errName2',
-						'message': 'errMessage2',
-						'$isValidatorError': false
+					key2: {
+						name: 'errName2',
+						message: 'errMessage2',
+						$isValidatorError: false
 					}
 				}
 			};
@@ -119,7 +119,7 @@ describe('ErrorUtils', () => {
 	describe('guessStatusCode', () => {
 		it('should return 422 Unprocessable Entity if error is a ValidatorError', () => {
 			const err = {
-				'$isValidatorError': true
+				$isValidatorError: true
 			};
 
 			const res = ErrorUtils.guessStatusCode(err);

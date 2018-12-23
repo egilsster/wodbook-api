@@ -10,8 +10,8 @@ import { RouterUtils } from '../../src/utils/router.utils';
 
 describe('Movement endpoint', () => {
 	const user = {
-		'id': 'userId',
-		'email': 'user@email.com'
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let movementRouter: MovementRouter;
@@ -25,7 +25,7 @@ describe('Movement endpoint', () => {
 		save() { return null; }
 		static find() { return null; }
 		static findOne() { return null; }
-		static ensureIndexes() { return null; }
+		static createIndexes() { return null; }
 	}
 
 	beforeEach(() => {
@@ -33,8 +33,8 @@ describe('Movement endpoint', () => {
 		_trainingService = sinon.mock(trainingService);
 
 		movementMongo = {
-			'id': '5a4704ca46425f97c638bcaa',
-			'name': 'Snatch'
+			id: '5a4704ca46425f97c638bcaa',
+			name: 'Snatch'
 		};
 
 		const logger = {
@@ -113,9 +113,9 @@ describe('Movement endpoint', () => {
 
 		beforeEach(() => {
 			createPostBody = {
-				'data': {
-					'createdBy': user.id,
-					'name': 'wodBook'
+				data: {
+					createdBy: user.id,
+					name: 'wodBook'
 				}
 			};
 		});
@@ -204,13 +204,13 @@ describe('Movement endpoint', () => {
 	});
 
 	describe('POST /movements/{id}/scores', () => {
-		const score = { 'movementId': 'movementId' };
+		const score = { movementId: 'movementId' };
 
 		it('should return 201 if score is successfully added to movement', async (done) => {
 			_trainingService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).resolves(score);
 
 			try {
-				const res = await request.post(`/${movementMongo.id}/scores`).send({ 'data': score });
+				const res = await request.post(`/${movementMongo.id}/scores`).send({ data: score });
 				expect(res.status).toBe(HttpStatus.CREATED);
 				expect(res.body).toHaveProperty('data', score);
 				done();
@@ -224,7 +224,7 @@ describe('Movement endpoint', () => {
 			_trainingService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).rejects(err);
 
 			try {
-				const res = await request.post(`/${movementMongo.id}/scores`).send({ 'data': score });
+				const res = await request.post(`/${movementMongo.id}/scores`).send({ data: score });
 				expect(res.status).toBe(HttpStatus.NOT_FOUND);
 				expect(res.body).toHaveProperty('status', err.status);
 				expect(res.body).toHaveProperty('detail', err.detail);

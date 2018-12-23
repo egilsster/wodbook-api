@@ -37,9 +37,9 @@ describe('User component tests', () => {
 			try {
 				const res1 = await request.get(`users/me`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					}
 				});
 
@@ -65,9 +65,9 @@ describe('User component tests', () => {
 			try {
 				const res1 = await request.get(`users/me`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.admin}`
+						Authorization: `Bearer ${tokens.admin}`
 					}
 				});
 

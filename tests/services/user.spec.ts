@@ -4,8 +4,8 @@ import { UserService } from '../../src/services/user';
 
 describe('UserService', () => {
 	const user: any = {
-		'id': 'userId',
-		'email': 'user@email.com'
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	let service: UserService;
 	let _service: sinon.SinonMock;
@@ -25,8 +25,8 @@ describe('UserService', () => {
 		_model = sinon.mock(MockModel);
 
 		const options = {
-			'userModel': MockModel,
-			'logger': {
+			userModel: MockModel,
+			logger: {
 				info() { },
 				warn() { },
 				error() { }
@@ -60,7 +60,7 @@ describe('UserService', () => {
 
 	describe('getUser', () => {
 		it('should user with specified email', async () => {
-			_model.expects('findOne').withArgs({ 'email': user.email }).returns(user);
+			_model.expects('findOne').withArgs({ email: user.email }).returns(user);
 
 			const res = await service.getUser(user);
 			expect(res).toEqual(user);
