@@ -99,7 +99,7 @@ describe('Workout endpoint', () => {
 		});
 
 		it('404 The specified workout does not exist', (done) => {
-			_trainingService.expects('getOne').withArgs(user.id, workoutMongo.id).resolves(null);
+			_trainingService.expects('getOne').withArgs(user.id, workoutMongo.id).resolves();
 			request.get(`/${workoutMongo.id}`)
 				.expect(HttpStatus.NOT_FOUND)
 				.end((err, _res) => {

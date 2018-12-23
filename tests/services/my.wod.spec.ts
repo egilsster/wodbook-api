@@ -115,7 +115,7 @@ describe('MywodService', () => {
 
 		it('should throw 404 Not found if the user info in the JWT does not exist', async (done) => {
 			try {
-				_model.expects('findOne').resolves(null);
+				_model.expects('findOne').resolves();
 
 				const promise = service.saveAthlete(user, userData);
 				await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);

@@ -98,7 +98,7 @@ describe('Movement endpoint', () => {
 		});
 
 		it('404 The specified movement does not exist', (done) => {
-			_trainingService.expects('getOne').withArgs(user.id, movementMongo.id).resolves(null);
+			_trainingService.expects('getOne').withArgs(user.id, movementMongo.id).resolves();
 			request.get(`/${movementMongo.id}`)
 				.expect(HttpStatus.NOT_FOUND)
 				.end((err, _res) => {

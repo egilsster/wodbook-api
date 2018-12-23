@@ -100,7 +100,7 @@ describe('TrainingService', () => {
 
 		it('should throw error if item does not exist', async () => {
 			const err = new ExpressError(`Entity with identity '${movement.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_service.expects('getOne').withExactArgs(user.id, movement.id).resolves(null);
+			_service.expects('getOne').withExactArgs(user.id, movement.id).resolves();
 
 			const promise = service.getScores(user.id, movement.id);
 			await expect(promise).rejects.toEqual(err);

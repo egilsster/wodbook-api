@@ -1,4 +1,4 @@
-import * as request from 'request-promise';
+import * as request from 'request-promise-native';
 import * as HttpStatus from 'http-status-codes';
 
 const baseUrl = process.env.API_URL || 'http://127.0.0.1:43210';

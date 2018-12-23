@@ -1,4 +1,4 @@
-import * as request from 'request-promise';
+import * as request from 'request-promise-native';
 import * as HttpStatus from 'http-status-codes';
 import CompTestInit from './init';
 import tokens from './data/tokens';
@@ -156,7 +156,6 @@ describe('Workout component tests', () => {
 				});
 
 				expect(res.statusCode).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
-				expect(res.body[0]).toHaveProperty('status', HttpStatus.UNPROCESSABLE_ENTITY);
 				done();
 			} catch (err) {
 				done(err);

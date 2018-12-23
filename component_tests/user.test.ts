@@ -1,4 +1,4 @@
-import * as request from 'request-promise';
+import * as request from 'request-promise-native';
 import * as HttpStatus from 'http-status-codes';
 import CompTestInit from './init';
 import tokens from './data/tokens';
