@@ -13,14 +13,14 @@ export class ErrorUtils {
 	 *
 	 * @param err any type of error
 	 */
-	public static ensureExpressError(err: any): ExpressError | ExpressError[] {
+	public static ensureExpressError(err: any) {
 		err = err || {};
-		if (ErrorUtils.isExpressError(err)) {
+		if (err instanceof ExpressError) {
 			return err;
 		}
 
-		if (ErrorUtils.isErrorWithErrors(err)) {
-			return ErrorUtils.convertMongooseErrorToExpressErrors(err);
+		if (Boolean(err && err.errors)) {
+			return ErrorUtils.convertMongooseErrorToExpressError(err);
 		}
 
 		if (err.code) {
@@ -65,16 +65,15 @@ export class ErrorUtils {
 	 * @param mongooseErrors an object with error names as the key and the error as their values
 	 * @param status status code to set on the ExpressError
 	 */
-	public static convertMongooseErrorToExpressErrors(mongooseErrors: { errors: { [key: string]: Error } }) {
+	public static convertMongooseErrorToExpressError(mongooseErrors: { errors: { [key: string]: Error } }) {
 		const errorObject = mongooseErrors.errors;
-		return Object.keys(errorObject).map((key: string) => {
-			const err = errorObject[key];
-			const status = ErrorUtils.guessStatusCode(err);
-			return new ExpressError(err.message, status);
-		});
+		const status = ErrorUtils.guessStatusCode(mongooseErrors);
+		const errorMessage = Object.keys(errorObject)
+			.map((key: string) => errorObject[key].message)
+			.join(' ');
+		return new ExpressError(errorMessage, status);
 	}
 
-	// #region helper utilities
 	public static guessStatusCode(err: any) {
 		let status = HttpStatus.INTERNAL_SERVER_ERROR;
 		if (['ValidatorError', 'ValidationError'].includes(err.name)) {
@@ -82,16 +81,4 @@ export class ErrorUtils {
 		}
 		return status;
 	}
-
-	public static isExpressError(err: any) {
-		if (Array.isArray(err)) {
-			err = err[0];
-		}
-		return err instanceof ExpressError;
-	}
-
-	public static isErrorWithErrors(error: any) {
-		return Boolean(error && error.errors);
-	}
-	//#endregion
 }
