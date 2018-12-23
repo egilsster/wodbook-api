@@ -26,7 +26,7 @@ services:
       - MONGO_URI=mongodb://mongo:27017/wodbook-test
 
   mongo:
-    image: mongo:latest
+    image: mongo:3.6
     container_name: mongo
     restart: always
     healthcheck:
