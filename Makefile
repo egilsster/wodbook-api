@@ -24,23 +24,18 @@ else
 endif
 
 test-local:
-	$(MAKE) check-security
 	$(MAKE) depcheck
 	$(MAKE) lint
 	npm test
 
 test-ci:
-	$(MAKE) check-security
 	$(MAKE) depcheck
 	$(MAKE) lint
 	npm run test:coverage
 	$(CODECLIMATE) < coverage/lcov.info
 
 depcheck:
-	$(DEPCHECK) --ignores codeclimate-test-reporter,depcheck,tslint,nsp,ts-jest,request-promise,@types/*
-
-check-security:
-	$(MOD_BIN)/nsp check
+	$(DEPCHECK) --ignores codeclimate-test-reporter,depcheck,tslint,ts-jest,@types/*
 
 lint:
 	$(MOD_BIN)/tslint -p . -c tslint.json

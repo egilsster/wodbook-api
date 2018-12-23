@@ -18,8 +18,8 @@ jobs:
           name: Pull public docker images in the background
           background: true
           command: |
-             docker pull node:8-alpine
-             docker pull mongo:latest
+             docker pull node:10-alpine
+             docker pull mongo:3.6
       - run:
           name: Upgrade Docker Compose
           command: |

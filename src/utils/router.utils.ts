@@ -3,7 +3,6 @@ import * as express from 'express';
 import * as HttpStatus from 'http-status-codes';
 import * as bearerToken from 'express-bearer-token';
 import * as expressWinston from 'express-winston';
-import * as config from 'config';
 
 import jwtVerify from '../middleware/jwt.verify';
 import { WorkoutRouter } from '../routes/workout';
@@ -15,6 +14,7 @@ import { MovementRouter } from '../routes/movement';
 import { logContextInjector } from './logger/log.context.injector';
 import { UserRouter } from '../routes/user';
 import { ErrorUtils } from './error.utils';
+import { ConfigService } from '../services/config';
 
 export class RouterUtils {
 	public static readonly LATEST_VERSION: string = 'v1';
@@ -25,11 +25,11 @@ export class RouterUtils {
 		app.use(bearerToken());
 		app.use(logContextInjector());
 		app.use(expressWinston.logger({
-			'winstonInstance': logger,
-			'requestWhitelist': ['url', 'user', 'method', 'query', 'endpoint'],
-			'statusLevels': true,
+			winstonInstance: logger,
+			requestWhitelist: ['url', 'user', 'method', 'query', 'endpoint'],
+			statusLevels: true,
 			// slightly prettier output in local dev
-			'expressFormat': process.env.NODE_ENV === 'development'
+			expressFormat: process.env.NODE_ENV === 'development'
 		}));
 	}
 
@@ -46,8 +46,9 @@ export class RouterUtils {
 		const authRouterInstance = new AuthRouter();
 		app.use(`/${RouterUtils.LATEST_VERSION}/${authRouterInstance.path}`, authRouterInstance.router);
 
-		const webtokens = config.get<WebTokenConfig>('webtokens');
-		app.use(jwtVerify(webtokens.public));
+		const configService = new ConfigService();
+		const config = configService.getConfig();
+		app.use(jwtVerify(config.jwtConfig.publicKey));
 
 		// Private routes
 		const privateRoutes = [

@@ -8,8 +8,8 @@ import { UserRouter } from '../../src/routes/user';
 
 describe('User endpoint', () => {
 	const user = {
-		'id': 'userId',
-		'email': 'user@email.com'
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	let request: supertest.SuperTest<supertest.Test>;
 	let userRouter: UserRouter;
@@ -99,7 +99,7 @@ describe('User endpoint', () => {
 		});
 
 		it('should get 404 Not found if user on the request does not exist', async (done) => {
-			_userService.expects('getUser').resolves(null);
+			_userService.expects('getUser').resolves();
 
 			try {
 				const res = await request.get('/me');

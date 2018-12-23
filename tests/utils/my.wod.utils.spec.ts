@@ -57,20 +57,20 @@ describe('MywodUtils', () => {
 	describe('parseWorkoutScore', () => {
 		it('should parse myWOD workout score to correct object', () => {
 			const score = {
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 1,
-				'hasChangesForServer': 0,
-				'parseId': 'OPssEL9w2Q',
-				'title': '181017',
-				'date': '2017-11-18',
-				'scoreType': 'For Time:',
-				'score': '14:20',
-				'personalRecord': 1,
-				'asPrescribed': 1,
-				'description': '5 rounds:\n15 ft rope climb, 3 ascents,\n10 toes-to-bar,\n21 walking lunges with 20.4/13.6kg plate overhead,\n400 meter run',
-				'notes': '',
-				'heartRate': 'NA',
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 1,
+				hasChangesForServer: 0,
+				parseId: 'OPssEL9w2Q',
+				title: '181017',
+				date: '2017-11-18',
+				scoreType: 'For Time:',
+				score: '14:20',
+				personalRecord: 1,
+				asPrescribed: 1,
+				description: '5 rounds:\n15 ft rope climb, 3 ascents,\n10 toes-to-bar,\n21 walking lunges with 20.4/13.6kg plate overhead,\n400 meter run',
+				notes: '',
+				heartRate: 'NA',
+				deleted: 0
 			};
 
 			const res = MyWodUtils.parseWorkoutScore(score);
@@ -87,67 +87,67 @@ describe('MywodUtils', () => {
 	describe('getScoresForMovement', () => {
 		const movements = [
 			{
-				'primaryClientID': 'initial',
-				'primaryRecordID': 1,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'name': 'Thruster',
-				'type': 0,
-				'everModifiedByAthlete': 0,
-				'deleted': 0
+				primaryClientID: 'initial',
+				primaryRecordID: 1,
+				hasChangesForServer: 1,
+				parseId: null,
+				name: 'Thruster',
+				type: 0,
+				everModifiedByAthlete: 0,
+				deleted: 0
 			},
 			{
-				'primaryClientID': 'initial',
-				'primaryRecordID': 3,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'name': 'Snatch',
-				'type': 0,
-				'everModifiedByAthlete': 0,
-				'deleted': 0
+				primaryClientID: 'initial',
+				primaryRecordID: 3,
+				hasChangesForServer: 1,
+				parseId: null,
+				name: 'Snatch',
+				type: 0,
+				everModifiedByAthlete: 0,
+				deleted: 0
 			},
 			{
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 5,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'name': 'HSPU',
-				'type': 2,
-				'everModifiedByAthlete': 1,
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 5,
+				hasChangesForServer: 1,
+				parseId: null,
+				name: 'HSPU',
+				type: 2,
+				everModifiedByAthlete: 1,
+				deleted: 0
 			}
 		];
 
 		const movementScores = [
 			{
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 50,
-				'foreignMovementClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'foreignMovementRecordID': 5,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'date': '2017-11-07',
-				'measurementAValue': 7,
-				'measurementAUnitsCode': 8,
-				'measuermentB': '0:00',
-				'sets': '1',
-				'notes': '',
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 50,
+				foreignMovementClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				foreignMovementRecordID: 5,
+				hasChangesForServer: 1,
+				parseId: null,
+				date: '2017-11-07',
+				measurementAValue: 7,
+				measurementAUnitsCode: 8,
+				measuermentB: '0:00',
+				sets: '1',
+				notes: '',
+				deleted: 0
 			},
 			{
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 44,
-				'foreignMovementClientID': 'initial',
-				'foreignMovementRecordID': 3,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'date': '2017-04-11',
-				'measurementAValue': 70,
-				'measurementAUnitsCode': 1,
-				'measuermentB': '1',
-				'sets': '1',
-				'notes': '',
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 44,
+				foreignMovementClientID: 'initial',
+				foreignMovementRecordID: 3,
+				hasChangesForServer: 1,
+				parseId: null,
+				date: '2017-04-11',
+				measurementAValue: 70,
+				measurementAUnitsCode: 1,
+				measuermentB: '1',
+				sets: '1',
+				notes: '',
+				deleted: 0
 			}
 		];
 

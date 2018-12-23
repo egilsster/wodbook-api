@@ -28,8 +28,8 @@ export class BaseModel {
 	 */
 	public createSchema(): mongoose.Schema {
 		const schema = new mongoose.Schema(this.MODEL_DEFINITION, {
-			'timestamps': true,
-			'versionKey': false
+			timestamps: true,
+			versionKey: false
 		});
 
 		if (this.options.indices && this.options.unique) {

@@ -51,7 +51,7 @@ describe('RouterUtils', () => {
 	describe('errorHandler', () => {
 		it('should continue down middleware chain with error if response has been sent', () => {
 			const nextFn = sinon.stub();
-			RouterUtils.errorHandler('error', null as any, { 'headersSent': true } as any, nextFn);
+			RouterUtils.errorHandler('error', null as any, { headersSent: true } as any, nextFn);
 			expect(nextFn.calledWithExactly('error')).toBeTruthy();
 			expect(nextFn.calledOnce).toBeTruthy();
 		});

@@ -1,4 +1,4 @@
-import * as request from 'request-promise';
+import * as request from 'request-promise-native';
 import * as HttpStatus from 'http-status-codes';
 import CompTestInit from './init';
 import tokens from './data/tokens';
@@ -35,23 +35,23 @@ describe('Workout component tests', () => {
 	describe('creating workouts', () => {
 		it('should create a new workout. This should return Created (201)', async (done) => {
 			const wod = {
-				'title': 'Fran',
-				'measurement': 'time',
-				'description': '21-15-9 Thruster (42.5kg / 30kg) / Pull ups'
+				title: 'Fran',
+				measurement: 'time',
+				description: '21-15-9 Thruster (42.5kg / 30kg) / Pull ups'
 			};
 
 			try {
 				const res1 = await request.post(`workouts`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'title': wod.title,
-							'measurement': wod.measurement,
-							'description': wod.description
+					body: {
+						data: {
+							title: wod.title,
+							measurement: wod.measurement,
+							description: wod.description
 						}
 					}
 				});
@@ -70,9 +70,9 @@ describe('Workout component tests', () => {
 
 				const res2 = await request.get(`workouts/${workoutId}`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					}
 				});
 
@@ -95,23 +95,23 @@ describe('Workout component tests', () => {
 
 		it('should get 409 Conflict if creating the same workout more than once', async (done) => {
 			const wod = {
-				'title': 'Cindy',
-				'measurement': 'repetitions',
-				'description': 'AMRAP20: 5 pull ups, 10 push ups, 15 air squats'
+				title: 'Cindy',
+				measurement: 'repetitions',
+				description: 'AMRAP20: 5 pull ups, 10 push ups, 15 air squats'
 			};
 
 			try {
 				const payload = {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'title': wod.title,
-							'measurement': wod.measurement,
-							'description': wod.description
+					body: {
+						data: {
+							title: wod.title,
+							measurement: wod.measurement,
+							description: wod.description
 						}
 					}
 				};
@@ -143,20 +143,19 @@ describe('Workout component tests', () => {
 			try {
 				const res = await request.post(`workouts`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'title': 'Invalid',
-							'measurement': 'spliff'
+					body: {
+						data: {
+							title: 'Invalid',
+							measurement: 'spliff'
 						}
 					}
 				});
 
 				expect(res.statusCode).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
-				expect(res.body[0]).toHaveProperty('status', HttpStatus.UNPROCESSABLE_ENTITY);
 				done();
 			} catch (err) {
 				done(err);
@@ -167,23 +166,23 @@ describe('Workout component tests', () => {
 	describe('workout scores', () => {
 		it('should create a new workout and add scores to it', async (done) => {
 			const wod = {
-				'title': 'Heavy Fran',
-				'measurement': 'time',
-				'description': '15-12-9 Thruster (60kg / 45kg) / Chest to bar (weighted)'
+				title: 'Heavy Fran',
+				measurement: 'time',
+				description: '15-12-9 Thruster (60kg / 45kg) / Chest to bar (weighted)'
 			};
 
 			try {
 				const res1 = await request.post(`workouts`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'title': wod.title,
-							'measurement': wod.measurement,
-							'description': wod.description
+					body: {
+						data: {
+							title: wod.title,
+							measurement: wod.measurement,
+							description: wod.description
 						}
 					}
 				});
@@ -202,15 +201,15 @@ describe('Workout component tests', () => {
 
 				const res2 = await request.post(`workouts/${workoutId}/scores`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'score': '4:20',
-							'measurement': 'time',
-							'rx': true
+					body: {
+						data: {
+							score: '4:20',
+							measurement: 'time',
+							rx: true
 						}
 					}
 				});
@@ -225,9 +224,9 @@ describe('Workout component tests', () => {
 
 				const res3 = await request.get(`workouts/${workoutId}/scores`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					}
 				});
 
@@ -249,23 +248,23 @@ describe('Workout component tests', () => {
 	describe('user separated workouts', () => {
 		it('should not return workouts created by other users', async (done) => {
 			const wod = {
-				'title': 'Annie',
-				'measurement': 'time',
-				'description': '50-40-30-20-10 Double unders / Sit ups'
+				title: 'Annie',
+				measurement: 'time',
+				description: '50-40-30-20-10 Double unders / Sit ups'
 			};
 
 			try {
 				const res1 = await request.post(`workouts`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					},
-					'body': {
-						'data': {
-							'title': wod.title,
-							'measurement': wod.measurement,
-							'description': wod.description
+					body: {
+						data: {
+							title: wod.title,
+							measurement: wod.measurement,
+							description: wod.description
 						}
 					}
 				});
@@ -284,9 +283,9 @@ describe('Workout component tests', () => {
 
 				const res2 = await request.get(`workouts/${workoutId}`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.user}`
+						Authorization: `Bearer ${tokens.user}`
 					}
 				});
 
@@ -303,9 +302,9 @@ describe('Workout component tests', () => {
 
 				const res3 = await request.get(`workouts/${workoutId}`, {
 					...reqOpts,
-					'headers': {
+					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${tokens.admin}`
+						Authorization: `Bearer ${tokens.admin}`
 					}
 				});
 

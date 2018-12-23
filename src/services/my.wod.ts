@@ -95,7 +95,7 @@ export class MyWodService {
 		const scoresSorted = _.sortBy(workoutScores, ['title']);
 		for (const score of scoresSorted) {
 			try {
-				const workoutModel = await this.workoutService.getByFilter(user.id, { 'title': score.title });
+				const workoutModel = await this.workoutService.getByFilter(user.id, { title: score.title });
 				if (!workoutModel) {
 					continue; // Do not save scores that do not belong to a registered workout
 				}

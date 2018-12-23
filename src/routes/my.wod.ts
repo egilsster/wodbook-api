@@ -45,10 +45,10 @@ export class MyWodRouter extends BaseRouter {
 			// Add serializer
 
 			return res.status(HttpStatus.OK).send({
-				'data': {
-					'user': this.userSerializer.serialize(user, req),
-					'workouts': workouts,
-					'movements': movements
+				data: {
+					user: this.userSerializer.serialize(user, req),
+					workouts: workouts,
+					movements: movements
 				}
 			});
 		} catch (err) {

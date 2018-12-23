@@ -7,25 +7,25 @@ import { QueryUtils } from '../../src/utils/query.utils';
 
 describe('TrainingService', () => {
 	const user = {
-		'id': 'userId',
-		'email': 'user@email.com'
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	const movement: any = {
-		'id': '5a4704ca46425f97c638bcaa',
-		'name': 'Snatch',
-		'scores': [],
-		'measurement': 'weight',
-		'createdBy': user.id,
-		'createdAt': new Date(),
-		'modifiedAt': new Date()
+		id: '5a4704ca46425f97c638bcaa',
+		name: 'Snatch',
+		scores: [],
+		measurement: 'weight',
+		createdBy: user.id,
+		createdAt: new Date(),
+		modifiedAt: new Date()
 	};
 	const score: any = {
-		'parentId': movement.id,
-		'score': '100',
-		'measurement': 'weight',
-		'sets': 1,
-		'notes': '',
-		'date': new Date('2014-01-03')
+		parentId: movement.id,
+		score: '100',
+		measurement: 'weight',
+		sets: 1,
+		notes: '',
+		date: new Date('2014-01-03')
 	};
 	let service: TrainingService, _service: sinon.SinonMock;
 	let modelInstance, _modelInstance: sinon.SinonMock;
@@ -35,7 +35,7 @@ describe('TrainingService', () => {
 		save() { return null; }
 		static find() { return null; }
 		static findOne() { return null; }
-		static ensureIndexes() { return null; }
+		static createIndexes() { return null; }
 	}
 
 	beforeEach(() => {
@@ -65,14 +65,14 @@ describe('TrainingService', () => {
 
 	describe('getOne', () => {
 		it('should get single item if it exists', async () => {
-			_model.expects('findOne').withArgs(QueryUtils.forOne({ '_id': movement.id }, user.id)).returns(movement);
+			_model.expects('findOne').withArgs(QueryUtils.forOne({ _id: movement.id }, user.id)).returns(movement);
 
 			const res = await service.getOne(user.id, movement.id);
 			expect(res).toEqual(movement);
 		});
 
 		it('should get nothing if item does not exist', async () => {
-			_model.expects('findOne').withArgs(QueryUtils.forOne({ '_id': 'notId' }, user.id)).returns(null);
+			_model.expects('findOne').withArgs(QueryUtils.forOne({ _id: 'notId' }, user.id)).returns(null);
 
 			const res = await service.getOne(user.id, 'notId');
 			expect(res).toEqual(null);
@@ -81,7 +81,7 @@ describe('TrainingService', () => {
 
 	describe('getByFilter', () => {
 		it('should return item based on filter', async () => {
-			const filter = { 'name': 'Snatch' };
+			const filter = { name: 'Snatch' };
 			_model.expects('findOne').withArgs(QueryUtils.forOne(filter, user.id)).returns(movement);
 
 			const res = await service.getByFilter(user.id, filter);
@@ -92,7 +92,7 @@ describe('TrainingService', () => {
 	describe('getScores', () => {
 		it('should scores for item if item exists', async () => {
 			_service.expects('getOne').withExactArgs(user.id, movement.id).resolves(movement);
-			_model.expects('find').withArgs(QueryUtils.forOne({ 'parentId': movement.id }, user.id)).returns([]);
+			_model.expects('find').withArgs(QueryUtils.forOne({ parentId: movement.id }, user.id)).returns([]);
 
 			const res = await service.getScores(user.id, movement.id);
 			expect(res).toEqual([]);
@@ -100,7 +100,7 @@ describe('TrainingService', () => {
 
 		it('should throw error if item does not exist', async () => {
 			const err = new ExpressError(`Entity with identity '${movement.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_service.expects('getOne').withExactArgs(user.id, movement.id).resolves(null);
+			_service.expects('getOne').withExactArgs(user.id, movement.id).resolves();
 
 			const promise = service.getScores(user.id, movement.id);
 			await expect(promise).rejects.toEqual(err);

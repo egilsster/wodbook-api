@@ -20,9 +20,10 @@ export class Models {
 		const connection = this.mongoose.connection;
 		let uri = this.options.uri;
 		const mongooseOptions: mongoose.ConnectionOptions = {
-			'autoReconnect': true,
-			'keepAlive': KEEP_ALIVE,
-			'connectTimeoutMS': CONN_TO
+			autoReconnect: true,
+			keepAlive: KEEP_ALIVE,
+			connectTimeoutMS: CONN_TO,
+			useNewUrlParser: true
 		};
 
 		let callbackCalled = false;

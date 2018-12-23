@@ -1,31 +1,32 @@
-﻿import * as http from 'http';
+import * as http from 'http';
 import * as express from 'express';
-import * as config from 'config';
 import { Connection } from 'mongoose';
-
 import { RouterUtils } from './utils/router.utils';
 import { Models } from './models';
 import { Logger } from './utils/logger/logger';
+import { ConfigService } from './services/config';
 
 export default class Server {
 	private routerUtils: RouterUtils;
 	private logger: Logger;
-	public app: express.Express;
 	private server: http.Server;
+	public app: express.Express;
+	public models?: Models;
 
-	constructor(public routers?, public middleware?, public models?: Models, options: any = {}) {
+	constructor() {
 		this.app = express();
 		this.app.disable('x-powered-by');
-		this.logger = options.logger || new Logger('server');
-		this.routerUtils = options.routerUtils || new RouterUtils(options);
-		this.server = http.createServer(this.app as any);
+		this.logger = new Logger('server');
+		this.routerUtils = new RouterUtils();
+		this.server = http.createServer(this.app);
 	}
 
 	public async start() {
-		const serverConfig = config.get<ServerConfig>('server');
+		const configService = new ConfigService();
+		const config = configService.getConfig();
 
 		this.models = new Models({
-			'uri': process.env.MONGO_URI
+			uri: process.env.MONGO_URI
 		});
 
 		this.models.connect((err: any, connection: Connection) => {
@@ -37,8 +38,8 @@ export default class Server {
 			this.routerUtils.registerMiddleware(this.app, this.logger);
 			this.routerUtils.registerRoutes(this.app);
 
-			this.server.listen(serverConfig.port, () => {
-				this.logger.info(`Listening on port ${serverConfig.port}`);
+			this.server.listen(config.servicePort, () => {
+				this.logger.info(`Listening on port ${config.servicePort}`);
 			});
 
 			connection.once('disconnected', () => {

@@ -11,7 +11,7 @@ networks:
 
 services:
   mongo:
-    image: mongo:latest
+    image: mongo:3.6
     container_name: mongo
     restart: always
     ports:

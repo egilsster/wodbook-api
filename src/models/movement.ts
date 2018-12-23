@@ -13,23 +13,23 @@ export type MovementType = mongoose.Document & {
 export class MovementModel extends BaseModel {
 	private static NAME = 'Movement';
 	private static DEFINITION = {
-		'name': {
-			'type': String,
-			'required': true,
-			'trim': true
+		name: {
+			type: String,
+			required: true,
+			trim: true
 		},
-		'measurement': {
-			'type': String,
-			'required': true,
-			'enum': MyWodUtils.MOVEMENT_MEASUREMENTS
+		measurement: {
+			type: String,
+			required: true,
+			enum: MyWodUtils.MOVEMENT_MEASUREMENTS
 		},
-		'createdBy': {
-			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'User'
+		createdBy: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'User'
 		}
 	};
 
 	constructor(options: any = {}) {
-		super(MovementModel.NAME, MovementModel.DEFINITION, { ...options, indices: { 'name': 1, 'createdBy': 1 }, unique: { 'unique': true } });
+		super(MovementModel.NAME, MovementModel.DEFINITION, { ...options, indices: { name: 1, createdBy: 1 }, unique: { unique: true } });
 	}
 }

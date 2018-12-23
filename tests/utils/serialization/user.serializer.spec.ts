@@ -8,21 +8,21 @@ describe('UserSerializer', () => {
 	});
 
 	describe('serialize', () => {
-		const admin_req = { 'user': { 'admin': true } };
-		const non_admin_req = { 'user': { 'admin': false } };
+		const admin_req = { user: { admin: true } };
+		const non_admin_req = { user: { admin: false } };
 		const user: any = {
-			'firstName': 'Egill',
-			'lastName': 'Sveinbjörnsson',
-			'email': 'egillsveinbjorns@gmail.com',
-			'updatedAt': '2018-03-30T20:30:48.557Z',
-			'createdAt': '2018-03-30T20:30:48.557Z',
-			'boxName': 'CrossFit Reykjavík',
-			'dateOfBirth': '1991-12-06T00:00:00.000Z',
-			'gender': 'male',
-			'height': 189,
-			'weight': 92000,
-			'avatarUrl': '/public/avatars/5abe9e97a3de7cd1faba082e.png',
-			'id': '5abe9e97a3de7cd1faba082e'
+			firstName: 'Egill',
+			lastName: 'Sveinbjörnsson',
+			email: 'egillsveinbjorns@gmail.com',
+			updatedAt: '2018-03-30T20:30:48.557Z',
+			createdAt: '2018-03-30T20:30:48.557Z',
+			boxName: 'CrossFit Reykjavík',
+			dateOfBirth: '1991-12-06T00:00:00.000Z',
+			gender: 'male',
+			height: 189,
+			weight: 92000,
+			avatarUrl: '/public/avatars/5abe9e97a3de7cd1faba082e.png',
+			id: '5abe9e97a3de7cd1faba082e'
 		};
 
 		it('should only keep public properties if logged in user is not an admin', () => {

@@ -6,7 +6,7 @@ import JwtVerify from '../../src/middleware/jwt.verify';
 describe('JwtVerify', () => {
 	const secret = 'testing';
 	const jwtVerify = JwtVerify(Buffer.from(secret).toString('base64'));
-	const payload = { 'email': 'user@email.com' };
+	const payload = { email: 'user@email.com' };
 	let token: string;
 	let res;
 	let _res: sinon.SinonMock;

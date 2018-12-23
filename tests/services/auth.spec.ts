@@ -6,10 +6,10 @@ import { UserType } from '../../src/models/user';
 
 describe('AuthService', () => {
 	const data = {
-		'id': 'someId',
-		'password': 'pass',
-		'email': 'some@email.com',
-		'admin': false
+		id: 'someId',
+		password: 'pass',
+		email: 'some@email.com',
+		admin: false
 	} as UserType;
 	let service: AuthService;
 	let _service: sinon.SinonMock;
@@ -28,8 +28,8 @@ describe('AuthService', () => {
 		_model = sinon.mock(MockModel);
 
 		const options = {
-			'userModel': MockModel,
-			'logger': {
+			userModel: MockModel,
+			logger: {
 				info() { },
 				warn() { },
 				error() { }

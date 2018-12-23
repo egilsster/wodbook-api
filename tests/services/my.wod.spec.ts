@@ -9,9 +9,9 @@ import { TrainingService } from '../../src/services/training';
 
 describe('MywodService', () => {
 	const user: any = {
-		'_id': 'userId',
-		'id': 'userId',
-		'email': 'user@email.com'
+		_id: 'userId',
+		id: 'userId',
+		email: 'user@email.com'
 	};
 	const filename = 'filename';
 	let _sqlite: sinon.SinonMock;
@@ -50,13 +50,13 @@ describe('MywodService', () => {
 		_trainingService = sinon.mock(trainingService);
 
 		const options = {
-			'userModel': MockModel,
-			'workoutModel': MockModel,
-			'workoutScoreModel': MockModel,
-			'workoutService': trainingService,
-			'movementModel': MockModel,
-			'movementScoreModel': MockModel,
-			'logger': logger
+			userModel: MockModel,
+			workoutModel: MockModel,
+			workoutScoreModel: MockModel,
+			workoutService: trainingService,
+			movementModel: MockModel,
+			movementScoreModel: MockModel,
+			logger: logger
 		};
 
 		service = new MyWodService(options);
@@ -79,15 +79,15 @@ describe('MywodService', () => {
 
 	describe('saveAthlete', () => {
 		const userData = {
-			'id': 'someid',
-			'firstName': 'firstname',
-			'lastName': 'lastname',
-			'gender': 1,
-			'email': 'user@email.com',
-			'dateOfBirth': '1000-10-01',
-			'height': 100,
-			'weight': 100,
-			'boxName': 'string'
+			id: 'someid',
+			firstName: 'firstname',
+			lastName: 'lastname',
+			gender: 1,
+			email: 'user@email.com',
+			dateOfBirth: '1000-10-01',
+			height: 100,
+			weight: 100,
+			boxName: 'string'
 		};
 
 		it('should successfully update a user if he exists', async (done) => {
@@ -105,7 +105,7 @@ describe('MywodService', () => {
 
 		it('should throw 403 Forbidden if the email from the backup dont match', async (done) => {
 			try {
-				const promise = service.saveAthlete({ 'email': 'another@email.com' }, userData);
+				const promise = service.saveAthlete({ email: 'another@email.com' }, userData);
 				await expect(promise).rejects.toHaveProperty('status', HttpStatus.FORBIDDEN);
 				done();
 			} catch (err) {
@@ -115,7 +115,7 @@ describe('MywodService', () => {
 
 		it('should throw 404 Not found if the user info in the JWT does not exist', async (done) => {
 			try {
-				_model.expects('findOne').resolves(null);
+				_model.expects('findOne').resolves();
 
 				const promise = service.saveAthlete(user, userData);
 				await expect(promise).rejects.toHaveProperty('status', HttpStatus.NOT_FOUND);
@@ -129,16 +129,16 @@ describe('MywodService', () => {
 	describe('saveWorkouts', () => {
 		const workouts = [
 			{
-				'id': 'id1',
-				'description': 'This is a sample custom WOD',
-				'title': 'w1',
-				'scoreType': 'For Time:'
+				id: 'id1',
+				description: 'This is a sample custom WOD',
+				title: 'w1',
+				scoreType: 'For Time:'
 			},
 			{
-				'id': 'id2',
-				'description': 'Great workout',
-				'title': 'w2',
-				'scoreType': 'For Time:'
+				id: 'id2',
+				description: 'Great workout',
+				title: 'w2',
+				scoreType: 'For Time:'
 			}
 		];
 
@@ -172,41 +172,41 @@ describe('MywodService', () => {
 	describe('saveWorkoutScores', () => {
 		const scores = [
 			{
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 1,
-				'hasChangesForServer': 0,
-				'parseId': 'OPssEL9w2Q',
-				'title': '181017',
-				'date': '2017-11-18',
-				'scoreType': 'For Time:',
-				'score': '14:20',
-				'personalRecord': 0,
-				'asPrescribed': 1,
-				'description': '5 rounds:\n15 ft rope climb, 3 ascents,\n10 toes-to-bar,\n21 walking lunges with 20.4/13.6kg plate overhead,\n400 meter run',
-				'notes': '',
-				'heartRate': 'NA',
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 1,
+				hasChangesForServer: 0,
+				parseId: 'OPssEL9w2Q',
+				title: '181017',
+				date: '2017-11-18',
+				scoreType: 'For Time:',
+				score: '14:20',
+				personalRecord: 0,
+				asPrescribed: 1,
+				description: '5 rounds:\n15 ft rope climb, 3 ascents,\n10 toes-to-bar,\n21 walking lunges with 20.4/13.6kg plate overhead,\n400 meter run',
+				notes: '',
+				heartRate: 'NA',
+				deleted: 0
 			},
 			{
-				'primaryClientID': 'i-2fb15b03cbs313ef86270ad1eff1a340-2017-01-02 12:14:48 +0000',
-				'primaryRecordID': 1,
-				'hasChangesForServer': 0,
-				'parseId': 'OPssEL9w2Q',
-				'title': 'Fran',
-				'date': '2017-12-06',
-				'scoreType': 'For Time:',
-				'score': '3:22',
-				'personalRecord': 1,
-				'asPrescribed': 1,
-				'description': 'You already know what it is',
-				'notes': '',
-				'heartRate': 'NA',
-				'deleted': 0
+				primaryClientID: 'i-2fb15b03cbs313ef86270ad1eff1a340-2017-01-02 12:14:48 +0000',
+				primaryRecordID: 1,
+				hasChangesForServer: 0,
+				parseId: 'OPssEL9w2Q',
+				title: 'Fran',
+				date: '2017-12-06',
+				scoreType: 'For Time:',
+				score: '3:22',
+				personalRecord: 1,
+				asPrescribed: 1,
+				description: 'You already know what it is',
+				notes: '',
+				heartRate: 'NA',
+				deleted: 0
 			}
 		];
 
 		it('should save workout scores', async () => {
-			_trainingService.expects('getByFilter').resolves({ 'id': 'workoutId' });
+			_trainingService.expects('getByFilter').resolves({ id: 'workoutId' });
 			_modelInstance.expects('save').once().resolves();
 			_trainingService.expects('getByFilter').resolves();
 
@@ -215,7 +215,7 @@ describe('MywodService', () => {
 		});
 
 		it('should not care about failed score migration', async () => {
-			_trainingService.expects('getByFilter').twice().resolves({ 'id': 'workoutId' });
+			_trainingService.expects('getByFilter').twice().resolves({ id: 'workoutId' });
 			_modelInstance.expects('save').twice().rejects();
 
 			const promise = service.saveWorkoutScores(user, scores);
@@ -226,67 +226,67 @@ describe('MywodService', () => {
 	describe('saveMovementsAndMovementScores', () => {
 		const movements = [
 			{
-				'primaryClientID': 'initial',
-				'primaryRecordID': 1,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'name': 'Thruster',
-				'type': 0,
-				'everModifiedByAthlete': 0,
-				'deleted': 0
+				primaryClientID: 'initial',
+				primaryRecordID: 1,
+				hasChangesForServer: 1,
+				parseId: null,
+				name: 'Thruster',
+				type: 0,
+				everModifiedByAthlete: 0,
+				deleted: 0
 			},
 			{
-				'primaryClientID': 'initial',
-				'primaryRecordID': 3,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'name': 'Snatch',
-				'type': 0,
-				'everModifiedByAthlete': 0,
-				'deleted': 0
+				primaryClientID: 'initial',
+				primaryRecordID: 3,
+				hasChangesForServer: 1,
+				parseId: null,
+				name: 'Snatch',
+				type: 0,
+				everModifiedByAthlete: 0,
+				deleted: 0
 			},
 			{
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 5,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'name': 'HSPU',
-				'type': 2,
-				'everModifiedByAthlete': 1,
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 5,
+				hasChangesForServer: 1,
+				parseId: null,
+				name: 'HSPU',
+				type: 2,
+				everModifiedByAthlete: 1,
+				deleted: 0
 			}
 		];
 
 		const movementScores = [
 			{
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 50,
-				'foreignMovementClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'foreignMovementRecordID': 5,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'date': '2017-11-07',
-				'measurementAValue': 7,
-				'measurementAUnitsCode': 8,
-				'measuermentB': '0:00',
-				'sets': '1',
-				'notes': '',
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 50,
+				foreignMovementClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				foreignMovementRecordID: 5,
+				hasChangesForServer: 1,
+				parseId: null,
+				date: '2017-11-07',
+				measurementAValue: 7,
+				measurementAUnitsCode: 8,
+				measuermentB: '0:00',
+				sets: '1',
+				notes: '',
+				deleted: 0
 			},
 			{
-				'primaryClientID': 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
-				'primaryRecordID': 44,
-				'foreignMovementClientID': 'initial',
-				'foreignMovementRecordID': 3,
-				'hasChangesForServer': 1,
-				'parseId': null,
-				'date': '2017-04-11',
-				'measurementAValue': 70,
-				'measurementAUnitsCode': 1,
-				'measuermentB': '1',
-				'sets': '1',
-				'notes': '',
-				'deleted': 0
+				primaryClientID: 'i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000',
+				primaryRecordID: 44,
+				foreignMovementClientID: 'initial',
+				foreignMovementRecordID: 3,
+				hasChangesForServer: 1,
+				parseId: null,
+				date: '2017-04-11',
+				measurementAValue: 70,
+				measurementAUnitsCode: 1,
+				measuermentB: '1',
+				sets: '1',
+				notes: '',
+				deleted: 0
 			}
 		];
 

@@ -16,31 +16,31 @@ export type MovementScoreType = mongoose.Document & {
 export class MovementScoreModel extends BaseModel {
 	private static NAME = 'MovementScore';
 	private static DEFINITION = {
-		'score': {
-			'type': String,
-			'required': true
+		score: {
+			type: String,
+			required: true
 		},
-		'measurement': {
-			'type': String,
-			'required': true,
-			'enum': MyWodUtils.MOVEMENT_MEASUREMENTS
+		measurement: {
+			type: String,
+			required: true,
+			enum: MyWodUtils.MOVEMENT_MEASUREMENTS
 		},
-		'sets': {
-			'type': Number,
-			'default': 1,
-			'set': Number
+		sets: {
+			type: Number,
+			default: 1,
+			set: Number
 		},
-		'notes': {
-			'type': String,
-			'required': false
+		notes: {
+			type: String,
+			required: false
 		},
-		'parentId': {
-			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'Movement'
+		parentId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Movement'
 		},
-		'createdBy': {
-			'type': mongoose.Schema.Types.ObjectId,
-			'ref': 'User'
+		createdBy: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'User'
 		}
 	};
 

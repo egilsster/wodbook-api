@@ -11,25 +11,28 @@ describe('ErrorUtils', () => {
 			expect(res).toEqual(exprErr);
 		});
 
-		it('should return array of express errors if the error contains a truthy errors property', () => {
+		it('should convert validation errors', () => {
 			const manyErrors = {
-				'errors': {
-					'key1': {
-						'name': 'errName1',
-						'message': 'errMessage1',
-						'$isValidatorError': true
+				errors: {
+					key1: {
+						name: 'ValidatorError',
+						message: 'errMessage1'
 					},
-					'key2': {
-						'name': 'errName2',
-						'message': 'errMessage2',
-						'$isValidatorError': false
+					key2: {
+						name: 'ValidationError',
+						message: 'errMessage2'
+					},
+					key3: {
+						name: 'OtherError',
+						message: 'errMessage3'
 					}
 				}
 			};
 			const res = ErrorUtils.ensureExpressError(manyErrors);
-			expect(res).toHaveProperty('length', 2);
-			expect(res[0]).toBeInstanceOf(ExpressError);
-			expect(res[1]).toBeInstanceOf(ExpressError);
+			expect(res).toBeInstanceOf(ExpressError);
+			expect(res.detail).toContain(manyErrors.errors.key1.message);
+			expect(res.detail).toContain(manyErrors.errors.key2.message);
+			expect(res.detail).toContain(manyErrors.errors.key3.message);
 		});
 
 		it('should convert Mongo error if error has a truthy code property', () => {
@@ -89,100 +92,43 @@ describe('ErrorUtils', () => {
 		});
 	});
 
-	describe('convertMongooseErrorToExpressErrors', () => {
-		it('should convert mongoose errors to list of ExpressError', () => {
+	describe('convertMongooseErrorToExpressError', () => {
+		it('should convert mongoose errors to an ExpressError', () => {
 			const mongooseErrors = {
-				'errors': {
-					'key1': {
-						'name': 'errName1',
-						'message': 'errMessage1',
-						'$isValidatorError': true
+				name: 'ValidationError',
+				errors: {
+					key1: {
+						name: 'ValidatorError',
+						message: 'errMessage1'
 					},
-					'key2': {
-						'name': 'errName2',
-						'message': 'errMessage2',
-						'$isValidatorError': false
+					key2: {
+						name: 'OtherError',
+						message: 'errMessage2'
 					}
 				}
 			};
 
-			const res = ErrorUtils.convertMongooseErrorToExpressErrors(mongooseErrors);
-			expect(res).toBeDefined();
-			expect(res.length).toEqual(2);
-			expect(res[0].detail).toEqual(mongooseErrors.errors.key1.message);
-			expect(res[0].status).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
-			expect(res[1].detail).toEqual(mongooseErrors.errors.key2.message);
-			expect(res[1].status).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+			const res = ErrorUtils.convertMongooseErrorToExpressError(mongooseErrors);
+			expect(res.status).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
+			expect(res.detail).toContain(mongooseErrors.errors.key1.message);
+			expect(res.detail).toContain(mongooseErrors.errors.key2.message);
 		});
 	});
 
 	describe('guessStatusCode', () => {
 		it('should return 422 Unprocessable Entity if error is a ValidatorError', () => {
-			const err = {
-				'$isValidatorError': true
-			};
+			const res = ErrorUtils.guessStatusCode({ name: 'ValidatorError' });
+			expect(res).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
+		});
 
-			const res = ErrorUtils.guessStatusCode(err);
+		it('should return 422 Unprocessable Entity if error is a ValidationError', () => {
+			const res = ErrorUtils.guessStatusCode({ name: 'ValidationError' });
 			expect(res).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
 		});
 
 		it('should return 500 Server Error if the status code could not be determined', () => {
-			const err = new Error('msg');
-
-			const res = ErrorUtils.guessStatusCode(err);
+			const res = ErrorUtils.guessStatusCode(new Error('msg'));
 			expect(res).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
-		});
-	});
-
-	describe('isExpressError', () => {
-		it('should return true if an error is an ExpressError instance', () => {
-			const exprErr = new ExpressError('msg', HttpStatus.ACCEPTED);
-			const res = ErrorUtils.isExpressError(exprErr);
-			expect(res).toBe(true);
-		});
-
-		it('should return true if an error is an array of ExpressError instances', () => {
-			const exprErr = new ExpressError('msg', HttpStatus.ACCEPTED);
-			const res = ErrorUtils.isExpressError([exprErr]);
-			expect(res).toBe(true);
-		});
-
-		it('should return false if an error is a regular error', () => {
-			const err = new Error('msg');
-			const res = ErrorUtils.isExpressError(err);
-			expect(res).toBe(false);
-		});
-
-		it('should return false if the error is a regular object', () => {
-			const err = { name: 'test' };
-			const res = ErrorUtils.isExpressError(err);
-			expect(res).toBe(false);
-		});
-	});
-
-	describe('isErrorWithErrors', () => {
-		it('should return true if error object has a truthy errors property', () => {
-			const err = { errors: [] };
-			const res = ErrorUtils.isErrorWithErrors(err);
-			expect(res).toBe(true);
-		});
-
-		it('should return false if error object has a falsy errors property', () => {
-			const err = { errors: null };
-			const res = ErrorUtils.isErrorWithErrors(err);
-			expect(res).toBe(false);
-		});
-
-		it('should return false if error object does not have an errors property', () => {
-			const err = {};
-			const res = ErrorUtils.isErrorWithErrors(err);
-			expect(res).toBe(false);
-		});
-
-		it('should return false if error object is falsy', () => {
-			const err = null;
-			const res = ErrorUtils.isErrorWithErrors(err);
-			expect(res).toBe(false);
 		});
 	});
 });
