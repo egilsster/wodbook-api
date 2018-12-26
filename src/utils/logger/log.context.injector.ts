@@ -1,18 +1,17 @@
-import * as express from 'express';
-import * as cls from 'continuation-local-storage';
-const session = cls.createNamespace('logger');
+import * as cls from 'cls-hooked';
+let session = cls.createNamespace('logger');
 
 /**
  * Stores the current request object using `continuation-local-storage` that
- * can be retrieved later in the request chain
+ *  can be retrieved later in the request chain
+ *
  */
 export function logContextInjector() {
-	return function (req: express.Request, res: express.Response, next: express.NextFunction) {
-		session.bindEmitter(req);
-		session.bindEmitter(res);
-		session.run(() => {
-			session.set('req', req);
-			next();
+	return async (ctx, next) => {
+		await session.runAndReturn(async () => {
+			session.set('req', ctx.request);
+			session.set('state', ctx.state);
+			await next();
 		});
 	};
 }

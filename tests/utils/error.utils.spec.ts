@@ -1,134 +1,72 @@
 import * as HttpStatus from 'http-status-codes';
+import * as _ from 'lodash';
 import { ErrorUtils } from '../../src/utils/error.utils';
-import { ExpressError } from '../../src/utils/express.error';
-import { Error } from 'mongoose';
+import { ServiceError } from '../../src/utils/service.error';
+import { ERROR_TEMPLATES } from '../../src/utils/error.templates';
 
 describe('ErrorUtils', () => {
-	describe('ensureExpressError', () => {
-		it('should return ExpressError as is', () => {
-			const exprErr = new ExpressError('msg', HttpStatus.IM_A_TEAPOT);
-			const res = ErrorUtils.ensureExpressError(exprErr);
-			expect(res).toEqual(exprErr);
-		});
+	ErrorUtils.logger = {
+		info: () => { },
+		warning: () => { },
+		error: () => { }
+	} as any;
 
-		it('should convert validation errors', () => {
-			const manyErrors = {
-				errors: {
-					key1: {
-						name: 'ValidatorError',
-						message: 'errMessage1'
-					},
-					key2: {
-						name: 'ValidationError',
-						message: 'errMessage2'
-					},
-					key3: {
-						name: 'OtherError',
-						message: 'errMessage3'
-					}
-				}
-			};
-			const res = ErrorUtils.ensureExpressError(manyErrors);
-			expect(res).toBeInstanceOf(ExpressError);
-			expect(res.detail).toContain(manyErrors.errors.key1.message);
-			expect(res.detail).toContain(manyErrors.errors.key2.message);
-			expect(res.detail).toContain(manyErrors.errors.key3.message);
+	describe('ensureServiceError', () => {
+		it('should return ServiceError as is', () => {
+			const svcErr = new ServiceError(ERROR_TEMPLATES.INVALID_JWT);
+			const res = ErrorUtils.ensureServiceError(svcErr);
+			expect(res).toEqual(svcErr);
 		});
 
 		it('should convert Mongo error if error has a truthy code property', () => {
 			const err = { name: 'MongoError', code: 11000 };
-			const res = ErrorUtils.ensureExpressError(err);
+			const res = ErrorUtils.ensureServiceError(err);
 			expect(res).toHaveProperty('status', HttpStatus.CONFLICT);
-			expect(res).toBeInstanceOf(ExpressError);
-		});
-
-		it('should use information from the error if cases are not known', () => {
-			const err = { message: 'test', status: HttpStatus.BAD_REQUEST };
-			const res = ErrorUtils.ensureExpressError(err);
-			expect(res).toHaveProperty('detail', err.message);
-			expect(res).toHaveProperty('status', HttpStatus.BAD_REQUEST);
-			expect(res).toBeInstanceOf(ExpressError);
+			expect(res).toBeInstanceOf(ServiceError);
 		});
 
 		it('should use default text and code if error is falsy', () => {
-			const res = ErrorUtils.ensureExpressError(null);
-			expect(res).toHaveProperty('detail', 'Unknown error occurred');
+			const res = ErrorUtils.ensureServiceError(null);
 			expect(res).toHaveProperty('status', HttpStatus.INTERNAL_SERVER_ERROR);
-			expect(res).toBeInstanceOf(ExpressError);
+			const meta = JSON.stringify(_.get(res, 'meta', {}));
+			expect(meta).toMatch(/Unknown error was raised/);
+			expect(res).toBeInstanceOf(ServiceError);
+		});
+
+		it('should handle type error', () => {
+			const res = ErrorUtils.ensureServiceError(new TypeError());
+			expect(res).toHaveProperty('status', HttpStatus.INTERNAL_SERVER_ERROR);
+			const meta = JSON.stringify(_.get(res, 'meta', {}));
+			expect(meta).toMatch(/Unknown error was raised/);
+			expect(res).toBeInstanceOf(ServiceError);
 		});
 	});
 
-	describe('convertMongoErrorToExpressError', () => {
-		it('should convert MongoError with code 11000 to ExpressError with status 409 Conflict', () => {
+	describe('convertMongoErrorToServiceError', () => {
+		it('should convert MongoError with code 11000 to ServiceError with status 409 Conflict', () => {
 			const err = { name: 'MongoError', code: 11000 };
-			const res = ErrorUtils.convertMongoErrorToExpressError(err);
+			const res = ErrorUtils.convertMongoErrorToServiceError(err);
 			expect(res).toHaveProperty('status', HttpStatus.CONFLICT);
 		});
 
-		it('should convert MongoError with code 11001 to ExpressError with status 409 Conflict', () => {
+		it('should convert MongoError with code 11001 to ServiceError with status 409 Conflict', () => {
 			const err = { name: 'MongoError', code: 11001 };
-			const res = ErrorUtils.convertMongoErrorToExpressError(err);
+			const res = ErrorUtils.convertMongoErrorToServiceError(err);
 			expect(res).toHaveProperty('status', HttpStatus.CONFLICT);
 		});
 
-		it('should convert MongoError with code 17280 to ExpressError with status 422 Unprocessable Entity', () => {
+		it('should convert MongoError with code 17280 to ServiceError with status 422 Unprocessable Entity', () => {
 			const err = { name: 'MongoError', code: 17280 };
-			const res = ErrorUtils.convertMongoErrorToExpressError(err);
+			const res = ErrorUtils.convertMongoErrorToServiceError(err);
 			expect(res).toHaveProperty('status', HttpStatus.UNPROCESSABLE_ENTITY);
 		});
 
-		it('should create ExpressError with information from the MongoError in cases that are not known', () => {
+		it('should create ServiceError with information from the MongoError in cases that are not known', () => {
 			const err = { name: 'MongoError', message: 'test' };
-			const res = ErrorUtils.convertMongoErrorToExpressError(err);
-			expect(res).toHaveProperty('detail', err.message);
+			const res = ErrorUtils.convertMongoErrorToServiceError(err);
 			expect(res).toHaveProperty('status', HttpStatus.INTERNAL_SERVER_ERROR);
-		});
-
-		it('should create ExpressError with default text and 500 Server Error code if nothing can be extracted from the error', () => {
-			const err = { name: 'MongoError' };
-			const res = ErrorUtils.convertMongoErrorToExpressError(err);
-			expect(res).toHaveProperty('detail', 'Unknown Mongo error occurred');
-			expect(res).toHaveProperty('status', HttpStatus.INTERNAL_SERVER_ERROR);
-		});
-	});
-
-	describe('convertMongooseErrorToExpressError', () => {
-		it('should convert mongoose errors to an ExpressError', () => {
-			const mongooseErrors = {
-				name: 'ValidationError',
-				errors: {
-					key1: {
-						name: 'ValidatorError',
-						message: 'errMessage1'
-					},
-					key2: {
-						name: 'OtherError',
-						message: 'errMessage2'
-					}
-				}
-			};
-
-			const res = ErrorUtils.convertMongooseErrorToExpressError(mongooseErrors);
-			expect(res.status).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
-			expect(res.detail).toContain(mongooseErrors.errors.key1.message);
-			expect(res.detail).toContain(mongooseErrors.errors.key2.message);
-		});
-	});
-
-	describe('guessStatusCode', () => {
-		it('should return 422 Unprocessable Entity if error is a ValidatorError', () => {
-			const res = ErrorUtils.guessStatusCode({ name: 'ValidatorError' });
-			expect(res).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
-		});
-
-		it('should return 422 Unprocessable Entity if error is a ValidationError', () => {
-			const res = ErrorUtils.guessStatusCode({ name: 'ValidationError' });
-			expect(res).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
-		});
-
-		it('should return 500 Server Error if the status code could not be determined', () => {
-			const res = ErrorUtils.guessStatusCode(new Error('msg'));
-			expect(res).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+			const meta = JSON.stringify(_.get(res, 'meta', {}));
+			expect(meta).toMatch(/Unknown Mongo error was raised/);
 		});
 	});
 });

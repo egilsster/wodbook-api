@@ -1,35 +1,53 @@
-import * as mongoose from 'mongoose';
-import { BaseModel } from './base';
-import { MyWodUtils } from '../utils/my.wod.utils';
+import * as _ from 'lodash';
+import { ServiceError } from '../utils/service.error';
+import { Resource } from './resource';
+import { ERROR_TEMPLATES } from '../utils/error.templates';
 
-export type MovementType = mongoose.Document & {
-	name: string;
-	measurement: string;
-	createdBy: mongoose.Schema.Types.ObjectId;
-	createdAt: Date;
-	modifiedAt: Date;
-};
+const VALID_MOVEMENT_MEASURES = ['weight', 'distance', 'reps', 'height'];
 
-export class MovementModel extends BaseModel {
-	private static NAME = 'Movement';
-	private static DEFINITION = {
-		name: {
-			type: String,
-			required: true,
-			trim: true
-		},
-		measurement: {
-			type: String,
-			required: true,
-			enum: MyWodUtils.MOVEMENT_MEASUREMENTS
-		},
-		createdBy: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'User'
+export class Movement extends Resource {
+	private _name!: string;
+	private _measurement!: string;
+
+	public static REQUIRED_FIELDS = ['name', 'measurement'];
+	public static ATTRIBUTES = [
+		'id', 'userId', 'name', 'measurement', 'createdAt', 'updatedAt'
+	];
+
+	constructor(params) {
+		super(params);
+		Movement.validateRequiredFields(params, Movement.REQUIRED_FIELDS);
+		this.name = params.name;
+		this.measurement = params.measurement;
+	}
+
+	get name() { return this._name; }
+	set name(value) {
+		if (Movement.isValidName(value)) {
+			this._name = value.trim();
+		} else {
+			throw new ServiceError(ERROR_TEMPLATES.INVALID_PROPERTY, { source: { pointer: '/name' } });
 		}
-	};
+	}
 
-	constructor(options: any = {}) {
-		super(MovementModel.NAME, MovementModel.DEFINITION, { ...options, indices: { name: 1, createdBy: 1 }, unique: { unique: true } });
+	get measurement() { return this._measurement; }
+	set measurement(value) {
+		if (Movement.isValidMeasure(value)) {
+			this._measurement = value;
+		} else {
+			throw new ServiceError(ERROR_TEMPLATES.INVALID_PROPERTY, { source: { pointer: '/measure' } });
+		}
+	}
+
+	toObject() {
+		return _.pick(this, Movement.ATTRIBUTES);
+	}
+
+	static isValidName(name: string) {
+		return _.isString(name) && name.length <= 200;
+	}
+
+	static isValidMeasure(measure: string) {
+		return _.isString(measure) && VALID_MOVEMENT_MEASURES.includes(measure);
 	}
 }

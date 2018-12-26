@@ -1,67 +1,89 @@
+import { Logger } from '../../../src/utils/logger/logger';
 import * as winston from 'winston';
 import * as _ from 'lodash';
-import * as cls from 'continuation-local-storage';
-import { Logger } from '../../../src/utils/logger/logger';
-const session = cls.createNamespace('logger');
+import * as cls from 'cls-hooked';
 
-describe('Logger', () => {
+let session = cls.createNamespace('logger');
+
+describe('Logger', function () {
 	let logger, transport, winstonInstance;
 
-	beforeEach(() => {
+	beforeEach(function () {
+		Logger.setContext({});
 		transport = new winston.transports.Memory({
 			json: true,
 			stringify: true,
 			level: 'info'
 		});
-		winstonInstance = new winston.Logger({ transports: [transport], levels: Logger.LOG_LEVELS });
+		winstonInstance = new winston.Logger({
+			transports: [transport],
+			levels: Logger.LOG_LEVELS
+		});
 		logger = new Logger('logger:tests', {
 			winstonLogger: winstonInstance
 		});
 		delete process.env.LOG_LEVEL;
 	});
 
-	afterEach(() => {
+	afterEach(function () {
 		transport.errorOutput.length = 0;
 		transport.writeOutput.length = 0;
+		Logger.setContext({});
 		Logger._resetLogger();
 		delete process.env.LOG_LEVEL;
 	});
 
-	describe('getWinstonLogger', () => {
-		it('caches logger', () => {
-			const first = Logger.getWinstonLogger();
-			const second = Logger.getWinstonLogger();
+	describe('getWinstonLogger', function () {
+		it('caches logger', function () {
+			let first = Logger.getWinstonLogger();
+			let second = Logger.getWinstonLogger();
 			expect(first).toEqual(second);
 		});
 
-		it('sets log level to info by default', () => {
-			const l = Logger.getWinstonLogger().transports.console.level;
+		it('sets log level to info by default', function () {
+			let l = Logger.getWinstonLogger().transports.console.level;
 			expect(l).toEqual('info');
 		});
 
-		it('overrides level with setting from LOG_LEVEL', () => {
-			process.env.NODE_ENV = 'development';
+		it('overrides level with setting from LOG_LEVEL', function () {
 			process.env.LOG_LEVEL = 'warn';
-			const l = Logger.getWinstonLogger().transports.console.level;
+			let l = Logger.getWinstonLogger().transports.console.level;
+			expect(l).toEqual('warn');
+		});
+		it('lowercases value from LOG_LEVEL', function () {
+			process.env.LOG_LEVEL = 'WARN';
+			let l = Logger.getWinstonLogger().transports.console.level;
 			expect(l).toEqual('warn');
 		});
 	});
 
-	describe('constructor', () => {
-		it('sets default context', () => {
-			const l = new Logger('themodule', {
-				winstonLogger: new (winston.Logger)({ transports: [transport] })
+	describe('addContext', function () {
+		it('alters default context', function () {
+			Logger.addContext({
+				version: '123'
+			});
+			let l = new Logger();
+			delete l.defaultContext.pid;
+			expect(l.defaultContext).toEqual({
+				version: '123'
+			});
+		});
+	});
+
+	describe('constructor', function () {
+		it('sets default context', function () {
+			let l = new Logger('themodule', {
+				winstonLogger: new winston.Logger({ transports: [transport] })
 			});
 			delete l.defaultContext.pid;
 			expect(l.defaultContext).toEqual({
-				module: 'themodule',
-				type: 'wodbook-api'
+				module: 'themodule'
 			});
 		});
 
-		it('merges added context into default context', () => {
-			const l = new Logger('themodule', {
-				winstonLogger: new (winston.Logger)({ transports: [transport] }),
+		it('merges added context into default context', function () {
+			let l = new Logger('themodule', {
+				winstonLogger: new winston.Logger({ transports: [transport] }),
 				context: {
 					foo: 'foo'
 				}
@@ -69,53 +91,53 @@ describe('Logger', () => {
 			delete l.defaultContext.pid;
 			expect(l.defaultContext).toEqual({
 				module: 'themodule',
-				foo: 'foo',
-				type: 'wodbook-api'
+				foo: 'foo'
 			});
 		});
 
-		it('overwrites default context values with provided values', () => {
-			const l = new Logger('themodule', {
-				winstonLogger: new (winston.Logger)({ transports: [transport] }),
+		it('overwrites default context values with provided values', function () {
+			let l = new Logger('themodule', {
+				winstonLogger: new winston.Logger({ transports: [transport] }),
 				context: {
 					module: 'someotherthing'
 				}
 			});
 			delete l.defaultContext.pid;
 			expect(l.defaultContext).toEqual({
-				module: 'someotherthing',
-				type: 'wodbook-api'
+				module: 'someotherthing'
 			});
 		});
 	});
 
-	describe('_createContext', () => {
-		it('returns default context given null request', () => {
-			const context = logger._createContext(null);
+	describe('_createContext', function () {
+		it('returns default context given null request', function () {
+			let context = logger._createContext(null);
 			expect(context).toEqual({});
 		});
-
-		it('returns augmented context given correct request', () => {
-			const req = {
+		it('returns augmented context given correct request', function () {
+			let req = {
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: 'foo'
 				},
 				method: 'PATCH'
 			};
-			const context = logger._createContext(req);
+			let context = logger._createContext(req);
 			expect(context).toEqual({
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
-				query: [
-					['feature', 'foo']
-				],
+				query: [['feature', 'foo']],
 				userId: undefined
 			});
 		});
-
-		it('returns userId when it is provided in the request in req.user.id', () => {
-			const req = {
+		it('returns userId when it is provided in the request in req.user.id', function () {
+			let req = {
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: 'foo'
@@ -123,19 +145,20 @@ describe('Logger', () => {
 				method: 'PATCH',
 				user: { id: '1234' }
 			};
-			const context = logger._createContext(req);
+			let context = logger._createContext(req);
 			expect(context).toEqual({
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
-				query: [
-					['feature', 'foo']
-				],
+				query: [['feature', 'foo']],
 				userId: '1234'
 			});
 		});
-
-		it('drops query entries where the values are empty', () => {
-			const req = {
+		it('drops query entries where the values are empty', function () {
+			let req = {
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: 'foo',
@@ -145,19 +168,20 @@ describe('Logger', () => {
 				method: 'PATCH',
 				user: { id: '1234' }
 			};
-			const context = logger._createContext(req);
+			let context = logger._createContext(req);
 			expect(context).toEqual({
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
-				query: [
-					['feature', 'foo']
-				],
+				query: [['feature', 'foo']],
 				userId: '1234'
 			});
 		});
-
-		it('correctly handles multi-value query params', () => {
-			const req = {
+		it('correctly handles multi-value query params', function () {
+			let req = {
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				query: {
 					feature: ['foo', 'bar']
@@ -165,511 +189,484 @@ describe('Logger', () => {
 				method: 'PATCH',
 				user: { id: '1234' }
 			};
-			const context = logger._createContext(req);
+			let context = logger._createContext(req);
 			expect(context).toEqual({
+				id: 'abcd1234',
+				ip: '1.2.3.4',
 				url: '/some/random/url',
 				method: 'PATCH',
-				query: [
-					['feature', ['foo', 'bar']]
-				],
+				query: [['feature', ['foo', 'bar']]],
 				userId: '1234'
 			});
 		});
 	});
 
-	describe('_defaultRequestFilter', () => {
-		let req;
-		beforeEach(() => {
-			req = {
-				foo: 'bar',
-				status: '200',
-				method: 'GET',
-				path: '/v1/foo/fooid123/bar/barid123',
-				params: {
-					fooId: 'fooid123',
-					barId: 'barid123'
-				}
-			};
-		});
+	describe('computeContext', function () {
+		it('calls context transform function when added', function () {
+			try {
+				let req = {
+					id: 'abcd1234',
+					ip: '1.2.3.4',
+					url: '/some/random/url',
+					query: {
+						feature: 'foo'
+					},
+					method: 'PATCH',
+					user: { id: '1234' }
+				};
+				Logger.setContextTransform((logContext, _reqContext) => {
+					logContext.url = `${logContext.url}#FOOBAR`;
+					logContext.testToken123 = 'testToken123';
+					return logContext;
+				});
+				let context = logger._createContext(req);
+				context = logger.computeContext(context);
 
-		it('returns property from the request', () => {
-			const property = Logger._defaultRequestFilter(req, 'foo');
-			expect(property).toEqual('bar');
-		});
+				// pid will change with each test execution, verify that it's present then remove
+				expect(context.pid).toBeDefined();
+				delete context.pid;
 
-		it('returns formatted property when propName is endpoint', () => {
-			const property = Logger._defaultRequestFilter(req, 'endpoint');
-			expect(property).toEqual('GET /v1/foo/{fooId}/bar/{barId}');
+				expect(context).toEqual({
+					module: 'logger:tests',
+					id: 'abcd1234',
+					ip: '1.2.3.4',
+					url: '/some/random/url#FOOBAR',
+					method: 'PATCH',
+					query: [['feature', 'foo']],
+					userId: '1234',
+					testToken123: 'testToken123'
+				});
+			} finally {
+				// don't allow our custom transform to affect other tests, even if error thrown
+				Logger.clearContextTransform();
+			}
 		});
 	});
 
-	describe('_defaultIgnoreRoute', () => {
-		let req;
-
-		beforeEach(() => {
-			req = {};
-		});
-
-		it('returns false when url does not match /health or /metrics', () => {
-			req.url = '/bar';
-			const ignoreRoute = Logger._defaultIgnoreRoute(req);
-			expect(ignoreRoute).toBe(false);
-		});
-
-		it('returns true when url matches /health', () => {
-			req.url = '/health';
-			const ignoreRoute = Logger._defaultIgnoreRoute(req);
-			expect(ignoreRoute).toBe(true);
-		});
-
-		it('returns true when url matches /metrics', () => {
-			req.url = '/metrics';
-			const ignoreRoute = Logger._defaultIgnoreRoute(req);
-			expect(ignoreRoute).toBe(true);
-		});
-	});
-
-	describe('log functions', () => {
-		_.each(['trace', 'debug', 'verbose', 'info', 'warn', 'error', 'fatal'], function (level) {
-			it(`${level} level with message and messageContext`, function (done) {
-				const req = {
-					user: {
-						id: '123'
-					},
-					url: '/foo/bar/baz',
-					query: {
-						bogus: '',
-						filter: 'blah'
-					}
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const message = 'hello world!';
-				const messageContext = {
-					userId: '1234',
-					appId: '456',
-					query: {
-						bogus: '',
-						filter: 'blah'
-					}
-				};
-				session.run(() => {
-					session.set('req', req);
-					logger[level](message, messageContext);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toEqual({
-						level,
-						logseverity: level.toUpperCase(),
-						message,
-						userId: messageContext.userId,
-						appId: messageContext.appId,
-						url: context.url,
-						module: 'logger:tests',
-						query: [['filter', 'blah']],
-						type: 'wodbook-api'
-					});
-					done();
-				});
-			});
-
-			it(`${level} level with message only`, function (done) {
-				const req = {
-					user: {
-						id: '1234'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const message = 'hello world!';
-				session.run(() => {
-					session.set('req', req);
-					logger[level](message);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toEqual({
-						level,
-						logseverity: level.toUpperCase(),
-						message,
-						url: context.url,
-						module: 'logger:tests',
-						userId: req.user.id,
-						query: [],
-						type: 'wodbook-api'
-					});
-					done();
-				});
-			});
-
-			it(`${level} level with messageContext`, function (done) {
-				const req = {
-					user: {
-						id: '1234'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const messageContext = {
-					userId: '123',
-					appId: '456'
-				};
-				session.run(() => {
-					session.set('req', req);
-					logger[level](messageContext);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toEqual({
-						level,
-						logseverity: level.toUpperCase(),
-						message: '',
-						userId: messageContext.userId,
-						appId: messageContext.appId,
-						url: context.url,
-						module: 'logger:tests',
-						query: [],
-						type: 'wodbook-api'
-					});
-					done();
-				});
-			});
-
-			it(`${level} level with format string`, function (done) {
-				const req = {
-					user: {
-						id: '123'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					url: '/foo/bar/baz'
-				};
-				session.run(() => {
-					session.set('req', req);
-					logger[level]('%s, %s', 'Hello', 'world!');
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toEqual({
-						level,
-						logseverity: level.toUpperCase(),
-						message: 'Hello, world!',
-						url: context.url,
-						module: 'logger:tests',
-						userId: req.user.id,
-						query: [],
-						type: 'wodbook-api'
-					});
-					done();
-				});
-			});
-
-			it(`${level} level with format string and messageContext`, function (done) {
-				const req = {
-					user: {
-						id: '1234'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const messageContext = {
-					userId: '123',
-					appId: '456'
-				};
-				session.run(() => {
-					session.set('req', req);
-					logger[level]('%s, %s', 'Hello', 'world!', messageContext);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toEqual({
-						level,
-						logseverity: level.toUpperCase(),
-						message: 'Hello, world!',
-						userId: messageContext.userId,
-						appId: messageContext.appId,
-						url: context.url,
-						module: 'logger:tests',
-						query: [],
-						type: 'wodbook-api'
-					});
-					done();
-				});
-			});
-
-			it(`${level} level with errors`, function (done) {
-				const req = {
-					user: {
-						id: '123'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const error = new Error('THE SKY IS FALLING');
-				session.run(() => {
-					session.set('req', req);
-					logger[level](error);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toHaveProperty('level', level);
-					expect(msg).toHaveProperty('logseverity', level.toUpperCase());
-					expect(msg).toHaveProperty('message');
-					expect(msg.message).toMatch(/^Error: THE SKY IS FALLING.*/);
-					expect(msg).toHaveProperty('url', context.url);
-					expect(msg).toHaveProperty('module', 'logger:tests');
-					expect(msg).toHaveProperty('query', []);
-					expect(msg).toHaveProperty('userId', req.user.id);
-					expect(msg).toHaveProperty('type', 'wodbook-api');
-					done();
-				});
-			});
-
-			it(`${level} level with errors, messages and contexts`, function (done) {
-				const req = {
-					user: {
-						id: '123'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					url: '/foo/bar/baz'
-				};
-				const messageContext = {
-					userId: '1234',
-					appId: '456'
-				};
-				const error = new Error('THE SKY IS FALLING');
-				session.run(() => {
-					session.set('req', req);
-					logger[level]('Oh look what happened:', error, messageContext);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toHaveProperty('level', level);
-					expect(msg).toHaveProperty('logseverity', level.toUpperCase());
-					expect(msg).toHaveProperty('message');
-					expect(msg.message).toMatch(/^Oh look what happened: Error: THE SKY IS FALLING.*/);
-					expect(msg).toHaveProperty('appId', messageContext.appId);
-					expect(msg).toHaveProperty('userId', messageContext.userId);
-					expect(msg).toHaveProperty('url', context.url);
-					expect(msg).toHaveProperty('module', 'logger:tests');
-					done();
-				});
-			});
-
-			it(`${level} level with promise`, function (done) {
-				const req = {
-					user: {
-						id: '123'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const messageContext = {
-					appId: '456'
-				};
-				const error = new Error('THE SKY IS FALLING');
-				session.run(() => {
-					session.set('req', req);
-					return new Promise(() => {
-						logger[level]('Oh look what happened:', error, messageContext);
-						const output = transport.writeOutput[0] || transport.errorOutput[0];
-						if (!output) {
-							done();
+	describe.skip('log functions', function () {
+		_.each(
+			['trace', 'debug', 'verbose', 'info', 'warn', 'error', 'fatal'],
+			function (level) {
+				it(`${level} level with message and messageContext`, function (done) {
+					let req = {
+						user: {
+							id: '123'
+						},
+						url: '/foo/bar/baz',
+						query: {
+							bogus: '',
+							filter: 'blah'
 						}
-						const msg = JSON.parse(output);
+					};
+					let context = {
+						username: 'foo',
+						url: '/foo/bar/baz'
+					};
+					let message = 'hello world!';
+					let messageContext = {
+						userId: '1234',
+						appId: '456',
+						query: {
+							bogus: '',
+							filter: 'blah'
+						}
+					};
+					session.run(() => {
+						session.set('req', req);
+						logger[level](message, messageContext);
+						let output = transport.writeOutput[0] || transport.errorOutput[0];
+						let msg = JSON.parse(output);
 						delete msg.pid;
-						expect(msg).toHaveProperty('level', level);
-						expect(msg).toHaveProperty('logseverity', level.toUpperCase());
-						expect(msg).toHaveProperty('message');
-						expect(msg.message).toMatch(/^Oh look what happened: Error: THE SKY IS FALLING.*/);
-						expect(msg).toHaveProperty('appId', messageContext.appId);
-						expect(msg).toHaveProperty('url', context.url);
-						expect(msg).toHaveProperty('module', 'logger:tests');
-						expect(msg).toHaveProperty('query', []);
-						expect(msg).toHaveProperty('userId', req.user.id);
+						expect(msg).toEqual({
+							level,
+							logseverity: level.toUpperCase(),
+							message,
+							userId: messageContext.userId,
+							appId: messageContext.appId,
+							url: context.url,
+							module: 'logger:tests',
+							query: [['filter', 'blah']]
+						});
 						done();
 					});
 				});
-			});
-
-			it(`${level} with log message template, params and msgContext`, function (done) {
-				const req = {
-					user: {
-						username: 'foo'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const messageContext = {
-					userId: '123',
-					appId: '456'
-				};
-				const msgStruct = {
-					code: 'SERVICE-123',
-					template: 'The first param is ${first} and the second is ${second}' // tslint:disable-line
-				};
-
-				session.run(() => {
-					session.set('req', req);
-					logger[level](msgStruct, { first: 'one', second: 'two', extra: 'this is extra!' }, messageContext);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toMatchObject({
-						level,
-						logseverity: level.toUpperCase(),
-						message: 'The first param is one and the second is two',
-						appId: messageContext.appId,
-						userId: messageContext.userId,
-						url: context.url,
-						module: 'logger:tests',
-						query: [],
-						first: 'one',
-						second: 'two',
-						extra: 'this is extra!'
-					});
-					done();
-				});
-			});
-
-			it(`${level} with log message template and params`, function (done) {
-				const req = {
-					user: {
-						username: 'foo'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const msgStruct = {
-					code: 'SERVICE-123',
-					template: 'The first param is ${first} and the second is ${second}' // tslint:disable-line
-				};
-
-				session.run(() => {
-					session.set('req', req);
-					logger[level](msgStruct, { first: 'one', second: 'two', extra: 'this is extra!' });
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toMatchObject({
-						level,
-						logseverity: level.toUpperCase(),
-						message: 'The first param is one and the second is two',
-						url: context.url,
-						module: 'logger:tests',
-						query: [],
-						first: 'one',
-						second: 'two',
-						extra: 'this is extra!'
-					});
-					done();
-				});
-			});
-
-			it(`${level} with log message template`, function (done) {
-				const req = {
-					user: {
-						username: 'foo'
-					},
-					url: '/foo/bar/baz',
-					query: []
-				};
-				const context = {
-					username: 'foo',
-					url: '/foo/bar/baz'
-				};
-				const messageContext = {
-					userId: '123',
-					appId: '456'
-				};
-				const msgStruct = {
-					code: 'SERVICE-123',
-					template: 'A message with no params' // eslint-disable-line no-template-curly-in-string
-				};
-
-				session.run(() => {
-					session.set('req', req);
-					logger[level](msgStruct, { first: 'one', second: 'two', extra: 'this is extra!' }, messageContext);
-					const output = transport.writeOutput[0] || transport.errorOutput[0];
-					if (!output) {
-						return done();
-					}
-					const msg = JSON.parse(output);
-					delete msg.pid;
-					expect(msg).toMatchObject({
-						level,
-						logseverity: level.toUpperCase(),
-						message: 'A message with no params',
-						url: context.url,
-						module: 'logger:tests',
+				it(`${level} level with message only`, function (done) {
+					let req = {
+						user: {
+							id: '1234'
+						},
+						url: '/foo/bar/baz',
 						query: []
+					};
+					let context = {
+						username: 'foo',
+						url: '/foo/bar/baz'
+					};
+					let message = 'hello world!';
+					session.run(() => {
+						session.set('req', req);
+						logger[level](message);
+						let output = transport.writeOutput[0] || transport.errorOutput[0];
+						let msg = JSON.parse(output);
+						delete msg.pid;
+						expect(msg).toEqual({
+							level,
+							logseverity: level.toUpperCase(),
+							message,
+							url: context.url,
+							module: 'logger:tests',
+							query: [],
+							userId: req.user.id
+						});
+						done();
 					});
-					done();
 				});
-			});
-		});
+				it(`${level} level with messageContext`, function (done) {
+					let req = {
+						user: {
+							id: '1234'
+						},
+						url: '/foo/bar/baz',
+						query: []
+					};
+					let context = {
+						username: 'foo',
+						url: '/foo/bar/baz'
+					};
+					let messageContext = {
+						userId: '123',
+						appId: '456'
+					};
+					session.run(() => {
+						session.set('req', req);
+						logger[level](messageContext);
+						let output = transport.writeOutput[0] || transport.errorOutput[0];
+						let msg = JSON.parse(output);
+						delete msg.pid;
+						expect(msg).toEqual({
+							level,
+							logseverity: level.toUpperCase(),
+							message: 'undefined',
+							userId: messageContext.userId,
+							appId: messageContext.appId,
+							url: context.url,
+							module: 'logger:tests',
+							query: []
+						});
+						done();
+					});
+				});
+				it(`${level} level with format string`, function (done) {
+					let req = {
+						user: {
+							id: '123'
+						},
+						url: '/foo/bar/baz',
+						query: []
+					};
+					let context = {
+						url: '/foo/bar/baz'
+					};
+					session.run(() => {
+						session.set('req', req);
+						logger[level]('%s, %s', 'Hello', 'world!');
+						let output = transport.writeOutput[0] || transport.errorOutput[0];
+						let msg = JSON.parse(output);
+						delete msg.pid;
+						expect(msg).toEqual({
+							level,
+							logseverity: level.toUpperCase(),
+							message: 'Hello, world!',
+							url: context.url,
+							module: 'logger:tests',
+							query: [],
+							userId: req.user.id
+						});
+						done();
+					});
+				});
+				it(`${level} level with format string and messageContext`, function (done) {
+					let req = {
+						user: {
+							id: '1234'
+						},
+						url: '/foo/bar/baz',
+						query: []
+					};
+					let context = {
+						username: 'foo',
+						url: '/foo/bar/baz'
+					};
+					let messageContext = {
+						userId: '123',
+						appId: '456'
+					};
+					session.run(() => {
+						session.set('req', req);
+						logger[level]('%s, %s', 'Hello', 'world!', messageContext);
+						let output = transport.writeOutput[0] || transport.errorOutput[0];
+						let msg = JSON.parse(output);
+						delete msg.pid;
+						expect(msg).toEqual({
+							level,
+							logseverity: level.toUpperCase(),
+							message: 'Hello, world!',
+							userId: messageContext.userId,
+							appId: messageContext.appId,
+							url: context.url,
+							module: 'logger:tests',
+							query: []
+						});
+						done();
+					});
+				});
+				it(`${level} level with errors`, function (done) {
+					let req = {
+						user: {
+							id: '123'
+						},
+						url: '/foo/bar/baz',
+						query: []
+					};
+					let context = {
+						username: 'foo',
+						url: '/foo/bar/baz'
+					};
+					let error = new Error('THE SKY IS FALLING');
+					session.run(() => {
+						session.set('req', req);
+						logger[level](error);
+						let output = transport.writeOutput[0] || transport.errorOutput[0];
+						let msg = JSON.parse(output);
+						delete msg.pid;
+						expect(msg).toMatchObject({
+							level,
+							logseverity: level.toUpperCase(),
+							message: /^Error: THE SKY IS FALLING.*/,
+							url: context.url,
+							module: 'logger:tests',
+							query: [],
+							userId: req.user.id
+						});
+						done();
+					});
+				});
+				it(`${level} level with errors, messages and contexts`, function (done) {
+					let req = {
+						user: {
+							id: '123'
+						},
+						url: '/foo/bar/baz',
+						query: []
+					};
+					let context = {
+						url: '/foo/bar/baz'
+					};
+					let messageContext = {
+						userId: '1234',
+						appId: '456'
+					};
+					let error = new Error('THE SKY IS FALLING');
+					session.run(() => {
+						session.set('req', req);
+						logger[level]('Oh look what happened:', error, messageContext);
+						let output = transport.writeOutput[0] || transport.errorOutput[0];
+						let msg = JSON.parse(output);
+						delete msg.pid;
+						expect(msg).toMatchObject({
+							level,
+							logseverity: level.toUpperCase(),
+							message: /^Oh look what happened: Error: THE SKY IS FALLING.*/,
+							appId: messageContext.appId,
+							userId: messageContext.userId,
+							url: context.url,
+							module: 'logger:tests',
+							query: []
+						});
+						done();
+					});
+				});
+				it(`${level} level with promise`, function (done) {
+					let req = {
+						user: {
+							id: '123'
+						},
+						url: '/foo/bar/baz',
+						query: []
+					};
+					let context = {
+						username: 'foo',
+						url: '/foo/bar/baz'
+					};
+					let messageContext = {
+						appId: '456'
+					};
+					let error = new Error('THE SKY IS FALLING');
+					session.run(() => {
+						session.set('req', req);
+						return new Promise(() => {
+							logger[level]('Oh look what happened:', error, messageContext);
+							let output = transport.writeOutput[0] || transport.errorOutput[0];
+							let msg = JSON.parse(output);
+							delete msg.pid;
+							expect(msg).toMatchObject({
+								level,
+								logseverity: level.toUpperCase(),
+								message: /^Oh look what happened: Error: THE SKY IS FALLING.*/,
+								appId: messageContext.appId,
+								url: context.url,
+								module: 'logger:tests',
+								query: [],
+								userId: req.user.id
+							});
+							done();
+						});
+					});
+					it(`${level} with log message template, params and msgContext`, function (done) {
+						let req = {
+							user: {
+								username: 'foo'
+							},
+							url: '/foo/bar/baz',
+							query: []
+						};
+						let context = {
+							username: 'foo',
+							url: '/foo/bar/baz'
+						};
+						let messageContext = {
+							userId: '123',
+							appId: '456'
+						};
+						let msgStruct = {
+							code: 'SERVICE-123',
+							template:
+								// tslint:disable-next-line:no-invalid-template-strings
+								'The first param is ${first} and the second is ${second}'
+						};
+
+						session.run(() => {
+							session.set('req', req);
+							logger[level](
+								msgStruct,
+								{ first: 'one', second: 'two', extra: 'this is extra!' },
+								messageContext
+							);
+							let output = transport.writeOutput[0] || transport.errorOutput[0];
+							let msg = JSON.parse(output);
+							delete msg.pid;
+							expect(msg).toMatchObject({
+								level,
+								logseverity: level.toUpperCase(),
+								message: 'The first param is one and the second is two',
+								appId: messageContext.appId,
+								userId: messageContext.userId,
+								url: context.url,
+								module: 'logger:tests',
+								query: [],
+								user: {
+									username: context.username
+								},
+								first: 'one',
+								second: 'two',
+								extra: 'this is extra!'
+							});
+							done();
+						});
+					});
+					it(`${level} with log message template and params`, function (done) {
+						let req = {
+							user: {
+								username: 'foo'
+							},
+							url: '/foo/bar/baz',
+							query: []
+						};
+						let context = {
+							username: 'foo',
+							url: '/foo/bar/baz'
+						};
+						let msgStruct = {
+							code: 'SERVICE-123',
+							template:
+								// tslint:disable-next-line:no-invalid-template-strings
+								'The first param is ${first} and the second is ${second}'
+						};
+
+						session.run(() => {
+							session.set('req', req);
+							logger[level](msgStruct, {
+								first: 'one',
+								second: 'two',
+								extra: 'this is extra!'
+							});
+							let output = transport.writeOutput[0] || transport.errorOutput[0];
+							let msg = JSON.parse(output);
+							delete msg.pid;
+							expect(msg).toMatchObject({
+								level,
+								logseverity: level.toUpperCase(),
+								message: 'The first param is one and the second is two',
+								url: context.url,
+								module: 'logger:tests',
+								query: [],
+								user: {
+									username: context.username
+								},
+								first: 'one',
+								second: 'two',
+								extra: 'this is extra!'
+							});
+							done();
+						});
+					});
+					it(`${level} with log message template`, function (done) {
+						let req = {
+							user: {
+								username: 'foo'
+							},
+							url: '/foo/bar/baz',
+							query: []
+						};
+						let context = {
+							username: 'foo',
+							url: '/foo/bar/baz'
+						};
+						let messageContext = {
+							userId: '123',
+							appId: '456'
+						};
+						let msgStruct = {
+							code: 'SERVICE-123',
+							template: 'A message with no params' // eslint-disable-line no-template-curly-in-string
+						};
+
+						session.run(() => {
+							session.set('req', req);
+							logger[level](
+								msgStruct,
+								{ first: 'one', second: 'two', extra: 'this is extra!' },
+								messageContext
+							);
+							let output = transport.writeOutput[0] || transport.errorOutput[0];
+							let msg = JSON.parse(output);
+							delete msg.pid;
+							expect(msg).toMatchObject({
+								level,
+								logseverity: level.toUpperCase(),
+								message: 'A message with no params',
+								url: context.url,
+								module: 'logger:tests',
+								query: [],
+								user: {
+									username: context.username
+								}
+							});
+							done();
+						});
+					});
+				});
+			}
+		);
 	});
 });

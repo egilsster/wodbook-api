@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { MyWodUtils } from '../../src/utils/my.wod.utils';
 
 describe('MywodUtils', () => {
@@ -31,26 +32,64 @@ describe('MywodUtils', () => {
 		});
 	});
 
-	describe('mapGender', () => {
-		it('should map valid numerical values to its appropriate string value', () => {
-			const genders = ['female', 'male', 'other'];
-
-			for (let i = 0; i < genders.length; ++i) {
-				const gender = genders[i];
-				const res = MyWodUtils.mapGender(i);
-				expect(res).toEqual(gender);
-			}
+	describe('adjustMovementScoreToMeasurement', () => {
+		it(`should modify properties for "weight"`, () => {
+			const weightScore = {
+				measurement: 'weight',
+				measurementAValue: 70,
+				measurementB: '1',
+				sets: '1',
+				notes: '',
+			};
+			const res = MyWodUtils.adjustMovementScoreToMeasurement('weight', weightScore);
+			expect(res).toHaveProperty('score', 70);
+			expect(res).toHaveProperty('sets', 1);
+			expect(res).toHaveProperty('reps', 1);
 		});
 
-		it(`should get 'other' if numerical value does not map to female or male`, () => {
-			const res = MyWodUtils.mapGender(3);
-			expect(res).toEqual('other');
+		it(`should modify properties for "height"`, () => {
+			const weightScore = {
+				measurementAValue: 126,
+				measurementB: '1',
+				sets: '1',
+				notes: ''
+			};
+			const res = MyWodUtils.adjustMovementScoreToMeasurement('height', weightScore);
+			expect(res).toHaveProperty('score', 126);
+			expect(res).toHaveProperty('sets', 1);
+			expect(res).toHaveProperty('reps', 1);
 		});
 
-		it('should return value unchanged if it is not a number', () => {
-			const gender = 'male';
-			const res = MyWodUtils.mapGender(gender);
-			expect(res).toEqual(gender);
+		it(`should modify properties for "distance"`, () => {
+			const weightScore = {
+				measurement: 'distance',
+				measurementAValue: 1000,
+				measurementB: '2:50',
+				sets: '1',
+				notes: '',
+			};
+			const res = MyWodUtils.adjustMovementScoreToMeasurement('distance', weightScore);
+			expect(res).toHaveProperty('score', '2:50');
+			expect(res).toHaveProperty('distance', 1000);
+			expect(res).toHaveProperty('sets', 1);
+			expect(res).toHaveProperty('reps', null);
+		});
+
+		it(`should modify properties for "reps"`, () => {
+			const repsScore = {
+				measurementAValue: 7,
+				measurementB: '0:00',
+				sets: '1',
+				notes: ''
+			};
+			const res = MyWodUtils.adjustMovementScoreToMeasurement('reps', repsScore);
+			expect(res).toHaveProperty('score', null);
+			expect(res).toHaveProperty('sets', 1);
+			expect(res).toHaveProperty('reps', 7);
+		});
+
+		it(`should throw error for invalid type`, () => {
+			expect(() => MyWodUtils.adjustMovementScoreToMeasurement('foo', {})).toThrow();
 		});
 	});
 
@@ -74,7 +113,7 @@ describe('MywodUtils', () => {
 			};
 
 			const res = MyWodUtils.parseWorkoutScore(score);
-			expect(res).toHaveProperty('workoutTitle', score.title);
+			expect(res).toHaveProperty('name', score.title);
 			expect(res).toHaveProperty('description', score.description);
 			expect(res).toHaveProperty('score', score.score);
 			expect(res).toHaveProperty('rx', Boolean(score.asPrescribed));
@@ -129,7 +168,7 @@ describe('MywodUtils', () => {
 				date: '2017-11-07',
 				measurementAValue: 7,
 				measurementAUnitsCode: 8,
-				measuermentB: '0:00',
+				measurementB: '0:00',
 				sets: '1',
 				notes: '',
 				deleted: 0
@@ -144,7 +183,7 @@ describe('MywodUtils', () => {
 				date: '2017-04-11',
 				measurementAValue: 70,
 				measurementAUnitsCode: 1,
-				measuermentB: '1',
+				measurementB: '1',
 				sets: '1',
 				notes: '',
 				deleted: 0
@@ -153,16 +192,18 @@ describe('MywodUtils', () => {
 
 		it('should find scores for movement', () => {
 			const movement = movements[2];
-			const session = movementScores[0];
 
 			const scores = MyWodUtils.getScoresForMovement(movement, movementScores);
 
 			expect(scores.length).toEqual(1);
-			expect(scores[0]).toHaveProperty('score', 7);
-			expect(scores[0]).toHaveProperty('measurement', MyWodUtils.mapMovementMeasurement(2));
-			expect(scores[0]).toHaveProperty('sets', '1');
-			expect(scores[0]).toHaveProperty('notes');
-			expect(scores[0]).toHaveProperty('createdAt', new Date(session.date));
+			const firstScore = _.omit(scores[0], ['createdAt']);
+			expect(firstScore).toEqual({
+				measurement: 'reps',
+				notes: '',
+				reps: 7,
+				score: null,
+				sets: 1
+			});
 		});
 	});
 });

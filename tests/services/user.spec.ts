@@ -1,36 +1,29 @@
 import * as sinon from 'sinon';
 
 import { UserService } from '../../src/services/user';
+import { User } from '../../src/models/user';
+import { UserDao } from '../../src/dao/user';
 
 describe('UserService', () => {
-	const user: any = {
-		id: 'userId',
-		email: 'user@email.com'
-	};
 	let service: UserService;
 	let _service: sinon.SinonMock;
-	let modelInstance;
-	let _modelInstance: sinon.SinonMock;
-	let _model: sinon.SinonMock;
-	class MockModel {
-		constructor() { return modelInstance; }
-		save() { return null; }
-		static find() { return null; }
-		static findOne() { return null; }
-	}
+	let userDao: UserDao, _userDao: sinon.SinonMock;
+
+	const user = new User({
+		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
+		email: 'some@email.com',
+		password: 'pass',
+		admin: false
+	});
+	const claims: any = { userId: user.id };
 
 	beforeEach(() => {
-		modelInstance = new MockModel();
-		_modelInstance = sinon.mock(modelInstance);
-		_model = sinon.mock(MockModel);
+		const anyOptions: any = {};
+		userDao = new UserDao(anyOptions);
+		_userDao = sinon.mock(userDao);
 
 		const options = {
-			userModel: MockModel,
-			logger: {
-				info() { },
-				warn() { },
-				error() { }
-			}
+			userDao
 		};
 
 		service = new UserService(options);
@@ -38,32 +31,40 @@ describe('UserService', () => {
 	});
 
 	afterEach(() => {
-		_model.verify();
+		_userDao.verify();
 		_service.verify();
-		_modelInstance.verify();
-	});
-
-	it('should create an instance without any options', () => {
-		const service = new UserService();
-		expect(service).toBeDefined();
 	});
 
 	describe('getUsers', () => {
 		it('should return list of workouts', async () => {
 			const items = ['user1', 'user2'];
-			_model.expects('find').returns(items);
+			_userDao.expects('getUsers').withExactArgs(claims).resolves(items);
 
-			const res = await service.getUsers();
-			expect(res).toEqual(items);
+			await expect(service.getUsers(claims)).resolves.toEqual(items);
 		});
 	});
 
-	describe('getUser', () => {
-		it('should user with specified email', async () => {
-			_model.expects('findOne').withArgs({ email: user.email }).returns(user);
+	describe('getUserByEmail', () => {
+		it('should get user with specified email', async () => {
+			_userDao.expects('getUserByEmail').withExactArgs(user.email).resolves(user);
 
-			const res = await service.getUser(user);
-			expect(res).toEqual(user);
+			await expect(service.getUserByEmail(user.email)).resolves.toEqual(user);
+		});
+	});
+
+	describe('getUserById', () => {
+		it('should get user with specified id', async () => {
+			_userDao.expects('getUserById').withExactArgs(user.id).resolves(user);
+
+			await expect(service.getUserById(user.id)).resolves.toEqual(user);
+		});
+	});
+
+	describe('updateUserByEmail', () => {
+		it('should update user with specified email', async () => {
+			_userDao.expects('updateUserByEmail').withExactArgs(user, claims).resolves(user);
+
+			await expect(service.updateUserByEmail(user, claims)).resolves.toEqual(user);
 		});
 	});
 });

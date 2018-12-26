@@ -1,122 +1,142 @@
-import * as supertest from 'supertest';
+import * as Koa from 'koa';
 import * as sinon from 'sinon';
-import * as express from 'express';
+import * as supertest from 'supertest';
+import { Server } from 'http';
 import * as HttpStatus from 'http-status-codes';
-import * as jwt from 'jsonwebtoken';
-
-import { AuthService } from '../../src/services/auth';
+import * as _ from 'lodash';
 import { AuthRouter } from '../../src/routes/auth';
+import { AuthService } from '../../src/services/auth';
+import { User } from '../../src/models/user';
+import { ConfigService } from '../../src/services/config';
+import { JwtUtils } from '../../src/utils/jwt.utils';
 
-describe('Auth endpoint', () => {
-	const user = {
-		id: 'userId',
-		email: 'user@email.com'
-	};
+describe('Auth Router', () => {
 	let request: supertest.SuperTest<supertest.Test>;
-	let authRouter: AuthRouter;
-	let userMongo;
-	let authService: AuthService;
-	let _authService: sinon.SinonMock;
-	let app: express.Application;
-	let token: string;
+	let server: Server;
+	let authRouter: AuthRouter, _router: sinon.SinonMock;
+	let authService: AuthService, _authService: sinon.SinonMock;
+	let configService: ConfigService, _configService: sinon.SinonMock;
+	let _jwtUtils: sinon.SinonMock;
 
-	beforeAll(() => {
-		authService = new AuthService();
+	const token = 'jwt';
+	const config = {
+		jwtConfig: {
+			publicKey: 'publicKey'
+		}
+	};
+	let ctx: Koa.Context;
+	const user = new User({
+		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
+		email: 'test@email.com',
+		password: 'test',
+		admin: false,
+		boxName: 'CrossFit Cloud',
+		dateOfBirth: '1969-06-09 00:00:00.000',
+		firstName: 'Cloud',
+		height: 199,
+		lastName: 'Atlas',
+		weight: 90000
+	});
+	const claims: any = {
+		userId: user.id,
+		email: user.email,
+		admin: user.admin
+	};
+
+	beforeEach(() => {
+		ctx = {
+			request: {
+				body: user.toObject()
+			},
+			params: {
+				id: user.id
+			} as any,
+			query: {} as any,
+		} as Koa.Context;
+
+		authService = new AuthService({ policyService: {} });
 		_authService = sinon.mock(authService);
 
-		userMongo = {
-			_id: '5a47b3ae8c4a33b2fdf118a9',
-			updatedAt: '2017-12-30 15:41:46.850',
-			createdAt: '2017-12-30 15:41:34.006',
-			email: 'test@email.com',
-			password: 'test',
-			admin: false,
-			boxName: 'CrossFit Cloud',
-			dateOfBirth: '1969-06-09 00:00:00.000',
-			firstName: 'Cloud',
-			gender: 'male',
-			height: 199,
-			lastName: 'Atlas',
-			weight: 90000
-		};
+		configService = new ConfigService();
+		_configService = sinon.mock(configService);
 
-		const logger = {
-			debug() { },
-			info() { },
-			warn() { },
-			error() { }
-		};
-		const cert = 'publicKey';
+		_jwtUtils = sinon.mock(JwtUtils);
+
 		authRouter = new AuthRouter({
 			authService,
-			logger
+			configService
 		});
-		authRouter.initRoutes();
-		token = jwt.sign(user, cert);
-		app = express();
-		app.use((req, _res, next) => {
-			req['token'] = token;
-			next();
-		});
-		app.use('/', authRouter.router);
-		request = supertest(app);
+		_router = sinon.mock(authRouter);
+
+		const app = new Koa();
+		authRouter.init(app);
+		server = app.listen();
+		request = supertest(server);
 	});
 
 	afterEach(() => {
+		server.close();
 		_authService.verify();
+		_configService.verify();
+		_router.verify();
+		_jwtUtils.verify();
 	});
 
-	it('should create instance of router when no options are given', () => {
-		const router = new AuthRouter();
-		expect(router).toBeDefined();
-	});
-
-	describe('POST /login', () => {
-		const payload = {
-			data: {
-				email: 'some@user.com',
-				password: 'test'
-			}
-		};
-
-		it('should get 200 OK with a JWT if credentials match an existing user', async (done) => {
-			_authService.expects('login').resolves(userMongo);
-
-			try {
-				const res = await request.post('/login').send(payload);
-				expect(res.status).toEqual(HttpStatus.OK);
-				expect(res.body).toBeDefined();
-				expect(res.body.data).toBeDefined();
-				expect(res.body.data).toHaveProperty('token');
-				done();
-			} catch (err) {
-				done(err);
-			}
+	describe('constructor', () => {
+		it('should create new instance of service', () => {
+			const instance = new AuthRouter({});
+			expect(instance).toBeDefined();
 		});
 	});
 
-	describe('POST /register', () => {
-		const payload = {
-			data: {
-				email: 'some@user.com',
-				password: 'test',
-				admin: true
-			}
-		};
+	describe('init', () => {
+		it('Should initialize the app', async () => {
+			const app = {
+				use: function (routesMiddleware) {
+					this.routesMiddleware = routesMiddleware;
+				}
+			} as any;
+			const appUseSpy = sinon.spy(app, 'use');
+			const authRouter = new AuthRouter({ authService: {} });
+			authRouter.init(app);
 
-		it('should get 201 Created if user is registered successfully', async (done) => {
-			_authService.expects('register').resolves(userMongo);
+			expect(appUseSpy.calledOnce).toBe(true);
+		});
+	});
 
-			try {
-				const res = await request.post('/register').send(payload);
-				expect(res.status).toEqual(HttpStatus.CREATED);
-				expect(res.body).toBeDefined();
-				expect(res.body.data).toBeDefined();
-				expect(res.body.data).toHaveProperty('token');
-				done();
-			} catch (err) {
-				done(err);
-			}
+	describe('login', () => {
+		it('should handle POST /v1/auth/login', async () => {
+			authRouter.login = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.post('/v1/auth/login').expect(HttpStatus.OK);
+		});
+
+		it('should return 200 OK when successfully logging in', async () => {
+			_authService.expects('login').withExactArgs(ctx.request.body).resolves(user);
+			_configService.expects('getConfig').returns(config);
+			_jwtUtils.expects('signToken').withExactArgs(claims, config.jwtConfig.publicKey).returns(token);
+
+			await authRouter.login(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toHaveProperty('token');
+		});
+	});
+
+	describe('signup', () => {
+		it('should handle POST /v1/auth/signup', async () => {
+			authRouter.signup = async (ctx) => { ctx.status = HttpStatus.CREATED; };
+			await request.post('/v1/auth/signup').expect(HttpStatus.CREATED);
+		});
+
+		it('should return 201 OK when successfully signing up', async () => {
+			_authService.expects('signup').withExactArgs(ctx.request.body).resolves(user);
+			_configService.expects('getConfig').returns(config);
+			_jwtUtils.expects('signToken').withExactArgs(claims, config.jwtConfig.publicKey).returns(token);
+
+			await authRouter.signup(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.CREATED);
+			expect(ctx.body).toHaveProperty('token');
 		});
 	});
 });

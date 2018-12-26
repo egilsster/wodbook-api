@@ -1,10 +1,10 @@
 import * as jwt from 'jsonwebtoken';
 
-const cert = 'publicKey';
-export const userId = '5abe9e78bc1b6d35dc04aa4e';
-export const adminId = '5abe9e78bc1b6d35dc04a9f9';
+const cert = 'cHVibGljS2V5';
+export const userId = 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7';
+export const adminId = 'otgdqlk1muHkCxfa7YPwKg_winE8enNR';
 
 export default {
-	user: jwt.sign({ 'id': userId, 'email': 'user@email.com', 'admin': false }, cert),
-	admin: jwt.sign({ 'id': adminId, 'email': 'admin@email.com', 'admin': true }, cert)
+	user: jwt.sign({ userId: userId, email: 'user@email.com', admin: false }, cert),
+	admin: jwt.sign({ userId: adminId, email: 'admin@email.com', admin: true }, cert)
 };

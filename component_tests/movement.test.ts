@@ -1,37 +1,33 @@
+import { MongoClient, Db } from 'mongodb';
 import * as request from 'request-promise-native';
 import * as HttpStatus from 'http-status-codes';
-import CompTestInit from './init';
 import tokens from './data/tokens';
 
-const baseUrl = `${(process.env.API_URL || 'http://127.0.0.1:43210')}/v1`;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/wodbook-test';
 
 describe('Movement component tests', () => {
 	const reqOpts: request.RequestPromiseOptions = {
 		json: true,
 		resolveWithFullResponse: true, // Get the full response instead of just the body
 		simple: false, // Get a rejection only if the request failed for technical reasons
-		baseUrl: baseUrl
+		baseUrl: `${(process.env.API_URL || 'http://127.0.0.1:43210')}/v1`
 	};
 
-	let init: CompTestInit;
+	let mongoClient: MongoClient;
+	let db: Db;
 
-	beforeAll(async (done) => {
-		try {
-			init = new CompTestInit();
-			await init.before();
-			done();
-		} catch (err) {
-			done(err);
-		}
+	beforeAll(async () => {
+		mongoClient = await MongoClient.connect(MONGO_URI, { useNewUrlParser: true });
+		db = mongoClient.db();
 	});
 
-	afterAll(async (done) => {
-		try {
-			await init.after();
-			done();
-		} catch (err) {
-			done(err);
-		}
+	afterEach(async () => {
+		await db.collection('movements').deleteMany({});
+		await db.collection('movementscores').deleteMany({});
+	});
+
+	afterAll(async () => {
+		await mongoClient.close();
 	});
 
 	describe('creating movements', () => {
@@ -42,31 +38,27 @@ describe('Movement component tests', () => {
 			};
 
 			try {
-				const res1 = await request.post(`movements`, {
+				const res1 = await request.post(`/movements`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${tokens.user}`
 					},
 					body: {
-						data: {
-							name: movement.name,
-							measurement: movement.measurement,
-						}
+						name: movement.name,
+						measurement: movement.measurement,
 					}
 				});
 
 				expect(res1.statusCode).toBe(HttpStatus.CREATED);
-				expect(res1.body).toHaveProperty('data');
-				expect(res1.body.data).toHaveProperty('_id');
-				const movementId = res1.body.data._id;
-				expect(res1.body.data).toHaveProperty('createdAt');
-				expect(res1.body.data).toHaveProperty('updatedAt');
-				expect(res1.body.data).toHaveProperty('createdBy');
-				expect(res1.body.data).toHaveProperty('measurement', movement.measurement);
-				expect(res1.body.data).toHaveProperty('name', movement.name);
+				expect(res1.body).toHaveProperty('id');
+				const movementId = res1.body.id;
+				expect(res1.body).toHaveProperty('createdAt');
+				expect(res1.body).toHaveProperty('updatedAt');
+				expect(res1.body).toHaveProperty('measurement', movement.measurement);
+				expect(res1.body).toHaveProperty('name', movement.name);
 
-				const res2 = await request.get(`movements/${movementId}`, {
+				const res2 = await request.get(`/movements/${movementId}`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
@@ -75,13 +67,11 @@ describe('Movement component tests', () => {
 				});
 
 				expect(res2.statusCode).toBe(HttpStatus.OK);
-				expect(res2.body).toHaveProperty('data');
-				expect(res2.body.data).toHaveProperty('_id');
-				expect(res2.body.data).toHaveProperty('createdAt');
-				expect(res2.body.data).toHaveProperty('updatedAt');
-				expect(res2.body.data).toHaveProperty('createdBy');
-				expect(res2.body.data).toHaveProperty('measurement', movement.measurement);
-				expect(res2.body.data).toHaveProperty('name', movement.name);
+				expect(res2.body).toHaveProperty('id');
+				expect(res2.body).toHaveProperty('createdAt');
+				expect(res2.body).toHaveProperty('updatedAt');
+				expect(res2.body).toHaveProperty('measurement', movement.measurement);
+				expect(res2.body).toHaveProperty('name', movement.name);
 
 				done();
 			} catch (err) {
@@ -102,26 +92,19 @@ describe('Movement component tests', () => {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${tokens.user}`
 					},
-					body: {
-						data: {
-							name: movement.name,
-							measurement: movement.measurement,
-						}
-					}
+					body: movement
 				};
 
-				const res1 = await request.post(`movements`, payload);
+				const res1 = await request.post(`/movements`, payload);
 
 				expect(res1.statusCode).toBe(HttpStatus.CREATED);
-				expect(res1.body).toHaveProperty('data');
-				expect(res1.body.data).toHaveProperty('_id');
-				expect(res1.body.data).toHaveProperty('createdAt');
-				expect(res1.body.data).toHaveProperty('updatedAt');
-				expect(res1.body.data).toHaveProperty('createdBy');
-				expect(res1.body.data).toHaveProperty('measurement', movement.measurement);
-				expect(res1.body.data).toHaveProperty('name', movement.name);
+				expect(res1.body).toHaveProperty('id');
+				expect(res1.body).toHaveProperty('createdAt');
+				expect(res1.body).toHaveProperty('updatedAt');
+				expect(res1.body).toHaveProperty('measurement', movement.measurement);
+				expect(res1.body).toHaveProperty('name', movement.name);
 
-				const res2 = await request.post(`movements`, payload);
+				const res2 = await request.post(`/movements`, payload);
 
 				expect(res2.statusCode).toBe(HttpStatus.CONFLICT);
 				expect(res2.body).toHaveProperty('status', HttpStatus.CONFLICT);
@@ -133,17 +116,15 @@ describe('Movement component tests', () => {
 
 		it('should get 422 Unprocessable entity if using bogus measurement', async (done) => {
 			try {
-				const res = await request.post(`movements`, {
+				const res = await request.post(`/movements`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${tokens.user}`
 					},
 					body: {
-						data: {
-							name: 'Invalid',
-							measurement: 'spliff'
-						}
+						name: 'Invalid',
+						measurement: 'spliff'
 					}
 				});
 
@@ -162,56 +143,50 @@ describe('Movement component tests', () => {
 				measurement: 'weight',
 			};
 
-			const scoreDate = '2012-12-24';
+			const scoreDate = new Date('2012-12-24');
 
 			try {
-				const res1 = await request.post(`movements`, {
+				const res1 = await request.post(`/movements`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${tokens.user}`
 					},
 					body: {
-						data: {
-							name: movement.name,
-							measurement: movement.measurement,
-						}
+						name: movement.name,
+						measurement: movement.measurement,
 					}
 				});
 
 				expect(res1.statusCode).toBe(HttpStatus.CREATED);
-				expect(res1.body).toHaveProperty('data');
-				expect(res1.body.data).toHaveProperty('_id');
-				const movementId = res1.body.data._id;
-				expect(res1.body.data).toHaveProperty('createdAt');
-				expect(res1.body.data).toHaveProperty('updatedAt');
-				expect(res1.body.data).toHaveProperty('createdBy');
-				expect(res1.body.data).toHaveProperty('measurement', movement.measurement);
-				expect(res1.body.data).toHaveProperty('name', movement.name);
+				expect(res1.body).toHaveProperty('id');
+				const movementId = res1.body.id;
+				expect(res1.body).toHaveProperty('createdAt');
+				expect(res1.body).toHaveProperty('updatedAt');
+				expect(res1.body).toHaveProperty('measurement', movement.measurement);
+				expect(res1.body).toHaveProperty('name', movement.name);
 
-				const res2 = await request.post(`movements/${movementId}/scores`, {
+				const res2 = await request.post(`/movements/${movementId}/scores`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${tokens.user}`
 					},
 					body: {
-						data: {
-							score: '200kg',
-							measurement: 'weight',
-							createdAt: scoreDate
-						}
+						score: '200kg',
+						measurement: 'weight',
+						createdAt: scoreDate
 					}
 				});
 
 				expect(res2.statusCode).toBe(HttpStatus.CREATED);
-				expect(res2.body.data).toHaveProperty('_id');
-				expect(res2.body.data).toHaveProperty('createdAt', new Date(scoreDate).toISOString());
-				expect(res2.body.data).toHaveProperty('updatedAt');
-				expect(res2.body.data).toHaveProperty('parentId', movementId);
-				expect(res2.body.data).toHaveProperty('score', '200kg');
+				expect(res2.body).toHaveProperty('id');
+				expect(res2.body).toHaveProperty('createdAt', scoreDate.toISOString());
+				expect(res2.body).toHaveProperty('updatedAt');
+				expect(res2.body).toHaveProperty('movementId', movementId);
+				expect(res2.body).toHaveProperty('score', '200kg');
 
-				const res3 = await request.get(`movements/${movementId}/scores`, {
+				const res3 = await request.get(`/movements/${movementId}/scores`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
@@ -221,10 +196,10 @@ describe('Movement component tests', () => {
 
 				expect(res3.statusCode).toBe(HttpStatus.OK);
 				expect(res3.body.data).toHaveProperty('length', 1);
-				expect(res3.body.data[0]).toHaveProperty('_id');
+				expect(res3.body.data[0]).toHaveProperty('id');
 				expect(res3.body.data[0]).toHaveProperty('createdAt');
 				expect(res3.body.data[0]).toHaveProperty('updatedAt');
-				expect(res3.body.data[0]).toHaveProperty('parentId');
+				expect(res3.body.data[0]).toHaveProperty('movementId');
 				expect(res3.body.data[0]).toHaveProperty('score');
 				done();
 			} catch (err) {
@@ -241,31 +216,27 @@ describe('Movement component tests', () => {
 			};
 
 			try {
-				const res1 = await request.post(`movements`, {
+				const res1 = await request.post(`/movements`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${tokens.user}`
 					},
 					body: {
-						data: {
-							name: movement.name,
-							measurement: movement.measurement,
-						}
+						name: movement.name,
+						measurement: movement.measurement,
 					}
 				});
 
 				expect(res1.statusCode).toBe(HttpStatus.CREATED);
-				expect(res1.body).toHaveProperty('data');
-				expect(res1.body.data).toHaveProperty('_id');
-				const movementId = res1.body.data._id;
-				expect(res1.body.data).toHaveProperty('createdAt');
-				expect(res1.body.data).toHaveProperty('updatedAt');
-				expect(res1.body.data).toHaveProperty('createdBy');
-				expect(res1.body.data).toHaveProperty('measurement', movement.measurement);
-				expect(res1.body.data).toHaveProperty('name', movement.name);
+				expect(res1.body).toHaveProperty('id');
+				const movementId = res1.body.id;
+				expect(res1.body).toHaveProperty('createdAt');
+				expect(res1.body).toHaveProperty('updatedAt');
+				expect(res1.body).toHaveProperty('measurement', movement.measurement);
+				expect(res1.body).toHaveProperty('name', movement.name);
 
-				const res2 = await request.get(`movements/${movementId}`, {
+				const res2 = await request.get(`/movements/${movementId}`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
@@ -274,15 +245,13 @@ describe('Movement component tests', () => {
 				});
 
 				expect(res2.statusCode).toBe(HttpStatus.OK);
-				expect(res2.body).toHaveProperty('data');
-				expect(res2.body.data).toHaveProperty('_id');
-				expect(res2.body.data).toHaveProperty('createdAt');
-				expect(res2.body.data).toHaveProperty('updatedAt');
-				expect(res2.body.data).toHaveProperty('createdBy');
-				expect(res2.body.data).toHaveProperty('measurement', movement.measurement);
-				expect(res2.body.data).toHaveProperty('name', movement.name);
+				expect(res2.body).toHaveProperty('id');
+				expect(res2.body).toHaveProperty('createdAt');
+				expect(res2.body).toHaveProperty('updatedAt');
+				expect(res2.body).toHaveProperty('measurement', movement.measurement);
+				expect(res2.body).toHaveProperty('name', movement.name);
 
-				const res3 = await request.get(`movements/${movementId}`, {
+				const res3 = await request.get(`/movements/${movementId}`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',

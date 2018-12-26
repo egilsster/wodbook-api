@@ -1,41 +1,56 @@
-import * as mongoose from 'mongoose';
+import * as _ from 'lodash';
+import { ServiceError } from '../utils/service.error';
+import { UID } from '../utils/uid';
+import { ERROR_TEMPLATES } from '../utils/error.templates';
 
-export class BaseModel {
-	private MODEL_DEFINITION: mongoose.SchemaDefinition;
-	private MODEL_NAME: string;
-	private options: any;
+export class Base {
+	private _id!: string;
+	private _createdAt!: Date;
+	private _updatedAt!: Date;
 
-	constructor(name: string, definition: mongoose.SchemaDefinition, options: any = {}) {
-		this.MODEL_NAME = name;
-		this.MODEL_DEFINITION = definition;
-		this.options = options;
+	constructor(params) {
+		this.id = params.id || params._id || UID.new();
+		this.createdAt = params.createdAt;
+		this.updatedAt = params.updatedAt;
 	}
 
-	/**
-	 * Create the Blob model
-	 * @return {Object} Blob mongoose model
-	 */
-	public createModel() {
-		if ((mongoose as any).models[this.MODEL_NAME]) {
-			return mongoose.model(this.MODEL_NAME);
+	get id() { return this._id; }
+	set id(newId) {
+		if (this._id) {
+			throw new ServiceError(ERROR_TEMPLATES.IMMUTABLE_PROPERTY, { source: { pointer: '/id' } });
+		} else if (UID.isValid(newId)) {
+			this._id = newId;
+		} else {
+			throw new ServiceError(ERROR_TEMPLATES.INVALID_PROPERTY, { source: { pointer: '/id' } });
 		}
-		return mongoose.model(this.MODEL_NAME, this.createSchema());
 	}
 
-	/**
-	 * Setup the mongo schema.
-	 * @return {mongoose.Schema} Created mongoose schema
-	 */
-	public createSchema(): mongoose.Schema {
-		const schema = new mongoose.Schema(this.MODEL_DEFINITION, {
-			timestamps: true,
-			versionKey: false
-		});
-
-		if (this.options.indices && this.options.unique) {
-			schema.index(this.options.indices, this.options.unique);
+	get createdAt() { return this._createdAt; }
+	set createdAt(date) {
+		if (!this._createdAt) {
+			if (!_.isNil(date) && (_.isDate(date) || _.isString(date))) {
+				this._createdAt = date;
+			}
 		}
+		// throw new ServiceError(ERROR_TEMPLATES.IMMUTABLE_PROPERTY, { source: { pointer: '/createdAt' } });
+	}
 
-		return schema;
+	get updatedAt() { return this._updatedAt; }
+	set updatedAt(date) {
+		if (!_.isNil(date) && (_.isDate(date) || _.isString(date))) {
+			this._updatedAt = date;
+		}
+	}
+
+	static validateRequiredFields(params: object, requiredFields: string[]) {
+		const missingFields: string[] = [];
+		for (let key of requiredFields) {
+			if (!params[key]) {
+				missingFields.push(key);
+			}
+		}
+		if (!_.isEmpty(missingFields)) {
+			throw new ServiceError(ERROR_TEMPLATES.MISSING_FIELDS, { meta: { missingFields, requiredFields } });
+		}
 	}
 }

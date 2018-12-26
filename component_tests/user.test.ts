@@ -1,7 +1,10 @@
+import { MongoClient, Db } from 'mongodb';
 import * as request from 'request-promise-native';
 import * as HttpStatus from 'http-status-codes';
-import CompTestInit from './init';
 import tokens from './data/tokens';
+import users from './data/users';
+
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/wodbook-test';
 
 describe('User component tests', () => {
 	const reqOpts: request.RequestPromiseOptions = {
@@ -11,25 +14,18 @@ describe('User component tests', () => {
 		baseUrl: `${(process.env.API_URL || 'http://127.0.0.1:43210')}/v1`
 	};
 
-	let init: CompTestInit;
+	let mongoClient: MongoClient;
+	let db: Db;
 
-	beforeAll(async (done) => {
-		try {
-			init = new CompTestInit();
-			await init.before();
-			done();
-		} catch (err) {
-			done(err);
-		}
+	beforeAll(async () => {
+		mongoClient = await MongoClient.connect(MONGO_URI, { useNewUrlParser: true });
+		db = mongoClient.db();
+		await db.collection('users').deleteMany({});
+		await db.collection('users').insertMany(users);
 	});
 
-	afterAll(async (done) => {
-		try {
-			await init.after();
-			done();
-		} catch (err) {
-			done(err);
-		}
+	afterAll(async () => {
+		await mongoClient.close();
 	});
 
 	describe('user profile', () => {
@@ -44,17 +40,14 @@ describe('User component tests', () => {
 				});
 
 				expect(res1.statusCode).toBe(HttpStatus.OK);
-				expect(res1.body).toHaveProperty('data');
-				expect(res1.body.data).toHaveProperty('firstName', 'Greg');
-				expect(res1.body.data).toHaveProperty('lastName', 'Sestero');
-				expect(res1.body.data).toHaveProperty('boxName', 'The Room');
-				expect(res1.body.data).toHaveProperty('email', 'user@email.com');
-				expect(res1.body.data).toHaveProperty('gender', 'male');
-				expect(res1.body.data).toHaveProperty('height', 187);
-				expect(res1.body.data).toHaveProperty('weight', 89000);
-				expect(res1.body.data).toHaveProperty('dateOfBirth');
-				expect(res1.body.data).not.toHaveProperty('password');
-
+				expect(res1.body).toHaveProperty('firstName', 'Greg');
+				expect(res1.body).toHaveProperty('lastName', 'Sestero');
+				expect(res1.body).toHaveProperty('boxName', 'The Room');
+				expect(res1.body).toHaveProperty('email', 'user@email.com');
+				expect(res1.body).toHaveProperty('height', 187);
+				expect(res1.body).toHaveProperty('weight', 89000);
+				expect(res1.body).toHaveProperty('dateOfBirth');
+				expect(res1.body).not.toHaveProperty('password');
 				done();
 			} catch (err) {
 				done(err);
@@ -72,18 +65,15 @@ describe('User component tests', () => {
 				});
 
 				expect(res1.statusCode).toBe(HttpStatus.OK);
-				expect(res1.body).toHaveProperty('data');
-				expect(res1.body.data).toHaveProperty('id');
-				expect(res1.body.data).toHaveProperty('firstName', 'Tommy');
-				expect(res1.body.data).toHaveProperty('lastName', 'Wiseau');
-				expect(res1.body.data).toHaveProperty('boxName', 'The Room');
-				expect(res1.body.data).toHaveProperty('email', 'admin@email.com');
-				expect(res1.body.data).toHaveProperty('gender', 'male');
-				expect(res1.body.data).toHaveProperty('height', 174);
-				expect(res1.body.data).toHaveProperty('weight', 85000);
-				expect(res1.body.data).toHaveProperty('dateOfBirth');
-				expect(res1.body.data).not.toHaveProperty('password');
-
+				expect(res1.body).toHaveProperty('id');
+				expect(res1.body).toHaveProperty('firstName', 'Tommy');
+				expect(res1.body).toHaveProperty('lastName', 'Wiseau');
+				expect(res1.body).toHaveProperty('boxName', 'The Room');
+				expect(res1.body).toHaveProperty('email', 'admin@email.com');
+				expect(res1.body).toHaveProperty('height', 174);
+				expect(res1.body).toHaveProperty('weight', 85000);
+				expect(res1.body).toHaveProperty('dateOfBirth');
+				expect(res1.body).not.toHaveProperty('password');
 				done();
 			} catch (err) {
 				done(err);

@@ -1,61 +1,68 @@
 import * as winston from 'winston';
 import * as _ from 'lodash';
-import * as cls from 'continuation-local-storage';
+import * as cls from 'cls-hooked';
 
-// the static context that gets added to each message
-let STATIC_CONTEXT = {
-	type: 'wodbook-api',
-	// 'serverInfo': {
-	// 	'version': version.version,
-	// 	'shortSHA': version.SHA
-	// }
-};
+/**
+ * Adds a transform function which a service can implement to customize the final logging context before logging.
+ */
+let contextTransformFunc;
 
 // Shared winston logger among all Logger instances to save memory!
 let winstonLogger;
+
+// the static context that gets added to each message
+let STATIC_CONTEXT = {};
+
+const LOG_LEVELS = {
+	fatal: 0,
+	error: 0,
+	warn: 1,
+	info: 2,
+	verbose: 3,
+	debug: 4,
+	trace: 5,
+	silly: 6
+};
 
 /**
  * Logger is a thin wrapper around winston.
  */
 export class Logger {
-	public static LOG_LEVELS = {
-		fatal: 0,
-		error: 0,
-		warn: 1,
-		info: 2,
-		verbose: 3,
-		debug: 4,
-		trace: 5,
-		silly: 6
-	};
+	static LOG_LEVELS = LOG_LEVELS;
 
 	// Cache of compiled templates
-	public static templates = {};
+	static templates = {};
 
-	public winston;
-	public defaultContext;
+	winston: any;
+	defaultContext: any;
 
-	constructor(moduleName?: string, options: any = {}) {
+	constructor(module?, options?) {
+		options = options || {};
 		this.winston = options.winstonLogger || Logger.getWinstonLogger();
 		this.defaultContext = { pid: process.pid };
-		_.merge(this.defaultContext, STATIC_CONTEXT, { module: moduleName }, options.context);
+		_.merge(this.defaultContext, STATIC_CONTEXT, module ? { module } : {}, options.context);
 	}
 
-	public _createContext(req) {
-		if (!req) {
+	_createContext(req, state) {
+		if (_.isEmpty(req) && _.isEmpty(state)) {
 			return {};
 		}
-		let userId;
-		if (req && req.user) {
-			userId = req.user.id;
-		}
-
+		let userId = _.get(req, 'user.id') || _.get(state, 'user.id') || _.get(state, 'claims.userId');
 		return {
+			id: req.id,
+			ip: req.ip,
 			url: req.url,
 			method: req.method,
-			userId,
 			query: Logger._parseQuery(req),
+			userId
 		};
+	}
+
+	/**
+	 * Silly level of verbosity
+	 */
+	silly() {
+		this.log('silly', [].slice.call(arguments));
 	}
 
 	/**
@@ -127,10 +134,16 @@ export class Logger {
 		this.winston.log.apply(this.winston, args);
 	}
 
+	_wrappedLog() {
+		let args = [].slice.call(arguments);
+		let level = args.shift();
+		this.log(level, args);
+	}
+
 	/**
 	 * Transform the arguments to those understood by winston
 	 */
-	private massageArgsForWinston(level: string, args: string | string[]) {
+	massageArgsForWinston(level: string, args: string | string[]) {
 		if (typeof args === 'string') {
 			args = [args];
 		}
@@ -159,7 +172,7 @@ export class Logger {
 	/**
 	 * Determines the args and msgContext for a message code type log
 	 */
-	private messageCodeArgsAndMsgContext(level, args) {
+	messageCodeArgsAndMsgContext(level, args) {
 		let msgStruct = args[1];
 		let paramsOrMsgContext = args[2];
 		let msgContext = args[3];
@@ -175,11 +188,13 @@ export class Logger {
 		};
 	}
 
-	private computeContext(msgContext) {
+	computeContext(msgContext) {
 		let context;
-		let req = cls.getNamespace('logger').get('req');
+		let ns = cls.getNamespace('logger');
+		let req = ns.get('req');
+		let state = ns.get('state');
 		if (req) {
-			context = this._createContext(req);
+			context = this._createContext(req, state);
 		}
 
 		context = _.merge(context, this.defaultContext);
@@ -188,71 +203,78 @@ export class Logger {
 			context = _.merge(context, msgContext);
 		}
 
+		if (contextTransformFunc) {
+			context = contextTransformFunc(context, { req, state });
+		}
+
 		return context;
 	}
 
-	private isMessageCodeArgs(args) {
+	isMessageCodeArgs(args) {
 		if (args && args[1]) {
 			let keys = _.keys(args[1]);
 			// check if the argument is an object with only code and template properties
 			return keys.length === 2 && _.intersection(['code', 'template'], keys).length === 2;
 		}
-
 		return false;
 	}
 
-	private applyTemplate(template, params) {
+	applyTemplate(template, params) {
 		let compiledTemplate = Logger.templates[template];
 		if (!compiledTemplate) {
 			compiledTemplate = _.template(template);
 			Logger.templates[template] = compiledTemplate;
 		}
-
-		return compiledTemplate(params);
+		let rendered;
+		try {
+			rendered = compiledTemplate(params);
+		} catch (err) {
+			rendered = template;
+		}
+		return rendered;
 	}
 
 	/**
- 	 * Converts a query object into an array of k/v pairs. Filters out any key-less
- 	 * values (i.e. elements in the query string where no `=` is present), to avoid
- 	 * high cardinality fields.
- 	 */
-	private static _parseQuery = function (req) {
+	 * Converts a query object into an array of k/v pairs. Filters out any key-less
+	 * values (i.e. elements in the query string where no `=` is present), to avoid
+	 * high cardinality fields.
+	 */
+	static _parseQuery = function (req) {
 		let pairs = _.toPairs(_.get(req, 'query', {}));
 		return _.filter(pairs, n => n[1]);
 	};
 
 	/**
-	 * Default RequestFilter function that will be passed into the expressWinston.logger
+	 * Adds a static global context value
 	 */
-	public static _defaultRequestFilter = function (req, propName) {
-		// Insert 'endpoint' that contains req method and params removed
-		if (propName === 'endpoint') {
-			let endpoint = req.path;
-			for (const param in req.params) {
-				endpoint = endpoint.replace(req.params[param], `{${param}}`);
-			}
-			return `${req.method} ${endpoint}`;
-		} else if (propName === 'user_agent') {
-			return _.get(req, 'headers.user-agent');
-		}
-		return req[propName];
+	static addContext = function (context) {
+		_.merge(STATIC_CONTEXT, context);
 	};
 
-	/**
-	 * Default IgnoreRoute function that will be passed into the expressWinston.logger
-	 */
-	public static _defaultIgnoreRoute(req) {
-		// Health check and metrics routes are too chatty.
-		return (req.url === '/health' || req.url === '/metrics');
-	}
+	static setContext = function (context) {
+		STATIC_CONTEXT = context;
+	};
 
-	public static getWinstonLogger() {
+	static setContextTransform = function (transformFunc) {
+		if (_.isFunction(transformFunc)) {
+			contextTransformFunc = transformFunc;
+		}
+	};
+
+	static clearContextTransform = function () {
+		contextTransformFunc = undefined;
+	};
+
+	static getWinstonLogger = function () {
 		if (!winstonLogger) {
-			let logOpts: any = {
-				timestamp: () => new Date().toISOString(),
+			let logOpts = {
+				timestamp: function () {
+					return new Date().toISOString();
+				},
 				json: true,
 				stringify: true,
-				level: process.env.LOG_LEVEL || 'info',
+				colorize: false,
+				level: _.toLower(process.env.LOG_LEVEL || 'info'),
 				handleExceptions: true,
 				humanReadableUnhandledException: true
 			};
@@ -266,17 +288,17 @@ export class Logger {
 
 			let transports = [new (winston.transports.Console)(logOpts)];
 
-			winstonLogger = new winston.Logger({
+			winstonLogger = new (winston.Logger)({
 				transports,
-				levels: Logger.LOG_LEVELS,
+				levels: LOG_LEVELS,
 				exitOnError: true
 			});
 			winstonLogger.emitErrors = false;
 		}
 		return winstonLogger;
-	}
+	};
 
-	public static _resetLogger() {
+	static _resetLogger = function () {
 		winstonLogger = undefined;
-	}
+	};
 }
