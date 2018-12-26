@@ -1,30 +1,29 @@
-import * as mongoose from 'mongoose';
-import * as HttpStatus from 'http-status-codes';
-import { UserModel, UserType } from '../models/user';
-import { ExpressError } from '../utils/express.error';
+import { UserDao } from '../dao/user';
+import { ServiceError } from '../utils/service.error';
+import { ERROR_TEMPLATES } from '../utils/error.templates';
+import { User } from '../models/user';
 
 export class AuthService {
-	private userModel: mongoose.Model<UserType>;
+	private userDao: UserDao;
 
-	constructor(private options: any = {}) {
-		this.userModel = this.options.userModel || new UserModel().createModel();
+	constructor(options: any) {
+		this.userDao = options.userDao;
 	}
 
-	async register(user: UserType) {
-		const model = new this.userModel(user);
-		return model.save();
+	async signup(user: User) {
+		return this.userDao.createUser(user);
 	}
 
-	async login(user: UserType) {
+	async login(user: User) {
 		const { email, password } = user;
-		const data = await this.userModel.findOne({ email });
+		const data = await this.userDao.getUserByEmail(email);
 
 		if (!data) {
-			throw new ExpressError('Email not registered', HttpStatus.UNAUTHORIZED);
+			throw new ServiceError(ERROR_TEMPLATES.UNAUTHORIZED, { meta: { message: 'Email not registered' } });
 		}
 
 		if (data.password !== password) {
-			throw new ExpressError('Password is incorrect', HttpStatus.UNAUTHORIZED);
+			throw new ServiceError(ERROR_TEMPLATES.UNAUTHORIZED, { meta: { message: 'Password is incorrect' } });
 		}
 
 		return data;

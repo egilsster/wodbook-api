@@ -1,237 +1,191 @@
-import * as supertest from 'supertest';
+import * as Koa from 'koa';
 import * as sinon from 'sinon';
-import * as express from 'express';
+import * as supertest from 'supertest';
+import { Server } from 'http';
 import * as HttpStatus from 'http-status-codes';
-
+import * as _ from 'lodash';
 import { MovementRouter } from '../../src/routes/movement';
-import { TrainingService } from '../../src/services/training';
-import { ExpressError } from '../../src/utils/express.error';
-import { RouterUtils } from '../../src/utils/router.utils';
+import { MovementService } from '../../src/services/movement';
+import { Movement } from '../../src/models/movement';
+import { MovementScore } from '../../src/models/movement.score';
 
-describe('Movement endpoint', () => {
-	const user = {
-		id: 'userId',
-		email: 'user@email.com'
-	};
+describe('Movement Router', () => {
 	let request: supertest.SuperTest<supertest.Test>;
-	let movementRouter: MovementRouter;
-	let movementMongo;
-	let trainingService: TrainingService;
-	let _trainingService: sinon.SinonMock;
-	let app: express.Application;
-	let modelInstance;
-	class MockModel {
-		constructor() { return modelInstance; }
-		save() { return null; }
-		static find() { return null; }
-		static findOne() { return null; }
-		static createIndexes() { return null; }
-	}
+	let server: Server;
+	let movementRouter: MovementRouter, _router: sinon.SinonMock;
+	let movementService: MovementService, _movementService: sinon.SinonMock;
+	const userId = 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7';
+	const claims: any = { userId: userId };
+	const movementId = '1';
+	let ctx: Koa.Context;
+	const movement = new Movement({
+		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
+		name: 'Snatch',
+		measurement: 'weight',
+		userId
+	});
+	const movementScore = new MovementScore({
+		movementId: movement.id,
+		measurement: movement.measurement,
+		score: 70,
+		reps: 1,
+		sets: 1
+	});
 
 	beforeEach(() => {
-		trainingService = new TrainingService(MockModel, MockModel);
-		_trainingService = sinon.mock(trainingService);
+		ctx = {
+			request: {
+				body: movement.toObject()
+			},
+			params: {
+				id: movement.id
+			} as any,
+			query: {} as any,
+			state: { claims } as any
+		} as Koa.Context;
 
-		movementMongo = {
-			id: '5a4704ca46425f97c638bcaa',
-			name: 'Snatch'
-		};
-
-		const logger = {
-			debug() { },
-			info() { },
-			warn() { },
-			error() { }
-		};
+		movementService = new MovementService({ policyService: {} });
+		_movementService = sinon.mock(movementService);
 
 		movementRouter = new MovementRouter({
-			trainingService,
-			logger
+			movementService
 		});
-		movementRouter.initRoutes();
+		_router = sinon.mock(movementRouter);
 
-		app = express();
-		app.use((req, _res, next) => {
-			req['user'] = user;
-			next();
-		});
-		app.use('/', movementRouter.router);
-		app.use(RouterUtils.errorHandler);
-		request = supertest(app);
+		const app = new Koa();
+		movementRouter.init(app);
+		server = app.listen();
+		request = supertest(server);
 	});
 
 	afterEach(() => {
-		_trainingService.verify();
+		server.close();
+		_movementService.verify();
+		_router.verify();
 	});
 
-	it('should create instance of router when no options are given', () => {
-		const router = new MovementRouter();
-		expect(router).toBeDefined();
-	});
-
-	describe('GET /movements query parameters', () => {
-		it('200 GET /movements without query parameters returns a list of movements', (done) => {
-			_trainingService.expects('getMany').returns([movementMongo]);
-			request.get('/')
-				.expect(HttpStatus.OK)
-				.end((err, res) => {
-					done(err);
-					expect(res.body.data).toBeDefined();
-					expect(res.body.data).toEqual([movementMongo]);
-					done();
-				});
+	describe('constructor', () => {
+		it('should create new instance of service', () => {
+			const instance = new MovementRouter({});
+			expect(instance).toBeDefined();
 		});
 	});
 
-	describe('GET /movements/{id}', () => {
-		it('200 Get specific movement.', (done) => {
-			_trainingService.expects('getOne').withArgs(user.id, movementMongo.id).resolves(movementMongo);
-
-			request.get(`/${movementMongo.id}`)
-				.expect(HttpStatus.OK)
-				.end((err, res) => {
-					done(err);
-					expect(res.body).toBeDefined();
-					expect(res.body.data).toEqual(movementMongo);
-					done();
-				});
-		});
-
-		it('404 The specified movement does not exist', (done) => {
-			_trainingService.expects('getOne').withArgs(user.id, movementMongo.id).resolves();
-			request.get(`/${movementMongo.id}`)
-				.expect(HttpStatus.NOT_FOUND)
-				.end((err, _res) => {
-					done(err);
-					done();
-				});
-		});
-	});
-
-	describe('POST /movements', () => {
-		let createPostBody;
-
-		beforeEach(() => {
-			createPostBody = {
-				data: {
-					createdBy: user.id,
-					name: 'wodBook'
+	describe('init', () => {
+		it('Should initialize the app', async () => {
+			const app = {
+				use: function (routesMiddleware) {
+					this.routesMiddleware = routesMiddleware;
 				}
-			};
-		});
+			} as any;
+			const appUseSpy = sinon.spy(app, 'use');
+			const movementRouter = new MovementRouter({ movementService: {} });
+			movementRouter.init(app);
 
-		it('415 Content-type is not JSON', (done) => {
-			request.post('/')
-				.send('This is a string')
-				.expect(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-				.end((err, _res) => {
-					done(err);
-					done();
-				});
-		});
-
-		it('201 Successful movement creation', async (done) => {
-			_trainingService.expects('create').withArgs(createPostBody.data).returns(movementMongo);
-
-			try {
-				const res = await request.post('/')
-					.send(createPostBody);
-				expect(res.status).toBe(HttpStatus.CREATED);
-				expect(res.body.data).toEqual(movementMongo);
-				done();
-			} catch (err) {
-				done(err);
-			}
-		});
-
-		it('should return 500 if movement could not be created', async (done) => {
-			_trainingService.expects('create').withArgs(createPostBody.data).rejects();
-
-			try {
-				const res = await request.post('/')
-					.send(createPostBody);
-				expect(res.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			expect(appUseSpy.calledOnce).toBe(true);
 		});
 	});
 
-	describe('GET /movements/{id}/scores', () => {
-		const scores = ['score1', 'score2'];
-
-		it('should return 200 with a non-empty list of scores for a movement if it has scores registered', async (done) => {
-			_trainingService.expects('getScores').withExactArgs(user.id, movementMongo.id).resolves(scores);
-
-			try {
-				const res = await request.get(`/${movementMongo.id}/scores`);
-				expect(res.status).toBe(HttpStatus.OK);
-				expect(res.body).toHaveProperty('data', scores);
-				done();
-			} catch (err) {
-				done(err);
-			}
+	describe('getMovements', () => {
+		it('should handle GET /v1/movements', async () => {
+			movementRouter.getMovements = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.get('/v1/movements').expect(HttpStatus.OK);
 		});
 
-		it('should return 200 with an empty list of scores for a movement if it has no scores', async (done) => {
-			_trainingService.expects('getScores').withExactArgs(user.id, movementMongo.id).resolves([]);
+		it('should return 200 OK when no resources exist', async () => {
+			_movementService.expects('getMovements').withExactArgs(claims).resolves([]);
 
-			try {
-				const res = await request.get(`/${movementMongo.id}/scores`);
-				expect(res.status).toBe(HttpStatus.OK);
-				expect(res.body).toHaveProperty('data', []);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			await movementRouter.getMovements(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
 		});
 
-		it('should return 404 if the specified movement does not exist', async (done) => {
-			const err = new ExpressError(`Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_trainingService.expects('getScores').withExactArgs(user.id, movementMongo.id).throws(err);
+		it('should return 200 OK with array of resources', async () => {
+			_movementService.expects('getMovements').withExactArgs(claims).resolves([movement]);
 
-			try {
-				const res = await request.get(`/${movementMongo.id}/scores`);
-				expect(res.status).toBe(HttpStatus.NOT_FOUND);
-				expect(res.body).toHaveProperty('status', err.status);
-				expect(res.body).toHaveProperty('detail', err.detail);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			await movementRouter.getMovements(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toEqual({
+				data: [movement.toObject()]
+			});
 		});
 	});
 
-	describe('POST /movements/{id}/scores', () => {
-		const score = { movementId: 'movementId' };
-
-		it('should return 201 if score is successfully added to movement', async (done) => {
-			_trainingService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).resolves(score);
-
-			try {
-				const res = await request.post(`/${movementMongo.id}/scores`).send({ data: score });
-				expect(res.status).toBe(HttpStatus.CREATED);
-				expect(res.body).toHaveProperty('data', score);
-				done();
-			} catch (err) {
-				done(err);
-			}
+	describe('getMovement', () => {
+		it('should handle GET /v1/movements/:id', async () => {
+			movementRouter.getMovement = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.get('/v1/movements/1').expect(HttpStatus.OK);
 		});
 
-		it('should return 404 if the specified movement does not exist', async (done) => {
-			const err = new ExpressError(`Entity with identity '${movementMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_trainingService.expects('addScore').withExactArgs(user.id, movementMongo.id, score).rejects(err);
+		it('should return movement when movement with id is found', async () => {
+			_movementService.expects('getMovementById').withExactArgs(movementId, claims).resolves(movement);
 
-			try {
-				const res = await request.post(`/${movementMongo.id}/scores`).send({ data: score });
-				expect(res.status).toBe(HttpStatus.NOT_FOUND);
-				expect(res.body).toHaveProperty('status', err.status);
-				expect(res.body).toHaveProperty('detail', err.detail);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			ctx.params.id = movementId;
+			await movementRouter.getMovement(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toEqual(movement.toObject());
+		});
+	});
+
+	describe('createMovement', () => {
+		it('should handle POST /v1/movements', async () => {
+			movementRouter.createMovement = async (ctx) => { ctx.status = HttpStatus.CREATED; };
+			await request.post('/v1/movements').expect(HttpStatus.CREATED);
+		});
+
+		it('should return 201 CREATED when creating a movement', async () => {
+			_movementService.expects('createMovement').withExactArgs(ctx.request.body, claims).resolves(movement);
+
+			await movementRouter.createMovement(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.CREATED);
+			expect(ctx.body).toEqual(movement.toObject());
+		});
+	});
+
+	describe('getScores', () => {
+		it('should handle GET /v1/movements/:id/scores', async () => {
+			movementRouter.getScores = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.get('/v1/movements/:id/scores').expect(HttpStatus.OK);
+		});
+
+		it('should return 200 OK when no scores exist', async () => {
+			_movementService.expects('getScores').withExactArgs(movement.id, claims).resolves([]);
+
+			await movementRouter.getScores(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+		});
+
+		it('should return 200 OK with array of scores', async () => {
+			_movementService.expects('getScores').withExactArgs(movement.id, claims).resolves([movementScore]);
+
+			await movementRouter.getScores(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toEqual({
+				data: [movementScore.toObject()]
+			});
+		});
+	});
+
+	describe('addScore', () => {
+		it('should handle POST /v1/movements/:id/scores', async () => {
+			movementRouter.addScore = async (ctx) => { ctx.status = HttpStatus.CREATED; };
+			await request.post('/v1/movements/:id/scores').expect(HttpStatus.CREATED);
+		});
+
+		it('should save score for movement', async () => {
+			_.set(ctx, 'request.body', movementScore.toObject());
+
+			_movementService.expects('addScore').withExactArgs(movement.id, movementScore.toObject(), claims).resolves(movementScore);
+
+			await movementRouter.addScore(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.CREATED);
+			expect(ctx.body).toEqual(movementScore.toObject());
 		});
 	});
 });

@@ -1,87 +1,67 @@
 import * as http from 'http';
-import * as express from 'express';
-import { Connection } from 'mongoose';
-import { RouterUtils } from './utils/router.utils';
-import { Models } from './models';
+import * as Koa from 'koa';
+import * as terminus from '@godaddy/terminus';
+import { logContextInjector } from './utils/logger/log.context.injector';
 import { Logger } from './utils/logger/logger';
 import { ConfigService } from './services/config';
+import { Mongo } from './models/mongo';
+import { routes } from './routes';
+import { WorkoutDao } from './dao/workout';
+import { MovementDao } from './dao/movement';
+import { UserDao } from './dao/user';
+import { MyWodService } from './services/my.wod';
+import { UserService } from './services/user';
+import { AuthService } from './services/auth';
+import { WorkoutService } from './services/workout';
+import { MovementService } from './services/movement';
+import { HealthService } from './services/health';
+import { WorkoutScoreDao } from './dao/workout.score';
+import { MovementScoreDao } from './dao/movement.score';
 
-export default class Server {
-	private routerUtils: RouterUtils;
-	private logger: Logger;
-	private server: http.Server;
-	public app: express.Express;
-	public models?: Models;
+const logger = new Logger('server');
+const app = new Koa();
 
-	constructor() {
-		this.app = express();
-		this.app.disable('x-powered-by');
-		this.logger = new Logger('server');
-		this.routerUtils = new RouterUtils();
-		this.server = http.createServer(this.app);
+async function start() {
+	const configService = new ConfigService();
+	const config = configService.getConfig();
+
+	const mongo = new Mongo({ config });
+	try {
+		await mongo.connect();
+	} catch (err) {
+		logger.error('Connection to Mongo failed', { err: err.stack });
+		throw err;
 	}
 
-	public async start() {
-		const configService = new ConfigService();
-		const config = configService.getConfig();
+	app.use(logContextInjector());
+	const userDao = new UserDao(mongo);
+	const userService = new UserService({ userDao });
+	const workoutDao = new WorkoutDao(mongo);
+	const workoutScoreDao = new WorkoutScoreDao(mongo);
+	const movementDao = new MovementDao(mongo);
+	const movementScoreDao = new MovementScoreDao(mongo);
+	const workoutService = new WorkoutService({ workoutDao, workoutScoreDao });
+	const movementService = new MovementService({ movementDao, movementScoreDao });
+	const myWodService = new MyWodService({ userService, workoutService, movementService, workoutScoreDao, movementScoreDao });
+	const authService = new AuthService({ userDao });
 
-		this.models = new Models({
-			uri: process.env.MONGO_URI
-		});
+	routes(app, { config, authService, userService, movementService, workoutService, myWodService });
 
-		this.models.connect((err: any, connection: Connection) => {
-			if (err) {
-				this.logger.error(`Error connecting to Mongo`, err);
-				throw err;
-			}
+	const server = http.createServer(app.callback());
+	const healthService = new HealthService({ mongo });
 
-			this.routerUtils.registerMiddleware(this.app, this.logger);
-			this.routerUtils.registerRoutes(this.app);
-
-			this.server.listen(config.servicePort, () => {
-				this.logger.info(`Listening on port ${config.servicePort}`);
-			});
-
-			connection.once('disconnected', () => {
-				this.server.close();
-			});
-
-			connection.once('error', (e) => {
-				this.logger.error(`Mongo error encountered: ${e}`);
-				this.server.close();
-			});
-		});
-	}
-
-	public close() {
-		if (this.server) {
-			this.server.close();
-			this.logger.info('Express server stopped');
+	terminus.createTerminus(server, {
+		healthChecks: { '/health': healthService.isHealthy.bind(healthService) },
+		onSignal: async () => {
+			await mongo.close();
 		}
-	}
-}
-
-if (!String(process.env.NODE_ENV).startsWith('test')) {
-	const server = new Server();
-	process.nextTick(() => {
-		server.start();
 	});
 
-	/*
-	* Handle SIGTERM gracefully
-	*/
-	process.on('SIGTERM', () => {
-		if (server) {
-			server.close();
-		}
-		// Wait for all SIGTERM listeners to gracefully stop before forcing process exit
-		process.nextTick(() => {
-			process.exit();
-		});
-	});
+	server.listen(config.servicePort);
+	logger.info(`Listening on port ${config.servicePort}`);
 }
 
-process.on('unhandledRejection', (reason, p) => {
-	// call handler here
-	console.log(reason, p);
+start().catch((err) => {
+	logger.error('Server failed to start', { stack: err.stack });
+	process.exit(1);
 });

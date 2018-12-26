@@ -16,7 +16,7 @@ describe('Wodbook General Tests', () => {
 		});
 
 		it('/api-docs yaml file should be returned', async () => {
-			const res = await request.get(`/api-docs`, reqOpts);
+			const res = await request.get(`/openapi`, reqOpts);
 			expect(res.statusCode).toBe(HttpStatus.OK);
 			expect(res.body.length).toBeGreaterThan(0);
 		});

@@ -1,39 +1,28 @@
 import * as sinon from 'sinon';
 import * as HttpStatus from 'http-status-codes';
-
 import { AuthService } from '../../src/services/auth';
-import { UserType } from '../../src/models/user';
+import { UserDao } from '../../src/dao/user';
+import { User } from '../../src/models/user';
 
 describe('AuthService', () => {
-	const data = {
-		id: 'someId',
-		password: 'pass',
-		email: 'some@email.com',
-		admin: false
-	} as UserType;
 	let service: AuthService;
 	let _service: sinon.SinonMock;
-	let modelInstance;
-	let _modelInstance: sinon.SinonMock;
-	let _model: sinon.SinonMock;
-	class MockModel {
-		constructor() { return modelInstance; }
-		save() { return null; }
-		static findOne() { return null; }
-	}
+	let userDao: UserDao, _userDao: sinon.SinonMock;
+
+	const user = new User({
+		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
+		email: 'some@email.com',
+		password: 'pass',
+		admin: false
+	});
 
 	beforeEach(() => {
-		modelInstance = new MockModel();
-		_modelInstance = sinon.mock(modelInstance);
-		_model = sinon.mock(MockModel);
+		const anyOptions: any = {};
+		userDao = new UserDao(anyOptions);
+		_userDao = sinon.mock(userDao);
 
 		const options = {
-			userModel: MockModel,
-			logger: {
-				info() { },
-				warn() { },
-				error() { }
-			}
+			userDao
 		};
 
 		service = new AuthService(options);
@@ -41,45 +30,31 @@ describe('AuthService', () => {
 	});
 
 	afterEach(() => {
-		_model.verify();
+		_userDao.verify();
 		_service.verify();
-		_modelInstance.verify();
 	});
 
-	it('should create an instance without any options', () => {
-		const service = new AuthService();
-		expect(service).toBeDefined();
-	});
-
-	describe('register', () => {
-		it('should register a user successfully', async () => {
-			_modelInstance.expects('save').resolves(data);
-
-			const promise = service.register(data);
-			await expect(promise).resolves.toEqual(data);
+	describe('signup', () => {
+		it('should signup a user successfully', async () => {
+			_userDao.expects('createUser').resolves(user);
+			await expect(service.signup(user)).resolves.toEqual(user);
 		});
 	});
 
 	describe('login', () => {
 		it('should successfully login if user exists', async () => {
-			_model.expects('findOne').withArgs({ email: data.email }).resolves(data);
-
-			const promise = service.login(data);
-			await expect(promise).resolves.toEqual(data);
+			_userDao.expects('getUserByEmail').withArgs(user.email).resolves(user);
+			await expect(service.login(user)).resolves.toEqual(user);
 		});
 
 		it('should throw unauthorized exception if user does not exist', async () => {
-			_model.expects('findOne').resolves();
-
-			const promise = service.login(data);
-			await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
+			_userDao.expects('getUserByEmail').resolves();
+			await expect(service.login(user)).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
 		});
 
 		it('should throw unauthorized exception if user exists but password does not match', async () => {
-			_model.expects('findOne').resolves({ email: data.email, password: 'anotherPassword' });
-
-			const promise = service.login(data);
-			await expect(promise).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
+			_userDao.expects('getUserByEmail').resolves({ email: user.email, password: 'anotherPassword' });
+			await expect(service.login(user)).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
 		});
 	});
 });

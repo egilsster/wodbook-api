@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Program",
+      "name": "Server",
       "type": "node",
       "request": "launch",
       "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
@@ -20,23 +20,9 @@
       }
     },
     {
-      "name": "Server for Component Test",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-      "args": [
-        "${workspaceRoot}/src/server.ts"
-      ],
-      "cwd": "${workspaceRoot}",
-      "env": {
-        "NODE_ENV": "development",
-        "MONGO_URI": "mongodb://localhost:27017/wodbook-test"
-      }
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Tests",
+      "name": "Unit Tests",
       "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
       "args": [
         "${workspaceRoot}/node_modules/jest/bin/jest.js",
@@ -55,6 +41,20 @@
       }
     },
     {
+      "name": "Server for Component Test",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
+      "args": [
+        "${workspaceRoot}/src/server.ts"
+      ],
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "NODE_ENV": "development",
+        "MONGO_URI": "mongodb://localhost:27017/wodbook"
+      }
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Component Test",
@@ -68,7 +68,7 @@
       "cwd": "${workspaceRoot}",
       "env": {
         "NODE_ENV": "test",
-        "MONGO_URI": "mongodb://localhost:27017/wodbook-test"
+        "MONGO_URI": "mongodb://localhost:27017/wodbook"
       }
     }
   ],

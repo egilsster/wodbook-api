@@ -1,26 +1,37 @@
-import * as cls from 'continuation-local-storage';
-import * as Emitter from 'events';
 import { logContextInjector } from '../../../src/utils/logger/log.context.injector';
-const session = cls.getNamespace('logger');
+import * as cls from 'cls-hooked';
+import * as Emitter from 'events';
 
-describe('logContextInjector', () => {
-	it('next middleware has access to request through continuation-local-storage', (done) => {
-		const req: any = new Emitter();
+let session = cls.getNamespace('logger');
 
-		logContextInjector()(req, new Emitter() as any, () => {
-			expect(session.get('req')).toEqual(req);
+describe('logContextInjector', function () {
+	it('next middleware has access to request through continuation-local-storage', function (done) {
+		let request = new Emitter();
+		let state = { data: 'test' };
+		logContextInjector()({ request, state }, () => {
+			expect(session.get('req')).toEqual(request);
+			expect(session.get('state')).toEqual(state);
 			done();
 		});
 	});
-
-	it('next middleware has access to request through continuation-local-storage using promise', (done) => {
-		const req: any = new Emitter();
-
-		logContextInjector()(req, new Emitter() as any, () => {
+	it('next middleware has access to request through continuation-local-storage using promise', function (done) {
+		let request = new Emitter();
+		let state = { data: 'test' };
+		logContextInjector()({ request, state }, () => {
 			return new Promise(() => {
-				expect(session.get('req')).toEqual(req);
+				expect(session.get('req')).toEqual(request);
+				expect(session.get('state')).toEqual(state);
 				done();
 			});
+		});
+	});
+	it('next middleware has access to request through continuation-local-storage using async function', function (done) {
+		let request = new Emitter();
+		let state = { data: 'test' };
+		logContextInjector()({ request, state }, async () => {
+			expect(session.get('req')).toEqual(request);
+			expect(session.get('state')).toEqual(state);
+			done();
 		});
 	});
 });

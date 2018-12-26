@@ -1,21 +1,40 @@
-#############
-# Build image
-#############
-FROM node:10-alpine AS builder
+# NPM deps
+##########
+FROM node:10-alpine AS deps
+
+WORKDIR /usr/src/app
+
+COPY package.json ./
+RUN npm install --production
+
+##############
+# Transpile TS
+##############
+FROM node:10-alpine AS transpile
 
 WORKDIR /usr/src/app
 
 COPY . ./
+RUN npm install && \
+	npm run build
 
-RUN npm install --production
-RUN npm run build
+####################
+# Common build image
+####################
+FROM node:10-alpine AS build
+
+WORKDIR /usr/src/app
+
+COPY --from=transpile /usr/src/app/package.json /usr/src/app/
+COPY --from=transpile /usr/src/app/build /usr/src/app/build
+COPY --from=deps /usr/src/app/node_modules /usr/src/app/node_modules
 
 ##################
 # Production Image
 ##################
-FROM node:10-alpine AS production
+FROM build AS production
 
-RUN apk --no-cache add curl
+RUN apk add --no-cache curl
 
 USER root
 
@@ -26,11 +45,12 @@ RUN chown nobody:nobody -R /usr/src/app/mywod
 
 USER nobody
 
-COPY --from=builder /usr/src/app .
-
-EXPOSE 43210
+COPY --from=build /usr/src/app /usr/src/app
+COPY api-docs.yml ./
 
 HEALTHCHECK CMD curl --fail http://localhost:43210/health || exit 1
+
+EXPOSE 43210
 
 CMD [ "node", "./build/server.js" ]
 
@@ -40,6 +60,13 @@ CMD [ "node", "./build/server.js" ]
 FROM production AS test
 
 USER root
-RUN npm install
+
+WORKDIR /usr/src/app
 
 RUN apk --no-cache add make grep git
+
+COPY . ./
+
+RUN curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter \
+  && chmod +x ./cc-test-reporter
+RUN	npm install

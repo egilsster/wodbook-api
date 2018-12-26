@@ -1,242 +1,189 @@
-import * as supertest from 'supertest';
+import * as Koa from 'koa';
 import * as sinon from 'sinon';
-import * as express from 'express';
+import * as supertest from 'supertest';
+import { Server } from 'http';
 import * as HttpStatus from 'http-status-codes';
-
+import * as _ from 'lodash';
 import { WorkoutRouter } from '../../src/routes/workout';
-import { TrainingService } from '../../src/services/training';
-import { ExpressError } from '../../src/utils/express.error';
-import { RouterUtils } from '../../src/utils/router.utils';
+import { WorkoutService } from '../../src/services/workout';
+import { Workout } from '../../src/models/workout';
+import { WorkoutScore } from '../../src/models/workout.score';
 
-describe('Workout endpoint', () => {
-	const user = {
-		id: 'userId',
-		email: 'user@email.com'
-	};
+describe('Workout Router', () => {
 	let request: supertest.SuperTest<supertest.Test>;
-	let workoutRouter: WorkoutRouter;
-	let workoutMongo;
-	let trainingService: TrainingService;
-	let _trainingService: sinon.SinonMock;
-	let app: express.Application;
-
-	let modelInstance;
-	class MockModel {
-		constructor() { return modelInstance; }
-		save() { return null; }
-		static find() { return null; }
-		static findOne() { return null; }
-		static createIndexes() { return null; }
-	}
+	let server: Server;
+	let workoutRouter: WorkoutRouter, _router: sinon.SinonMock;
+	let workoutService: WorkoutService, _workoutService: sinon.SinonMock;
+	const userId = 'KkZogjZCwjq6IzE1QAQmrXaKTTMuUp4D';
+	const claims: any = { userId: userId };
+	const workoutId = '1';
+	let ctx: Koa.Context;
+	const workout = new Workout({
+		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
+		name: 'Fran',
+		measurement: 'time',
+		userId
+	});
+	const workoutScore = new WorkoutScore({
+		workoutId: workout.id,
+		measurement: workout.measurement,
+		score: '1:59'
+	});
 
 	beforeEach(() => {
-		trainingService = new TrainingService(MockModel, MockModel);
-		_trainingService = sinon.mock(trainingService);
+		ctx = {
+			request: {
+				body: workout.toObject()
+			},
+			params: {
+				id: workout.id
+			} as any,
+			query: {} as any,
+			state: { claims } as any
+		} as Koa.Context;
 
-		workoutMongo = {
-			id: '5a4704ca46425f97c638bcaa',
-			name: 'Fran'
-		};
-
-		const logger = {
-			debug() { },
-			info() { },
-			warn() { },
-			error() { }
-		};
+		workoutService = new WorkoutService({ policyService: {} });
+		_workoutService = sinon.mock(workoutService);
 
 		workoutRouter = new WorkoutRouter({
-			trainingService,
-			logger
+			workoutService
 		});
-		workoutRouter.initRoutes();
+		_router = sinon.mock(workoutRouter);
 
-		app = express();
-		app.use((req, _res, next) => {
-			req['user'] = user;
-			next();
-		});
-		app.use('/', workoutRouter.router);
-		app.use(RouterUtils.errorHandler);
-		request = supertest(app);
+		const app = new Koa();
+		workoutRouter.init(app);
+		server = app.listen();
+		request = supertest(server);
 	});
 
 	afterEach(() => {
-		_trainingService.verify();
+		server.close();
+		_workoutService.verify();
+		_router.verify();
 	});
 
-	it('should create instance of router when no options are given', () => {
-		const router = new WorkoutRouter();
-		expect(router).toBeDefined();
-	});
-
-	describe('GET /workouts query parameters', () => {
-		it('200 GET /workouts without query parameters returns a list of workouts', (done) => {
-			_trainingService.expects('getMany').returns([workoutMongo]);
-			request.get('/')
-				.expect(HttpStatus.OK)
-				.end((err, res) => {
-					done(err);
-					expect(res.body.data).toBeDefined();
-					expect(res.body.data).toEqual([workoutMongo]);
-					done();
-				});
+	describe('constructor', () => {
+		it('should create new instance of service', () => {
+			const instance = new WorkoutRouter({});
+			expect(instance).toBeDefined();
 		});
 	});
 
-	describe('GET /workouts/{id}', () => {
-		it('200 Get specific workout.', (done) => {
-			_trainingService.expects('getOne').withArgs(user.id, workoutMongo.id).resolves(workoutMongo);
-
-			request.get(`/${workoutMongo.id}`)
-				.expect(HttpStatus.OK)
-				.end((err, res) => {
-					done(err);
-					expect(res.body).toBeDefined();
-					expect(res.body.data).toEqual(workoutMongo);
-					done();
-				});
-		});
-
-		it('404 The specified workout does not exist', (done) => {
-			_trainingService.expects('getOne').withArgs(user.id, workoutMongo.id).resolves();
-			request.get(`/${workoutMongo.id}`)
-				.expect(HttpStatus.NOT_FOUND)
-				.end((err, _res) => {
-					done(err);
-					done();
-				});
-		});
-	});
-
-	describe('POST /workouts', () => {
-		let createPostBody;
-
-		beforeEach(() => {
-			createPostBody = {
-				data: {
-					createdBy: user.id,
-					name: 'wodBook',
-					scores: [
-						'TBD'
-					],
-					type: 'bull'
+	describe('init', () => {
+		it('Should initialize the app', async () => {
+			const app = {
+				use: function (routesMiddleware) {
+					this.routesMiddleware = routesMiddleware;
 				}
-			};
-		});
+			} as any;
+			const appUseSpy = sinon.spy(app, 'use');
+			const workoutRouter = new WorkoutRouter({ workoutService: {} });
+			workoutRouter.init(app);
 
-		it('415 Content-type is not JSON', (done) => {
-			request.post('/')
-				.send('This is a string')
-				.expect(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-				.end((err, _res) => {
-					done(err);
-					done();
-				});
-		});
-
-		it('201 Successful workout creation', async (done) => {
-			_trainingService.expects('create').withArgs(createPostBody.data).returns(workoutMongo);
-
-			try {
-				const res = await request.post('/')
-					.send(createPostBody);
-				expect(res.status).toBe(HttpStatus.CREATED);
-				expect(res.body.data).toEqual(workoutMongo);
-				done();
-			} catch (err) {
-				done(err);
-			}
-		});
-
-		it('should return 500 if workout could not be created', async (done) => {
-			_trainingService.expects('create').withArgs(createPostBody.data).rejects();
-
-			try {
-				const res = await request.post('/')
-					.send(createPostBody);
-				expect(res.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			expect(appUseSpy.calledOnce).toBe(true);
 		});
 	});
 
-	describe('GET /workouts/{id}/scores', () => {
-		const scores = ['score1', 'score2'];
-
-		it('should return 200 with a non-empty list of scores for a workout if it has scores registered', async (done) => {
-			_trainingService.expects('getScores').withExactArgs(user.id, workoutMongo.id).resolves(scores);
-
-			try {
-				const res = await request.get(`/${workoutMongo.id}/scores`);
-				expect(res.status).toBe(HttpStatus.OK);
-				expect(res.body).toHaveProperty('data', scores);
-				done();
-			} catch (err) {
-				done(err);
-			}
+	describe('getWorkouts', () => {
+		it('should handle GET /v1/workouts', async () => {
+			workoutRouter.getWorkouts = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.get('/v1/workouts').expect(HttpStatus.OK);
 		});
 
-		it('should return 200 with an empty list of scores for a workout if it has no scores', async (done) => {
-			_trainingService.expects('getScores').withExactArgs(user.id, workoutMongo.id).resolves([]);
+		it('should return 200 OK when no resources exist', async () => {
+			_workoutService.expects('getWorkouts').withExactArgs(claims).resolves([]);
 
-			try {
-				const res = await request.get(`/${workoutMongo.id}/scores`);
-				expect(res.status).toBe(HttpStatus.OK);
-				expect(res.body).toHaveProperty('data', []);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			await workoutRouter.getWorkouts(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
 		});
 
-		it('should return 404 if the specified workout does not exist', async (done) => {
-			const err = new ExpressError(`Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_trainingService.expects('getScores').withExactArgs(user.id, workoutMongo.id).throws(err);
+		it('should return 200 OK with array of resources', async () => {
+			_workoutService.expects('getWorkouts').withExactArgs(claims).resolves([workout]);
 
-			try {
-				const res = await request.get(`/${workoutMongo.id}/scores`);
-				expect(res.status).toBe(HttpStatus.NOT_FOUND);
-				expect(res.body).toHaveProperty('status', err.status);
-				expect(res.body).toHaveProperty('detail', err.detail);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			await workoutRouter.getWorkouts(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toEqual({
+				data: [workout.toObject()]
+			});
 		});
 	});
 
-	describe('POST /workouts/{id}/scores', () => {
-		const score = { workoutId: 'workoutId' };
-
-		it('should return 201 if score is successfully added to workout', async (done) => {
-			_trainingService.expects('addScore').withExactArgs(user.id, workoutMongo.id, score).resolves(score);
-
-			try {
-				const res = await request.post(`/${workoutMongo.id}/scores`).send({ data: score });
-				expect(res.status).toBe(HttpStatus.CREATED);
-				expect(res.body).toHaveProperty('data', score);
-				done();
-			} catch (err) {
-				done(err);
-			}
+	describe('getWorkout', () => {
+		it('should handle GET /v1/workouts/:id', async () => {
+			workoutRouter.getWorkout = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.get('/v1/workouts/1').expect(HttpStatus.OK);
 		});
 
-		it('should return 404 if the specified workout does not exist', async (done) => {
-			const err = new ExpressError(`Entity with identity '${workoutMongo.id}' does not exist`, HttpStatus.NOT_FOUND);
-			_trainingService.expects('addScore').withExactArgs(user.id, workoutMongo.id, score).rejects(err);
+		it('should return workout when workout with id is found', async () => {
+			_workoutService.expects('getWorkoutById').withExactArgs(workoutId, claims).resolves(workout);
 
-			try {
-				const res = await request.post(`/${workoutMongo.id}/scores`).send({ data: score });
-				expect(res.status).toBe(HttpStatus.NOT_FOUND);
-				expect(res.body).toHaveProperty('status', err.status);
-				expect(res.body).toHaveProperty('detail', err.detail);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			ctx.params.id = workoutId;
+			await workoutRouter.getWorkout(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toEqual(workout.toObject());
+		});
+	});
+
+	describe('createWorkout', () => {
+		it('should handle POST /v1/workouts', async () => {
+			workoutRouter.createWorkout = async (ctx) => { ctx.status = HttpStatus.CREATED; };
+			await request.post('/v1/workouts').expect(HttpStatus.CREATED);
+		});
+
+		it('should return 201 CREATED when creating a workout', async () => {
+			_workoutService.expects('createWorkout').withExactArgs(ctx.request.body, claims).resolves(workout);
+
+			await workoutRouter.createWorkout(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.CREATED);
+			expect(ctx.body).toEqual(workout.toObject());
+		});
+	});
+
+	describe('getScores', () => {
+		it('should handle GET /v1/workouts/:id/scores', async () => {
+			workoutRouter.getScores = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.get('/v1/workouts/:id/scores').expect(HttpStatus.OK);
+		});
+
+		it('should return 200 OK when no scores exist', async () => {
+			_workoutService.expects('getScores').withExactArgs(workout.id, claims).resolves([]);
+
+			await workoutRouter.getScores(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+		});
+
+		it('should return 200 OK with array of scores', async () => {
+			_workoutService.expects('getScores').withExactArgs(workout.id, claims).resolves([workoutScore]);
+
+			await workoutRouter.getScores(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toEqual({
+				data: [workoutScore.toObject()]
+			});
+		});
+	});
+
+	describe('addScore', () => {
+		it('should handle POST /v1/workouts/:id/scores', async () => {
+			workoutRouter.addScore = async (ctx) => { ctx.status = HttpStatus.CREATED; };
+			await request.post('/v1/workouts/:id/scores').expect(HttpStatus.CREATED);
+		});
+
+		it('should save score for workout', async () => {
+			_.set(ctx, 'request.body', workoutScore.toObject());
+
+			_workoutService.expects('addScore').withExactArgs(workout.id, workoutScore.toObject(), claims).resolves(workoutScore);
+
+			await workoutRouter.addScore(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.CREATED);
+			expect(ctx.body).toEqual(workoutScore.toObject());
 		});
 	});
 });

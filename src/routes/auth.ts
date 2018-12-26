@@ -1,71 +1,55 @@
-import * as express from 'express';
+import * as Koa from 'koa';
+import * as Router from 'koa-router';
 import * as HttpStatus from 'http-status-codes';
-import * as bodyParser from 'body-parser';
-
-import BaseRouter from './base';
 import { JwtUtils } from '../utils/jwt.utils';
 import { AuthService } from '../services/auth';
-import { UserType } from '../models/user';
 import { ConfigService } from '../services/config';
+import { User } from '../models/user';
 
-export class AuthRouter extends BaseRouter {
-	public path: string = 'auth';
-	private authService: AuthService;
+export class AuthRouter extends Router {
 	private configService: ConfigService;
+	private authService: AuthService;
 
-	constructor(options: any = {}) {
-		super(options, 'router:auth');
+	constructor(options: any) {
+		super();
 		this.authService = options.authService || new AuthService(options);
 		this.configService = options.configService || new ConfigService();
-		this.initRoutes();
 	}
 
-	initRoutes() {
-		this.router.use(bodyParser.json());
-
-		this.router.route('/login')
-			.post(this.login.bind(this));
-
-		this.router.route('/register')
-			.post(this.register.bind(this));
-
-		super.useLogger();
+	init(app: Koa) {
+		this.prefix('/v1/auth');
+		this.post('/login', ctx => this.login(ctx));
+		this.post('/signup', ctx => this.signup(ctx));
+		app.use(this.routes());
 	}
 
-	async login(req: express.Request, res: express.Response, next: express.NextFunction) {
-		try {
-			const user = await this.authService.login(req.body.data);
+	async login(ctx: Koa.Context) {
+		const body = ctx.request.body;
+		const user = await this.authService.login(body);
+		const config = this.configService.getConfig();
 
-			return res.status(HttpStatus.OK).json({
-				data: {
-					token: JwtUtils.signToken(this.getPayload(user), 'publicKey')
-				}
-			});
-		} catch (err) {
-			next(err);
-		}
+		ctx.status = HttpStatus.OK;
+		ctx.body = {
+			token: this.signToken(user, config)
+		};
 	}
 
-	async register(req: express.Request, res: express.Response, next: express.NextFunction) {
-		try {
-			const user = await this.authService.register(req.body.data);
-			const config = this.configService.getConfig();
+	async signup(ctx: Koa.Context) {
+		const body = ctx.request.body;
+		const user = await this.authService.signup(body);
+		const config = this.configService.getConfig();
 
-			return res.status(HttpStatus.CREATED).json({
-				data: {
-					token: JwtUtils.signToken(this.getPayload(user), config.jwtConfig.publicKey)
-				}
-			});
-		} catch (err) {
-			next(err);
-		}
+		ctx.status = HttpStatus.CREATED;
+		ctx.body = {
+			token: this.signToken(user, config)
+		};
 	}
 
-	private getPayload(user: UserType) {
-		return {
-			id: user._id,
+	private signToken(user: User, config: Config) {
+		return JwtUtils.signToken({
+			userId: user.id,
 			email: user.email,
 			admin: user.admin
-		};
+		}, config.jwtConfig.publicKey);
 	}
 }

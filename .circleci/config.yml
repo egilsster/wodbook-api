@@ -37,6 +37,9 @@ jobs:
           name: Build test image
           command: make build-test-image
       - run:
+          name: Unit Tests
+          command: docker-compose -f docker-compose.unit-test.yml run test
+      - run:
           name: Component Test (initialize service)
           command: |
             VER=$(cat ./version.txt) docker-compose -f docker-compose.component-test.yml up -d wodbook-api
@@ -54,12 +57,6 @@ jobs:
               docker logs $container &> reports/component-test_${container}.log
             done
           when: always
-      - run:
-          name: Build test image
-          command: make build-test-image
-      - run:
-          name: Unit Tests
-          command: docker-compose -f docker-compose.unit-test.yml run test
       - store_artifacts:
           path: ./version.txt
           destination: version

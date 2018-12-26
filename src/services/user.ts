@@ -1,18 +1,26 @@
-import * as mongoose from 'mongoose';
-import { UserModel, UserType } from '../models/user';
+import { UserDao } from '../dao/user';
+import { User } from '../models/user';
 
 export class UserService {
-	private userModel: mongoose.Model<UserType>;
+	private userDao: UserDao;
 
-	constructor(private options: any = {}) {
-		this.userModel = this.options.userModel || new UserModel().createModel();
+	constructor(options: any) {
+		this.userDao = options.userDao;
 	}
 
-	async getUsers() {
-		return this.userModel.find();
+	async getUsers(claims: Claims) {
+		return this.userDao.getUsers(claims);
 	}
 
-	async getUser(user: UserType) {
-		return this.userModel.findOne({ email: user.email });
+	async getUserByEmail(email: string) {
+		return this.userDao.getUserByEmail(email);
+	}
+
+	async getUserById(userId: string) {
+		return this.userDao.getUserById(userId);
+	}
+
+	async updateUserByEmail(user: User, claims: Claims) {
+		return this.userDao.updateUserByEmail(user, claims);
 	}
 }

@@ -2,6 +2,13 @@ engines:
   tslint:
     enabled: true
     config: tslint.json
+    checks:
+      semicolon:
+        enabled: false
+      whitespace:
+        enabled: false
+      no-unused-expression:
+        enabled: false
   fixme:
     enabled: true
 ratings:

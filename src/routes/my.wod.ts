@@ -1,60 +1,49 @@
-import * as express from 'express';
-import * as multer from 'multer';
+import * as _ from 'lodash';
+import * as Koa from 'koa';
+import * as Router from 'koa-router';
 import * as HttpStatus from 'http-status-codes';
-
-import { ExpressError } from '../utils/express.error';
-import BaseRouter from './base';
+import * as fs from 'fs-extra';
 import { MyWodService } from '../services/my.wod';
-import { UserSerializer } from '../utils/serialization/user.serializer';
+import { ServiceError } from '../utils/service.error';
+import { ERROR_TEMPLATES } from '../utils/error.templates';
 
-const storage = multer.diskStorage({ destination: MyWodService.FILE_LOCATION });
-const upload = multer({ storage });
+export class MyWodRouter extends Router {
+	private myWodService: MyWodService;
 
-export class MyWodRouter extends BaseRouter {
-	public path: string = 'mywod';
-	private mywodService: MyWodService;
-	private userSerializer: UserSerializer;
-
-	constructor(options: any = {}) {
-		super(options, 'router:mywod');
-		this.mywodService = options.mywodService || new MyWodService(options);
-		this.userSerializer = this.options.userSerializer || new UserSerializer(this.options);
-		this.initRoutes();
+	constructor(options: any) {
+		super();
+		this.myWodService = options.myWodService || new MyWodService(options);
 	}
 
-	protected initRoutes() {
-		this.router.route('/migrate')
-			.post(upload.single('file'), this.migrate.bind(this));
-
-		super.useLogger();
+	init(app: Koa) {
+		this.prefix('/v1/mywod');
+		this.post('/migrate', ctx => this.migrate(ctx));
+		app.use(this.routes());
 	}
 
-	async migrate(req: express.Request, res: express.Response, next: express.NextFunction) {
-		const file = req.file;
+	async migrate(ctx: Koa.Context) {
+		const file = _.get(ctx, 'request.files.file');
+		if (!file) {
+			throw new ServiceError(ERROR_TEMPLATES.INVALID_PAYLOAD);
+		}
 		try {
-			if (!file) {
-				throw new ExpressError('The form contains no file', HttpStatus.BAD_REQUEST);
-			}
+			const claims: Claims = ctx.state.claims;
+			const contents = await this.myWodService.readContentsFromDatabase(file.path);
+			const user = await this.myWodService.saveAthlete(contents.athlete, claims);
+			const workouts = await this.myWodService.saveWorkouts(contents.workouts, claims);
+			const movements = await this.myWodService.saveMovementsAndMovementScores(contents.movements, contents.movementScores, claims);
+			await this.myWodService.saveWorkoutScores(contents.workoutScores, claims);
 
-			const contents = await this.mywodService.readContentsFromDatabase(file.filename);
-			const user = await this.mywodService.saveAthlete(req['user'], contents.athlete);
-			const workouts = await this.mywodService.saveWorkouts(user, contents.workouts);
-			const movements = await this.mywodService.saveMovementsAndMovementScores(user, contents.movements, contents.movementScores);
-			await this.mywodService.saveWorkoutScores(user, contents.workoutScores);
-
-			// Add serializer
-
-			return res.status(HttpStatus.OK).send({
-				data: {
-					user: this.userSerializer.serialize(user, req),
-					workouts: workouts,
-					movements: movements
-				}
-			});
+			ctx.status = HttpStatus.OK;
+			ctx.body = {
+				user: user.toObject(),
+				workouts: workouts.map(workout => workout.toObject()),
+				movements: movements.map(movement => movement.toObject())
+			};
 		} catch (err) {
-			next(err);
+			throw err;
 		} finally {
-			this.mywodService.deleteDatabaseFile(file.filename);
+			fs.unlinkSync(file.path);
 		}
 	}
 }

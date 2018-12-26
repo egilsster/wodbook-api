@@ -1,113 +1,99 @@
-import * as supertest from 'supertest';
+import * as Koa from 'koa';
 import * as sinon from 'sinon';
-import * as express from 'express';
+import * as supertest from 'supertest';
+import { Server } from 'http';
 import * as HttpStatus from 'http-status-codes';
-
-import { UserService } from '../../src/services/user';
 import { UserRouter } from '../../src/routes/user';
+import { UserService } from '../../src/services/user';
+import { User } from '../../src/models/user';
 
-describe('User endpoint', () => {
-	const user = {
-		id: 'userId',
-		email: 'user@email.com'
-	};
+describe('User Router', () => {
 	let request: supertest.SuperTest<supertest.Test>;
-	let userRouter: UserRouter;
-	let userMongo;
-	let userService: UserService;
-	let _userService: sinon.SinonMock;
-	let app: express.Application;
+	let server: Server;
+	let userRouter: UserRouter, _router: sinon.SinonMock;
+	let userService: UserService, _userService: sinon.SinonMock;
+	let ctx: Koa.Context;
+	const user = new User({
+		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
+		email: 'test@email.com',
+		password: 'test',
+		admin: false,
+		boxName: 'CrossFit Cloud',
+		dateOfBirth: '1969-06-09 00:00:00.000',
+		firstName: 'Cloud',
+		height: 199,
+		lastName: 'Atlas',
+		weight: 90000
+	});
+	const claims: any = { userId: user.id };
 
 	beforeEach(() => {
-		userService = new UserService();
+		ctx = {
+			state: { claims } as any
+		} as Koa.Context;
+
+		userService = new UserService({ policyService: {} });
 		_userService = sinon.mock(userService);
 
-		userMongo = {
-			_id: '5a47b3ae8c4a33b2fdf118a9',
-			updatedAt: '2017-12-30 15:41:46.850',
-			createdAt: '2017-12-30 15:41:34.006',
-			email: 'test@email.com',
-			password: 'test',
-			admin: false,
-			boxName: 'CrossFit Cloud',
-			dateOfBirth: '1969-06-09 00:00:00.000',
-			firstName: 'Cloud',
-			gender: 'male',
-			height: 199,
-			lastName: 'Atlas',
-			weight: 90000
-		};
-
-		const logger = {
-			debug() { },
-			info() { },
-			warn() { },
-			error() { }
-		};
-
 		userRouter = new UserRouter({
-			userService,
-			logger
+			userService
 		});
-		userRouter.initRoutes();
-		app = express();
-		app.use((req, _res, next) => {
-			req['user'] = user;
-			next();
-		});
-		app.use('/', userRouter.router);
-		request = supertest(app);
+		_router = sinon.mock(userRouter);
+
+		const app = new Koa();
+		userRouter.init(app);
+		server = app.listen();
+		request = supertest(server);
 	});
 
 	afterEach(() => {
+		server.close();
 		_userService.verify();
+		_router.verify();
 	});
 
-	it('should create instance of router when no options are given', () => {
-		const router = new UserRouter();
-		expect(router).toBeDefined();
+	describe('constructor', () => {
+		it('should create new instance of service', () => {
+			const instance = new UserRouter({});
+			expect(instance).toBeDefined();
+		});
 	});
 
-	describe('GET /me', () => {
-		it('should get 200 OK when user on the request exists', async (done) => {
-			_userService.expects('getUser').resolves(userMongo);
+	describe('init', () => {
+		it('Should initialize the app', async () => {
+			const app = {
+				use: function (routesMiddleware) {
+					this.routesMiddleware = routesMiddleware;
+				}
+			} as any;
+			const appUseSpy = sinon.spy(app, 'use');
+			const userRouter = new UserRouter({ userService: {} });
+			userRouter.init(app);
 
-			try {
-				const res = await request.get('/me');
-				expect(res.status).toEqual(HttpStatus.OK);
-				expect(res.body.data).toBeDefined();
-				const user = res.body.data;
-				expect(user).toHaveProperty('boxName');
-				expect(user).toHaveProperty('dateOfBirth');
-				expect(user).toHaveProperty('email');
-				expect(user).toHaveProperty('firstName');
-				expect(user).toHaveProperty('lastName');
-				expect(user).toHaveProperty('gender');
-				expect(user).toHaveProperty('height');
-				expect(user).toHaveProperty('weight');
-				expect(user).toHaveProperty('createdAt');
-				expect(user).toHaveProperty('updatedAt');
-				expect(Object.keys(user).length).toBe(10);
-				expect(user).not.toHaveProperty('_id');
-				expect(user).not.toHaveProperty('id');
-				expect(user).not.toHaveProperty('password');
-				expect(user).not.toHaveProperty('admin');
-				done();
-			} catch (err) {
-				done(err);
-			}
+			expect(appUseSpy.calledOnce).toBe(true);
+		});
+	});
+
+	describe('me', () => {
+		it('should handle GET /v1/users/me', async () => {
+			userRouter.me = async (ctx) => { ctx.status = HttpStatus.OK; };
+			await request.get('/v1/users/me').expect(HttpStatus.OK);
 		});
 
-		it('should get 404 Not found if user on the request does not exist', async (done) => {
-			_userService.expects('getUser').resolves();
+		it('should return 200 OK with the logged in user\'s data', async () => {
+			_userService.expects('getUserById').withExactArgs(claims.userId).resolves(user);
 
-			try {
-				const res = await request.get('/me');
-				expect(res.status).toEqual(HttpStatus.NOT_FOUND);
-				done();
-			} catch (err) {
-				done(err);
-			}
+			await userRouter.me(ctx);
+
+			expect(ctx.status).toEqual(HttpStatus.OK);
+			expect(ctx.body).toEqual(user.toObject());
+		});
+
+		it('should throw an error if the user does not exist', async () => {
+			const err = new Error();
+			_userService.expects('getUserById').withExactArgs(claims.userId).rejects(err);
+
+			await expect(userRouter.me(ctx)).rejects.toEqual(err);
 		});
 	});
 });

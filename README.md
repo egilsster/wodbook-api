@@ -18,7 +18,7 @@ make build-docker
 Run in docker:
 
 ```sh
-docker-compose -f docker-compose.yml -f docker-compose.wodbook-api.yml up -d
+docker-compose -f docker-compose.deps.yml -f docker-compose.wodbook-api.yml up -d
 ```
 
 ## Usage
@@ -28,20 +28,16 @@ Listing my profile:
 ```sh
 GET: http://localhost:43210/v1/me
 {
-    "data": {
-        "firstName": "Egill"
-        ...
-    }
+    "firstName": "Egill"
+    ...
 }
 ```
 
 Posting a workout score:
 
 ```sh
-POST: http://localhost:43210/v1/workouts/{id}
+POST: http://localhost:43210/v1/workouts/{id}/scores
 {
-  "data": {
     "score": "TBD"
-  }
 }
 ```
