@@ -17,7 +17,7 @@ describe('Movement Router', () => {
 	const userId = 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7';
 	const claims: any = { userId: userId };
 	const movementId = '1';
-	let ctx: Koa.Context;
+	let ctx;
 	const movement = new Movement({
 		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
 		name: 'Snatch',
@@ -39,10 +39,10 @@ describe('Movement Router', () => {
 			},
 			params: {
 				id: movement.id
-			} as any,
-			query: {} as any,
-			state: { claims } as any
-		} as Koa.Context;
+			},
+			query: {},
+			state: { claims }
+		};
 
 		movementService = new MovementService({ policyService: {} });
 		_movementService = sinon.mock(movementService);
@@ -118,14 +118,18 @@ describe('Movement Router', () => {
 			await request.get('/v1/movements/1').expect(HttpStatus.OK);
 		});
 
-		it('should return movement when movement with id is found', async () => {
+		it('should return movement with scores when movement with id is found', async () => {
 			_movementService.expects('getMovementById').withExactArgs(movementId, claims).resolves(movement);
+			_movementService.expects('getScores').withExactArgs(movementId, claims).resolves([movementScore]);
 
 			ctx.params.id = movementId;
 			await movementRouter.getMovement(ctx);
 
 			expect(ctx.status).toEqual(HttpStatus.OK);
-			expect(ctx.body).toEqual(movement.toObject());
+			expect(ctx.body).toEqual({
+				...movement.toObject(),
+				scores: [movementScore.toObject()]
+			});
 		});
 	});
 
@@ -145,36 +149,10 @@ describe('Movement Router', () => {
 		});
 	});
 
-	describe('getScores', () => {
-		it('should handle GET /v1/movements/:id/scores', async () => {
-			movementRouter.getScores = async (ctx) => { ctx.status = HttpStatus.OK; };
-			await request.get('/v1/movements/:id/scores').expect(HttpStatus.OK);
-		});
-
-		it('should return 200 OK when no scores exist', async () => {
-			_movementService.expects('getScores').withExactArgs(movement.id, claims).resolves([]);
-
-			await movementRouter.getScores(ctx);
-
-			expect(ctx.status).toEqual(HttpStatus.OK);
-		});
-
-		it('should return 200 OK with array of scores', async () => {
-			_movementService.expects('getScores').withExactArgs(movement.id, claims).resolves([movementScore]);
-
-			await movementRouter.getScores(ctx);
-
-			expect(ctx.status).toEqual(HttpStatus.OK);
-			expect(ctx.body).toEqual({
-				data: [movementScore.toObject()]
-			});
-		});
-	});
-
 	describe('addScore', () => {
-		it('should handle POST /v1/movements/:id/scores', async () => {
+		it('should handle POST /v1/movements/:id', async () => {
 			movementRouter.addScore = async (ctx) => { ctx.status = HttpStatus.CREATED; };
-			await request.post('/v1/movements/:id/scores').expect(HttpStatus.CREATED);
+			await request.post('/v1/movements/:id').expect(HttpStatus.CREATED);
 		});
 
 		it('should save score for movement', async () => {
