@@ -166,7 +166,7 @@ describe('Movement component tests', () => {
 				expect(res1.body).toHaveProperty('measurement', movement.measurement);
 				expect(res1.body).toHaveProperty('name', movement.name);
 
-				const res2 = await request.post(`/movements/${movementId}/scores`, {
+				const res2 = await request.post(`/movements/${movementId}`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ describe('Movement component tests', () => {
 				expect(res2.body).toHaveProperty('movementId', movementId);
 				expect(res2.body).toHaveProperty('score', '200kg');
 
-				const res3 = await request.get(`/movements/${movementId}/scores`, {
+				const res3 = await request.get(`/movements/${movementId}`, {
 					...reqOpts,
 					headers: {
 						'Content-Type': 'application/json',
@@ -195,12 +195,12 @@ describe('Movement component tests', () => {
 				});
 
 				expect(res3.statusCode).toBe(HttpStatus.OK);
-				expect(res3.body.data).toHaveProperty('length', 1);
-				expect(res3.body.data[0]).toHaveProperty('id');
-				expect(res3.body.data[0]).toHaveProperty('createdAt');
-				expect(res3.body.data[0]).toHaveProperty('updatedAt');
-				expect(res3.body.data[0]).toHaveProperty('movementId');
-				expect(res3.body.data[0]).toHaveProperty('score');
+				expect(res3.body).toHaveProperty('scores');
+				expect(res3.body.scores[0]).toHaveProperty('id');
+				expect(res3.body.scores[0]).toHaveProperty('createdAt');
+				expect(res3.body.scores[0]).toHaveProperty('updatedAt');
+				expect(res3.body.scores[0]).toHaveProperty('movementId');
+				expect(res3.body.scores[0]).toHaveProperty('score');
 				done();
 			} catch (err) {
 				done(err);

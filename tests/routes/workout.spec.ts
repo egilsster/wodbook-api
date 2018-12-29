@@ -17,7 +17,7 @@ describe('Workout Router', () => {
 	const userId = 'KkZogjZCwjq6IzE1QAQmrXaKTTMuUp4D';
 	const claims: any = { userId: userId };
 	const workoutId = '1';
-	let ctx: Koa.Context;
+	let ctx;
 	const workout = new Workout({
 		id: 'GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7',
 		name: 'Fran',
@@ -37,10 +37,10 @@ describe('Workout Router', () => {
 			},
 			params: {
 				id: workout.id
-			} as any,
-			query: {} as any,
-			state: { claims } as any
-		} as Koa.Context;
+			},
+			query: {},
+			state: { claims }
+		};
 
 		workoutService = new WorkoutService({ policyService: {} });
 		_workoutService = sinon.mock(workoutService);
@@ -116,14 +116,18 @@ describe('Workout Router', () => {
 			await request.get('/v1/workouts/1').expect(HttpStatus.OK);
 		});
 
-		it('should return workout when workout with id is found', async () => {
+		it('should return workout and scores when workout with id is found', async () => {
 			_workoutService.expects('getWorkoutById').withExactArgs(workoutId, claims).resolves(workout);
+			_workoutService.expects('getScores').withExactArgs(workoutId, claims).resolves([workoutScore]);
 
 			ctx.params.id = workoutId;
 			await workoutRouter.getWorkout(ctx);
 
 			expect(ctx.status).toEqual(HttpStatus.OK);
-			expect(ctx.body).toEqual(workout.toObject());
+			expect(ctx.body).toEqual({
+				...workout.toObject(),
+				scores: [workoutScore.toObject()]
+			});
 		});
 	});
 
@@ -143,36 +147,10 @@ describe('Workout Router', () => {
 		});
 	});
 
-	describe('getScores', () => {
-		it('should handle GET /v1/workouts/:id/scores', async () => {
-			workoutRouter.getScores = async (ctx) => { ctx.status = HttpStatus.OK; };
-			await request.get('/v1/workouts/:id/scores').expect(HttpStatus.OK);
-		});
-
-		it('should return 200 OK when no scores exist', async () => {
-			_workoutService.expects('getScores').withExactArgs(workout.id, claims).resolves([]);
-
-			await workoutRouter.getScores(ctx);
-
-			expect(ctx.status).toEqual(HttpStatus.OK);
-		});
-
-		it('should return 200 OK with array of scores', async () => {
-			_workoutService.expects('getScores').withExactArgs(workout.id, claims).resolves([workoutScore]);
-
-			await workoutRouter.getScores(ctx);
-
-			expect(ctx.status).toEqual(HttpStatus.OK);
-			expect(ctx.body).toEqual({
-				data: [workoutScore.toObject()]
-			});
-		});
-	});
-
 	describe('addScore', () => {
-		it('should handle POST /v1/workouts/:id/scores', async () => {
+		it('should handle POST /v1/workouts/:id', async () => {
 			workoutRouter.addScore = async (ctx) => { ctx.status = HttpStatus.CREATED; };
-			await request.post('/v1/workouts/:id/scores').expect(HttpStatus.CREATED);
+			await request.post('/v1/workouts/:id').expect(HttpStatus.CREATED);
 		});
 
 		it('should save score for workout', async () => {
