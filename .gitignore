@@ -1,18 +1,5 @@
-# Build related
-npm-debug.log*
-.npmrc
-package-lock.json
-yarn.lock
-version.txt
-npm-versions.txt
-node_modules/
-coverage/
-build/
+/target
+.env
 
-# OS X Files
-.DS_Store
-
-# Misc
-data.mywod
-mywod/
-public/
+# API tests, will be migrated from typescript later
+/node_modules

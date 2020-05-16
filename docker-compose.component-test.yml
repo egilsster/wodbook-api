@@ -5,7 +5,6 @@ services:
     image: test-image
     environment:
       - API_URL=http://wodbook-api:43210
-      - NODE_ENV=development
       - MONGO_URI=mongodb://mongo:27017/wodbook-test
     user: root
     depends_on:

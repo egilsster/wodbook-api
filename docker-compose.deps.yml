@@ -1,4 +1,4 @@
-version: '2.1'
+version: "2.1"
 
 networks:
   wodbook_network:
@@ -6,8 +6,8 @@ networks:
     ipam:
       driver: default
       config:
-      - subnet: 172.30.0.0/24
-        gateway: 172.30.0.1
+        - subnet: 172.30.0.0/24
+          gateway: 172.30.0.1
 
 services:
   mongo:
@@ -15,7 +15,7 @@ services:
     container_name: mongo
     restart: always
     ports:
-     - "27017:27017"
+      - "27017:27017"
     networks:
       - wodbook_network
     volumes:

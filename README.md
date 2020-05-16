@@ -1,43 +1,108 @@
 # wodbook-api
 
-[![CircleCI](https://circleci.com/gh/egilsster/wodbook-api/tree/master.svg?style=shield)](https://circleci.com/gh/egilsster/wodbook-api/tree/master)
-[![Maintainability](https://api.codeclimate.com/v1/badges/9f204b79ad07c8a0344f/maintainability)](https://codeclimate.com/github/egilsster/wodbook-api/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/9f204b79ad07c8a0344f/test_coverage)](https://codeclimate.com/github/egilsster/wodbook-api/test_coverage)
-[![Greenkeeper badge](https://badges.greenkeeper.io/egilsster/wodbook-api.svg)](https://greenkeeper.io/)
+Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
-Back-end for a CrossFit workout application
+## Requirements
 
-## Running
-
-Building the docker image:
-
-```sh
-make build-docker
-```
-
-Run in docker:
-
-```sh
-docker-compose -f docker-compose.deps.yml -f docker-compose.wodbook-api.yml up -d
-```
+- Rust
+- Docker
+- docker-compose
 
 ## Usage
 
-Listing my profile:
+```sh
+# Copy example .env file
+λ cp .env.example .env
+
+# Run docker containers
+λ docker-compose -f docker-compose.deps.yml up -d
+
+# Run unit tests
+λ cargo test
+
+# Run the server (Add --release for an optimized build)
+λ cargo run
+...
+Server started at http://127.0.0.1:43210
+```
+
+### APIs
+
+#### `POST /user/register`
 
 ```sh
-GET: http://localhost:43210/v1/me
+curl -X POST 'http://127.0.0.1:43210/user/register' \
+  -H "Content-Type: application/json" \
+  --data '{
+    "name": "name",
+     "surname": "surname",
+    "email": "user@email.com",
+    "password": "password"
+  }'
+```
+
+Returns
+
+```json
 {
-    "firstName": "Egill"
-    ...
+    "message": String,
+    "status": bool
 }
 ```
 
-Posting a workout score:
+#### `POST /user/login`
 
 ```sh
-POST: http://localhost:43210/v1/workouts/{id}/scores
+curl -X POST 'http://127.0.0.1:43210/user/login' \
+  -H "Content-Type: application/json" \
+  --data '{
+    "email": "user@email.com",
+    "password": "password"
+  }'
+```
+
+Returns
+
+```json
 {
-    "score": "TBD"
+    "message": String,
+    "status": bool,
+    "token": String
 }
+```
+
+#### `POST /user/user/info`
+
+```sh
+curl -X GET 'http://127.0.0.1:43210/user/info' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer TOKEN'
+```
+
+Returns
+
+```json
+{
+    "user_id": String,
+    "name": String,
+    "surname": String,
+    "phone": String,
+    "email": String,
+    "password": String,
+    "birth_date": String
+}
+```
+
+#### `POST /user/protected`
+
+```sh
+curl -X GET 'http://127.0.0.1:43210/user/protected' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer TOKEN'
+```
+
+Returns
+
+```txt
+bool
 ```

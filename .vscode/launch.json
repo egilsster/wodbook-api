@@ -5,56 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Server",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-      "args": [
-        "${workspaceRoot}/src/server.ts"
-      ],
-      "cwd": "${workspaceRoot}",
-      "protocol": "inspector",
-      "env": {
-        "NODE_ENV": "development",
-        "MONGO_URI": "mongodb://localhost:27017/wodbook"
-      }
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Unit Tests",
-      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-      "args": [
-        "${workspaceRoot}/node_modules/jest/bin/jest.js",
-        "--runInBand"
-      ],
-      "sourceMaps": true,
-      "outFiles": [
-        "${workspaceRoot}/build/**/*"
-      ],
-      "cwd": "${workspaceRoot}",
-      "console": "integratedTerminal",
-      "env": {
-        "NODE_ENV": "development",
-        "MONGO_URI": "mongodb://localhost:27017/wodbook",
-        "MONGO_MAX_POOL_SIZE": "10"
-      }
-    },
-    {
-      "name": "Server for Component Test",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
-      "args": [
-        "${workspaceRoot}/src/server.ts"
-      ],
-      "cwd": "${workspaceRoot}",
-      "env": {
-        "NODE_ENV": "development",
-        "MONGO_URI": "mongodb://localhost:27017/wodbook"
-      }
-    },
-    {
       "type": "node",
       "request": "launch",
       "name": "Component Test",
@@ -71,11 +21,5 @@
         "MONGO_URI": "mongodb://localhost:27017/wodbook"
       }
     }
-  ],
-  "compounds": [
-    {
-      "name": "Server & Component Test",
-      "configurations": ["Server for Component Test", "Component Test"]
-    },
   ]
 }

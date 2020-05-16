@@ -1,24 +1,16 @@
-FROM node:10-alpine
+FROM rust:latest
 
-WORKDIR /usr/src/app
+# RUN apk add --no-cache curl
 
-COPY package.json ./
-RUN yarn --production
+WORKDIR /usr/src/wodbook-api
 
-COPY . ./
-RUN npm run build
+COPY . .
 
-RUN apk --no-cache add curl
+RUN cargo build
+# RUN cargo build --release
 
-USER root
+RUN cargo install --path .
 
-RUN mkdir mywod
-RUN chown nobody:nobody -R /usr/src/app/mywod
+# HEALTHCHECK CMD curl --fail http://localhost:43210/health || exit 1
 
-USER nobody
-
-EXPOSE 43210
-
-HEALTHCHECK CMD curl --fail http://localhost:43210/health || exit 1
-
-CMD [ "node", "./build/server.js" ]
+CMD ["/usr/local/cargo/bin/wodbook-api"]
