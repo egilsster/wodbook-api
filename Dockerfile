@@ -1,3 +1,4 @@
+# TODO(egilsster): Optimize docker image https://shaneutt.com/blog/rust-fast-small-docker-image-builds/
 FROM rust:latest
 
 # RUN apk add --no-cache curl
