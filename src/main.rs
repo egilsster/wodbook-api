@@ -27,7 +27,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Compress::new(ContentEncoding::Br))
             .wrap(middleware::Logger::default())
             // Setup endpoints (strictest matcher first)
-            .service(web::scope("/v1/users").configure(repositories::user_repository::init_routes))
+            .service(web::scope("/v1/users").configure(routes::users::init_routes))
             .service(web::scope("/").configure(routes::index::init_routes))
     })
     .bind(server_addr)?
