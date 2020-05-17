@@ -21,6 +21,7 @@ impl FromRequest for AuthorizationService {
                 let config = Config::from_env().unwrap();
                 let _var = config.auth.secret;
                 let key = _var.as_bytes();
+                eprintln!("secret {}, token {}", _var, token);
                 match decode::<Claims>(
                     token,
                     &DecodingKey::from_secret(key),

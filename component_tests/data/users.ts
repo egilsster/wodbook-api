@@ -1,30 +1,34 @@
+import { createHash } from "crypto";
 import { adminId, userId } from "./tokens";
+
+const hashPassword = (password: string) =>
+  createHash("sha256").update(password).digest("hex");
 
 export default [
   {
-    id: adminId,
+    user_id: adminId,
     email: "admin@email.com",
-    password: "pass",
-    admin: false,
-    firstName: "Tommy",
-    lastName: "Wiseau",
-    dateOfBirth: new Date("1955-10-03"),
+    password: hashPassword("password"),
+    admin: true,
+    first_name: "Tommy",
+    last_name: "Wiseau",
+    date_of_birth: new Date("1955-10-03").toISOString(),
     height: 174,
     weight: 85000,
-    boxName: "The Room",
-    avatarUrl: "",
+    box_name: "The Room",
+    avatar_url: "",
   },
   {
-    id: userId,
+    user_id: userId,
     email: "user@email.com",
-    password: "pass",
+    password: hashPassword("password"),
     admin: false,
-    firstName: "Greg",
-    lastName: "Sestero",
-    dateOfBirth: new Date("1978-07-15"),
+    first_name: "Greg",
+    last_name: "Sestero",
+    date_of_birth: new Date("1978-07-15").toISOString(),
     height: 187,
     weight: 89000,
-    boxName: "The Room",
-    avatarUrl: "",
+    box_name: "The Room",
+    avatar_url: "",
   },
 ];

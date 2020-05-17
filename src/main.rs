@@ -20,15 +20,15 @@ async fn main() -> std::io::Result<()> {
     let port = config.server.port;
     let server_addr = format!("{}:{}", host, port);
 
-    println!("Server started at {}", server_addr);
+    println!("Listening on http://{}/", server_addr);
 
     HttpServer::new(|| {
         App::new()
             .wrap(middleware::Compress::new(ContentEncoding::Br))
             .wrap(middleware::Logger::default())
-            // Setup endpoint
+            // Setup endpoints (strictest matcher first)
+            .service(web::scope("/v1/users").configure(repositories::user_repository::init_routes))
             .service(web::scope("/").configure(routes::index::init_routes))
-            .service(web::scope("/user").configure(repositories::user_repository::init_routes))
     })
     .bind(server_addr)?
     .run()

@@ -5,6 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Server",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceRoot}/target/debug/wodbook-api",
+      "args": [],
+      "cwd": "${workspaceRoot}"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Component Test",
@@ -18,7 +26,7 @@
       "cwd": "${workspaceRoot}",
       "env": {
         "NODE_ENV": "test",
-        "MONGO_URI": "mongodb://localhost:27017/wodbook"
+        "MONGO_URI": "mongodb://localhost:27017/wodbook-test"
       }
     }
   ]

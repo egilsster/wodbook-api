@@ -1,41 +1,34 @@
-use crate::utils::Config;
-use crate::models::response::{LoginResponse, Response};
+use crate::models::response::{LoginResponse, Response, UserResponse};
 use crate::models::user::{Claims, Login, Register, User};
+use crate::utils::Config;
+use bson;
 use chrono::{DateTime, Duration, Utc};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use mongodb::error::Error;
-use mongodb::{Client, Database};
+use mongodb::{Client, Collection};
 
 static COLLECTION_NAME: &'static str = "users";
 
-pub trait IUserRepository {
-    fn get_database(&self) -> Database;
-    fn find_user_with_email(&self, email: String) -> Result<Option<User>, Error>;
-    fn login(&self, login: Login) -> Result<LoginResponse, Response>;
-    fn register(&self, user: Register) -> Response;
-    fn user_information(&self, token: &str) -> Result<Option<User>, Response>;
-    fn protected_function(&self) -> bool;
-}
-
 pub struct UserRepository {
-    pub connection: &'static Client,
+    pub connection: Client,
 }
 
-impl IUserRepository for UserRepository {
-    fn get_database(&self) -> Database {
+impl UserRepository {
+    fn get_collection(&self) -> Collection {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
-
-        self.connection.database(database_name.as_str())
+        let db = self.connection.database(database_name.as_str());
+        db.collection(COLLECTION_NAME)
     }
-    fn find_user_with_email(&self, email: String) -> Result<Option<User>, Error> {
-        let db = self.get_database();
-        let cursor = db
-            .collection(COLLECTION_NAME)
-            .find_one(doc! {"email": email}, None)
-            .unwrap();
+    pub async fn find_user_with_id(
+        &self,
+        user_id: bson::Bson,
+    ) -> Result<Option<UserResponse>, Error> {
+        let coll = self.get_collection();
+        let cursor = coll.find_one(doc! { "_id":  user_id }, None).await.unwrap();
+
         match cursor {
             Some(doc) => match bson::from_bson(bson::Bson::Document(doc)) {
                 Ok(model) => Ok(model),
@@ -44,8 +37,23 @@ impl IUserRepository for UserRepository {
             None => Ok(None),
         }
     }
-    fn login(&self, user: Login) -> Result<LoginResponse, Response> {
-        match self.find_user_with_email(user.email.to_string()).unwrap() {
+    pub async fn find_user_with_email(&self, email: String) -> Result<Option<User>, Error> {
+        let coll = self.get_collection();
+        let cursor = coll.find_one(doc! {"email": email}, None).await.unwrap();
+        match cursor {
+            Some(doc) => match bson::from_bson(bson::Bson::Document(doc)) {
+                Ok(model) => Ok(model),
+                Err(e) => Err(Error::from(e)),
+            },
+            None => Ok(None),
+        }
+    }
+    pub async fn login(&self, user: Login) -> Result<LoginResponse, Response> {
+        match self
+            .find_user_with_email(user.email.to_string())
+            .await
+            .unwrap()
+        {
             Some(x) => {
                 let mut sha = Sha256::new();
                 sha.input_str(user.password.as_str());
@@ -65,6 +73,8 @@ impl IUserRepository for UserRepository {
                     let my_claims = Claims {
                         sub: user.email,
                         exp: _date.timestamp() as usize,
+                        admin: x.admin,
+                        user_id: x.user_id,
                     };
                     let token = encode(
                         &Header::default(),
@@ -72,56 +82,64 @@ impl IUserRepository for UserRepository {
                         &EncodingKey::from_secret(key),
                     )
                     .unwrap();
-                    Ok(LoginResponse {
-                        status: true,
-                        token,
-                        message: "You have successfully logged in.".to_string(),
-                    })
+                    Ok(LoginResponse { token })
                 } else {
                     Err(Response {
-                        status: false,
                         message: "Check your user information.".to_string(),
                     })
                 }
             }
             None => Err(Response {
-                status: false,
                 message: "Check your user information.".to_string(),
             }),
         }
     }
-    fn register(&self, user: Register) -> Response {
+    pub async fn register(&self, user: Register) -> Result<UserResponse, Response> {
         let _exist = self
             .find_user_with_email((&user.email).parse().unwrap())
+            .await
             .unwrap();
         match _exist {
-            Some(_) => Response {
+            Some(_) => Err(Response {
                 message: "This e-mail is using by some user, please enter another e-mail."
                     .to_string(),
-                status: false,
-            },
+            }),
             None => {
-                let db = self.get_database();
+                let coll = self.get_collection();
                 let mut sha = Sha256::new();
                 sha.input_str(user.password.as_str());
                 let hash_pw = sha.result_str();
                 let user_id = uuid::Uuid::new_v4().to_string();
-                let _ex = db.collection(COLLECTION_NAME).insert_one(doc! {"user_id": user_id, "name": user.name, "surname": user.surname, "email": user.email, "password": hash_pw, "phone": "", "birth_date": "" }, None);
-                match _ex {
-                    Ok(_) => Response {
-                        status: true,
-                        message: "Register successful.".to_string(),
+                let user_doc = doc! {
+                    "user_id": user_id,
+                    "email": user.email,
+                    "password": hash_pw,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "date_of_birth": user.date_of_birth,
+                    "height": user.height,
+                    "weight": user.weight,
+                    "box_name": user.box_name,
+                    "avatar_url": "",
+                };
+
+                let insert_result = coll.insert_one(user_doc, None).await;
+                match insert_result {
+                    Ok(result) => match self.find_user_with_id(result.inserted_id).await.unwrap() {
+                        Some(new_user) => Ok(new_user),
+                        None => Err(Response {
+                            message: "New user not found after inserting".to_string(),
+                        }),
                     },
-                    Err(_) => Response {
-                        status: false,
-                        message: "Something wrong.".to_string(),
-                    },
+                    Err(_) => Err(Response {
+                        message: "Something went wrong.".to_string(),
+                    }),
                 }
             }
         }
     }
 
-    fn user_information(&self, token: &str) -> Result<Option<User>, Response> {
+    pub async fn user_information(&self, token: &str) -> Result<Option<User>, Response> {
         let config = Config::from_env().unwrap();
         let _var = config.auth.secret;
         let key = _var.as_bytes();
@@ -132,22 +150,19 @@ impl IUserRepository for UserRepository {
         );
         match _decode {
             Ok(decoded) => {
-                match self.find_user_with_email((decoded.claims.sub.to_string()).parse().unwrap()) {
+                match self
+                    .find_user_with_email((decoded.claims.sub.to_string()).parse().unwrap())
+                    .await
+                {
                     Ok(user) => Ok(user),
                     Err(_) => Err(Response {
-                        status: false,
                         message: "Something Wrong".to_string(),
                     }),
                 }
             }
             Err(_) => Err(Response {
-                status: false,
                 message: "Invalid Token".to_string(),
             }),
         }
-    }
-
-    fn protected_function(&self) -> bool {
-        true
     }
 }

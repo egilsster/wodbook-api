@@ -1,8 +1,11 @@
+use crate::models::response::HealthResponse;
 use actix_web::{get, web, HttpResponse};
 
 #[get("/health")]
 pub async fn health() -> HttpResponse {
-    HttpResponse::Ok().finish()
+    HttpResponse::Ok().json(HealthResponse {
+        status: "ok".to_owned(),
+    })
 }
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {

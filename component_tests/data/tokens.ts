@@ -6,11 +6,11 @@ export const adminId = "otgdqlk1muHkCxfa7YPwKg_winE8enNR";
 
 export default {
   user: jwt.sign(
-    { userId: userId, email: "user@email.com", admin: false },
+    { userId: userId, sub: "user@email.com", admin: false },
     cert
   ),
   admin: jwt.sign(
-    { userId: adminId, email: "admin@email.com", admin: true },
+    { userId: adminId, sub: "admin@email.com", admin: true },
     cert
   ),
 };

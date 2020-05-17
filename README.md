@@ -4,7 +4,7 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
 ## Requirements
 
-- Rust
+- Rust (1.43.0+)
 - Docker
 - docker-compose
 
@@ -23,19 +23,64 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 # Run the server (Add --release for an optimized build)
 λ cargo run
 ...
-Server started at http://127.0.0.1:43210
+Listening on http://127.0.0.1:43210/
 ```
 
 ### APIs
 
-#### `POST /user/register`
+#### `GET /health`
 
 ```sh
-curl -X POST 'http://127.0.0.1:43210/user/register' \
+curl http://localhost:43210/health
+```
+
+Returns
+
+```json
+{
+  "status": "ok"
+}
+```
+
+#### `POST /v1/users/register`
+
+```sh
+curl -X POST 'http://127.0.0.1:43210/v1/users/register' \
   -H "Content-Type: application/json" \
   --data '{
-    "name": "name",
-     "surname": "surname",
+    "first_name": "first name",
+    "last_name": "last name",
+    "email": "user@email.com",
+    "password": "password",
+    "box_name": "My Box",
+    "height": 189,
+    "weight": 89000,
+    "date_of_birth": "1991-12-06"
+  }'
+```
+
+Returns
+
+```json
+{
+  "user_id": "user-id",
+  "email": "user@email.com",
+  "first_name": "first name",
+  "last_name": "last name",
+  "date_of_birth": "1991-12-06",
+  "height": 189,
+  "weight": 89000,
+  "box_name": "My Box",
+  "avatar_url": ""
+}
+```
+
+#### `POST /v1/users/login`
+
+```sh
+curl -X POST 'http://127.0.0.1:43210/v1/users/login' \
+  -H "Content-Type: application/json" \
+  --data '{
     "email": "user@email.com",
     "password": "password"
   }'
@@ -45,36 +90,14 @@ Returns
 
 ```json
 {
-    "message": String,
-    "status": bool
+    "token": "my-token"
 }
 ```
 
-#### `POST /user/login`
+#### `POST /v1/users/me`
 
 ```sh
-curl -X POST 'http://127.0.0.1:43210/user/login' \
-  -H "Content-Type: application/json" \
-  --data '{
-    "email": "user@email.com",
-    "password": "password"
-  }'
-```
-
-Returns
-
-```json
-{
-    "message": String,
-    "status": bool,
-    "token": String
-}
-```
-
-#### `POST /user/user/info`
-
-```sh
-curl -X GET 'http://127.0.0.1:43210/user/info' \
+curl -X GET 'http://127.0.0.1:43210/v1/users/me' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer TOKEN'
 ```
@@ -83,26 +106,16 @@ Returns
 
 ```json
 {
-    "user_id": String,
-    "name": String,
-    "surname": String,
-    "phone": String,
-    "email": String,
-    "password": String,
-    "birth_date": String
+  "user_id": "user-id",
+  "email": "user@email.com",
+  "password": "password-hash",
+  "admin": false,
+  "first_name": "first name",
+  "last_name": "last name",
+  "date_of_birth": "1991-12-06",
+  "height": 189,
+  "weight": 89000,
+  "box_name": "My Box",
+  "avatar_url": ""
 }
-```
-
-#### `POST /user/protected`
-
-```sh
-curl -X GET 'http://127.0.0.1:43210/user/protected' \
-  -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer TOKEN'
-```
-
-Returns
-
-```txt
-bool
 ```
