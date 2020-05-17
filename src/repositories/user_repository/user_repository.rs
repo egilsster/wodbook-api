@@ -49,11 +49,11 @@ impl UserRepository {
         }
     }
     pub async fn login(&self, user: Login) -> Result<LoginResponse, Response> {
-        match self
+        let user_doc = self
             .find_user_with_email(user.email.to_string())
             .await
-            .unwrap()
-        {
+            .unwrap();
+        match user_doc {
             Some(x) => {
                 let mut sha = Sha256::new();
                 sha.input_str(user.password.as_str());
@@ -90,7 +90,7 @@ impl UserRepository {
                 }
             }
             None => Err(Response {
-                message: "Check your user information.".to_string(),
+                message: "Check your user information (user not found).".to_string(),
             }),
         }
     }

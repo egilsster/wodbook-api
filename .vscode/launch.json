@@ -10,12 +10,34 @@
       "request": "launch",
       "program": "${workspaceRoot}/target/debug/wodbook-api",
       "args": [],
-      "cwd": "${workspaceRoot}"
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "NODE_ENV": "test",
+        "MONGO__DB_NAME": "wodbook-test"
+      }
     },
     {
+      "name": "Component Test (open file)",
       "type": "node",
       "request": "launch",
-      "name": "Component Test",
+      "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
+      "args": [
+        "${workspaceRoot}/node_modules/jest/bin/jest.js",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/component-test.config.json",
+        "${file}"
+      ],
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "NODE_ENV": "test",
+        "MONGO_URI": "mongodb://localhost:27017/wodbook-test"
+      }
+    },
+    {
+      "name": "Component Test (all)",
+      "type": "node",
+      "request": "launch",
       "program": "${workspaceRoot}/node_modules/ts-node/dist/bin.js",
       "args": [
         "${workspaceRoot}/node_modules/jest/bin/jest.js",
