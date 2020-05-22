@@ -1,15 +1,13 @@
-swagger: '2.0'
+swagger: "3.0"
 info:
   title: Wodbook API
   version: 0.0.1
   description: >-
     ## About
 
-    The Wodbook API is a back-end for a mobie application that helps
+    The Wodbook API is a back-end for a mobile application that helps
     you keep track of all your CrossFit related things like workouts
     and movements.
-
-     All PATCH endpoints take in a json patch object as described here: http://tools.ietf.org/html/rfc6902.
 basePath: /v1
 schemes:
   - http

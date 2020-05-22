@@ -1,9 +1,0 @@
-test:
-  image: test-image
-  environment:
-    - CIRCLE_BUILD_NUM
-    - CODECLIMATE_REPO_TOKEN
-  volumes:
-    - ./coverage:/usr/src/app/coverage
-    - ./.git:/usr/src/app/.git
-  command: make test-ci

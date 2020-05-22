@@ -1,29 +1,26 @@
 version: "2.1"
 
 services:
-  sut:
-    image: test-image
-    environment:
-      - API_URL=http://wodbook-api:43210
-      - NODE_ENV=development
-      - MONGO_URI=mongodb://mongo:27017/wodbook-test
-    user: root
-    depends_on:
-      wodbook-api:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-    command: npm run component-test
-
   wodbook-api:
-    image: wodbook-api:${VER}
+    image: wodbook-api:latest
     container_name: wodbook-api
-    restart: on-failure
     depends_on:
       mongo:
         condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://mongo:27017/wodbook-test
+      - SERVER__HOST=0.0.0.0
+      - SERVER__PORT=43210
+      - AUTH__SECRET=cHVibGljS2V5
+      - MONGO__USERNAME=admin
+      - MONGO__PASSWORD=admin
+      - MONGO__HOST=mongo
+      - MONGO__PORT=27017
+      - MONGO__DB_NAME=wodbook-test
+      - RUST_LOG=info,actix_web=debug
+    ports:
+      - "43210:43210"
+    cpu_shares: 100
+    mem_limit: 512M
 
   mongo:
     image: mongo:3.6
@@ -37,3 +34,12 @@ services:
     ports:
       - "27017:27017"
     command: --smallfiles
+
+  wait-dependencies:
+    image: willwill/wait-for-it:latest
+    depends_on:
+      wodbook-api:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command: >
+      -c "./wait-for-it.sh wodbook-api:43210 --strict --timeout=60"
