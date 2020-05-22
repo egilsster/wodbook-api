@@ -1,8 +1,8 @@
 import * as jwt from "jsonwebtoken";
 
 const cert = "cHVibGljS2V5";
-export const userId = "GbCUZ36TQ1ebQmIF4W4JPu6RhP_MXD-7";
-export const adminId = "otgdqlk1muHkCxfa7YPwKg_winE8enNR";
+export const userId = "07254ac4-f1ac-43d8-9f7e-2ae12c0a7c74";
+export const adminId = "d2e45489-b50c-4a4d-b015-84830b246fae";
 
 export default {
   user: jwt.sign(

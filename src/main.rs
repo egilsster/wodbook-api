@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate bson;
-
 use actix_web::http::ContentEncoding;
 use actix_web::{middleware, web, App, HttpServer};
 
@@ -26,8 +23,10 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(middleware::Compress::new(ContentEncoding::Br))
             .wrap(middleware::Logger::default())
+            // TODO(egilsster): add error handler
             // Setup endpoints (strictest matcher first)
             .service(web::scope("/v1/users").configure(routes::users::init_routes))
+            .service(web::scope("/v1/workouts").configure(routes::workouts::init_routes))
             .service(web::scope("/").configure(routes::index::init_routes))
     })
     .bind(server_addr)?

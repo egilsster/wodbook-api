@@ -8,6 +8,10 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 - Docker
 - docker-compose
 
+## To read
+
+- [ ] <https://blog.burntsushi.net/rust-error-handling/>
+
 ## Usage
 
 ```sh
@@ -94,12 +98,14 @@ Returns
 }
 ```
 
+**For the following calls, the `TOKEN` is set on the environment: `export TOKEN=my-token**
+
 #### `POST /v1/users/me`
 
 ```sh
 curl -X GET 'http://127.0.0.1:43210/v1/users/me' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer TOKEN'
+  -H 'Authorization: Bearer '$TOKEN
 ```
 
 Returns
@@ -118,4 +124,58 @@ Returns
   "box_name": "My Box",
   "avatar_url": ""
 }
+```
+
+#### `POST /v1/workouts/`
+
+```sh
+curl -X POST 'http://127.0.0.1:43210/v1/workouts/' \
+  -H "Content-Type: application/json" \
+  -H 'Authorization: Bearer '$TOKEN \
+  --data '{
+    "name": "Fran",
+    "description": "21-15-9 Thruster (42.5kg / 30kg) / Pull ups",
+    "measurement": "time"
+  }'
+```
+
+Returns
+
+```json
+{
+  "workout_id": "57d3eb04-ad31-4bd2-950a-2ec0057b23af",
+  "name": "Fran",
+  "measurement": "time",
+  "description": "21-15-9 Thruster (42.5kg / 30kg) / Pull ups",
+  "scores": [],
+  "global": false,
+  "created_at": "2020-05-22T11:32:08.962274+00:00",
+  "updated_at": "2020-05-22T11:32:08.962274+00:00"
+}
+```
+
+#### `POST /v1/workouts/:id`
+
+```sh
+curl -X POST 'http://127.0.0.1:43210/v1/workouts/57d3eb04-ad31-4bd2-950a-2ec0057b23af' \
+  -H "Content-Type: application/json" \
+  -H 'Authorization: Bearer '$TOKEN \
+  --data '{
+    "score": "4:20",
+    "rx": true
+  }'
+```
+
+Returns
+
+```json
+{
+  "workout_score_id": "1a8d075b-1213-4d14-8a29-4fcf714ae6d0",
+  "workout_id": "57d3eb04-ad31-4bd2-950a-2ec0057b23af",
+  "score": "4:20",
+  "rx": true,
+  "created_at": "2020-05-28T11:32:08.962274+00:00",
+  "updated_at": "2020-05-28T11:32:08.962274+00:00"
+}
+
 ```

@@ -1,28 +1,12 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2015",
+    "target": "esnext",
     "rootDir": "./component_tests",
     "outDir": "./build",
     "inlineSourceMap": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "noImplicitThis": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "experimentalDecorators": true,
-    "lib": [
-      "dom",
-      "es2017"
-    ]
+    "strict": true
   },
-  "include": [
-    "component_tests"
-  ],
-  "exclude": [
-    "src",
-    "node_modules",
-    "build",
-    ".vscode"
-  ]
+  "include": ["component_tests"],
+  "exclude": ["src", "node_modules", "build", ".vscode"]
 }

@@ -1,15 +1,15 @@
-use crate::utils::Config;
 use crate::models::user::Claims;
+use crate::utils::Config;
+
 use actix_web::error::ErrorUnauthorized;
 use actix_web::{dev, Error, FromRequest, HttpRequest};
 use futures::future::{err, ok, Ready};
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 
-pub struct AuthorizationService;
-
-impl FromRequest for AuthorizationService {
+// TODO(egilsster): take whatever ir returned here and use it in an error handler to return a json response
+impl FromRequest for Claims {
     type Error = Error;
-    type Future = Ready<Result<AuthorizationService, Error>>;
+    type Future = Ready<Result<Claims, Error>>;
     type Config = ();
 
     fn from_request(_req: &HttpRequest, _payload: &mut dev::Payload) -> Self::Future {
@@ -21,13 +21,12 @@ impl FromRequest for AuthorizationService {
                 let config = Config::from_env().unwrap();
                 let _var = config.auth.secret;
                 let key = _var.as_bytes();
-                eprintln!("secret {}, token {}", _var, token);
                 match decode::<Claims>(
                     token,
                     &DecodingKey::from_secret(key),
                     &Validation::new(Algorithm::HS256),
                 ) {
-                    Ok(_token) => ok(AuthorizationService),
+                    Ok(token_data) => ok(token_data.claims),
                     Err(_e) => err(ErrorUnauthorized("invalid token!")),
                 }
             }

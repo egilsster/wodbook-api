@@ -13,6 +13,7 @@
       "cwd": "${workspaceRoot}",
       "env": {
         "NODE_ENV": "test",
+        // "MONGO__DB_NAME": "wodbook-api"
         "MONGO__DB_NAME": "wodbook-test"
       }
     },

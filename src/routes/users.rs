@@ -1,5 +1,4 @@
 use crate::db::connection::Connection;
-// use crate::middlewares::auth::AuthorizationService;
 use crate::models::user::{Login, Register};
 use crate::repositories::user_repository::UserRepository;
 use actix_web::http::StatusCode;
@@ -14,10 +13,10 @@ async fn login(user: web::Json<Login>) -> HttpResponse {
     let proc = _repository.login(user.into_inner()).await;
 
     match proc {
-        Ok(_) => HttpResponse::Ok().json(proc.unwrap()),
-        Err(_) => HttpResponse::Ok()
-            .status(StatusCode::from_u16(401).unwrap())
-            .json(proc.unwrap_err()),
+        Ok(res) => HttpResponse::Ok().json(res),
+        Err(err) => HttpResponse::Ok()
+            .status(StatusCode::from_u16(err.status).unwrap())
+            .json(err),
     }
 }
 
@@ -27,11 +26,12 @@ async fn register(user: web::Json<Register>) -> HttpResponse {
     let _repository: UserRepository = UserRepository {
         connection: _connection,
     };
-    // TODO(egilsster): payload validation / status codes
     let new_user = _repository.register(user.into_inner()).await;
     match new_user {
-        Ok(user_res) => HttpResponse::Ok().json(user_res),
-        Err(err) => HttpResponse::Ok().json(err),
+        Ok(user_res) => HttpResponse::Created().json(user_res),
+        Err(err) => HttpResponse::Ok()
+            .status(StatusCode::from_u16(err.status).unwrap())
+            .json(err),
     }
 }
 
@@ -46,7 +46,9 @@ async fn user_information(_req: HttpRequest) -> HttpResponse {
     };
     match _repository.user_information(token).await {
         Ok(result) => HttpResponse::Ok().json(result.unwrap()),
-        Err(err) => HttpResponse::Ok().json(err),
+        Err(err) => HttpResponse::Ok()
+            .status(StatusCode::from_u16(err.status).unwrap())
+            .json(err),
     }
 }
 
@@ -61,18 +63,11 @@ async fn user_information_get(_req: HttpRequest) -> HttpResponse {
     };
     match _repository.user_information(token).await {
         Ok(result) => HttpResponse::Ok().json(result.unwrap()),
-        Err(err) => HttpResponse::Ok().json(err),
+        Err(err) => HttpResponse::Ok()
+            .status(StatusCode::from_u16(err.status).unwrap())
+            .json(err),
     }
 }
-
-// #[post("/protected")]
-// async fn protected(_: AuthorizationService) -> HttpResponse {
-//     let _connection = Connection.init().await.unwrap();
-//     let _repository: UserRepository = UserRepository {
-//         connection: _connection,
-//     };
-//     HttpResponse::Ok().json(_repository.protected_function())
-// }
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(login);

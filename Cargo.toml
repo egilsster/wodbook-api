@@ -21,3 +21,4 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
 futures = "0.3.4"
 dotenv = "0.15.0"
 config = "0.10.1"
+http = "0.2"

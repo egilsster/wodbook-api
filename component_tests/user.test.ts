@@ -1,5 +1,6 @@
 import { MongoClient } from "mongodb";
 import * as request from "request-promise-native";
+import * as HttpStatus from "http-status-codes";
 import users from "./data/users";
 
 const MONGO_URI =
@@ -50,7 +51,7 @@ describe("/users", () => {
             },
           });
 
-          expect(res1.statusCode).toBe(200);
+          expect(res1.statusCode).toBe(HttpStatus.OK);
           expect(res1.body).toHaveProperty("user_id");
           expect(res1.body).toHaveProperty("first_name", "Juliette");
           expect(res1.body).toHaveProperty("last_name", "Danielle");
@@ -72,7 +73,7 @@ describe("/users", () => {
             },
           });
 
-          expect(res2.statusCode).toBe(200);
+          expect(res2.statusCode).toBe(HttpStatus.OK);
           expect(res2.body).toHaveProperty("token");
           expect(res2.body.token.startsWith("ey")).toBe(true);
           done();
@@ -98,7 +99,7 @@ describe("/users", () => {
             },
           });
 
-          expect(res1.statusCode).toBe(200);
+          expect(res1.statusCode).toBe(HttpStatus.OK);
           expect(res1.body).toHaveProperty("token");
           const { token } = res1.body;
 
@@ -110,7 +111,7 @@ describe("/users", () => {
             },
           });
 
-          expect(res2.statusCode).toBe(200);
+          expect(res2.statusCode).toBe(HttpStatus.OK);
           expect(res2.body).toHaveProperty("user_id");
           expect(res2.body).toHaveProperty("first_name", "Greg");
           expect(res2.body).toHaveProperty("last_name", "Sestero");
@@ -139,7 +140,7 @@ describe("/users", () => {
             },
           });
 
-          expect(res1.statusCode).toBe(200);
+          expect(res1.statusCode).toBe(HttpStatus.OK);
           expect(res1.body).toHaveProperty("token");
           const { token } = res1.body;
 
@@ -151,7 +152,7 @@ describe("/users", () => {
             },
           });
 
-          expect(res2.statusCode).toBe(200);
+          expect(res2.statusCode).toBe(HttpStatus.OK);
           expect(res2.body).toHaveProperty("user_id");
           expect(res2.body).toHaveProperty("first_name", "Tommy");
           expect(res2.body).toHaveProperty("last_name", "Wiseau");

@@ -2393,6 +2393,7 @@ dependencies = [
  "config",
  "dotenv",
  "futures",
+ "http",
  "jsonwebtoken",
  "lazy_static",
  "mongodb",
