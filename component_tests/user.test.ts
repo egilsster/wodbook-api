@@ -51,7 +51,7 @@ describe("/users", () => {
             },
           });
 
-          expect(res1.statusCode).toBe(HttpStatus.OK);
+          expect(res1.statusCode).toBe(HttpStatus.CREATED);
           expect(res1.body).toHaveProperty("user_id");
           expect(res1.body).toHaveProperty("first_name", "Juliette");
           expect(res1.body).toHaveProperty("last_name", "Danielle");
@@ -94,8 +94,8 @@ describe("/users", () => {
               "Content-Type": "application/json",
             },
             body: {
-              email: "user@email.com",
-              password: "password",
+              email: "user@wodbook.com",
+              password: "user",
             },
           });
 
@@ -116,7 +116,7 @@ describe("/users", () => {
           expect(res2.body).toHaveProperty("first_name", "Greg");
           expect(res2.body).toHaveProperty("last_name", "Sestero");
           expect(res2.body).toHaveProperty("box_name", "The Room");
-          expect(res2.body).toHaveProperty("email", "user@email.com");
+          expect(res2.body).toHaveProperty("email", "user@wodbook.com");
           expect(res2.body).toHaveProperty("height", 187);
           expect(res2.body).toHaveProperty("weight", 89000);
           expect(res2.body).toHaveProperty("date_of_birth");
@@ -135,8 +135,8 @@ describe("/users", () => {
               "Content-Type": "application/json",
             },
             body: {
-              email: "admin@email.com",
-              password: "password",
+              email: "admin@wodbook.com",
+              password: "admin",
             },
           });
 
@@ -157,7 +157,7 @@ describe("/users", () => {
           expect(res2.body).toHaveProperty("first_name", "Tommy");
           expect(res2.body).toHaveProperty("last_name", "Wiseau");
           expect(res2.body).toHaveProperty("box_name", "The Room");
-          expect(res2.body).toHaveProperty("email", "admin@email.com");
+          expect(res2.body).toHaveProperty("email", "admin@wodbook.com");
           expect(res2.body).toHaveProperty("height", 174);
           expect(res2.body).toHaveProperty("weight", 85000);
           expect(res2.body).toHaveProperty("date_of_birth");

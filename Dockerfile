@@ -1,17 +1,20 @@
 # TODO(egilsster): Optimize docker image https://shaneutt.com/blog/rust-fast-small-docker-image-builds/
+# Custom healthcheck https://github.com/mastertinner/healthcheck
 FROM rust:latest
+# FROM rust:alpine3.11
 
 # RUN apk add --no-cache curl
 
-WORKDIR /usr/src/wodbook-api
+RUN apt update && apt upgrade && apt install curl
 
-COPY . .
+WORKDIR /usr/src/app
+
+COPY Cargo.toml Cargo.lock ./
+COPY src/ src/
 
 RUN cargo build
 # RUN cargo build --release
 
-RUN cargo install --path .
+HEALTHCHECK CMD curl --fail http://localhost:43210/health || exit 1
 
-# HEALTHCHECK CMD curl --fail http://localhost:43210/health || exit 1
-
-CMD ["/usr/local/cargo/bin/wodbook-api"]
+CMD ["/usr/src/app/target/debug/wodbook-api"]

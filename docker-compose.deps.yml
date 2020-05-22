@@ -14,6 +14,11 @@ services:
     image: mongo:3.6
     container_name: mongo
     restart: always
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017/wodbook --quiet | grep -q "1"
+      interval: 5s
+      timeout: 5s
+      retries: 12
     ports:
       - "27017:27017"
     networks:
