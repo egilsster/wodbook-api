@@ -12,6 +12,16 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
 - [ ] <https://blog.burntsushi.net/rust-error-handling/>
 
+## High-level TODO
+
+- Unit tests
+- Movement / movement scores
+- Uploading a sqlite file from myWOD and it parses it for your user
+- Optimize docker image for production
+- OpenAPI endpoint (probably wont need it, will be keeping an eye open for yaml parsers that enable me to write it in yaml and serve it as json)
+- Improve CI (evaluating github actions, might switch back to circleci)
+- Investigate how component tests are generally written for Rust APIs. I will admit my Jest setup is quite nice but everything in Rust would be nice as well
+
 ## Usage
 
 ```sh
@@ -94,11 +104,11 @@ Returns
 
 ```json
 {
-    "token": "my-token"
+  "token": "my-token"
 }
 ```
 
-**For the following calls, the `TOKEN` is set on the environment: `export TOKEN=my-token**
+**For the following calls, the `TOKEN` is set on the environment: `export TOKEN=my-token**`
 
 #### `POST /v1/users/me`
 
