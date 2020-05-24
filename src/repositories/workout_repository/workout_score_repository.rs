@@ -1,12 +1,10 @@
-use crate::models::response::ErrorResponse;
+use crate::errors::AppError;
 use crate::models::workout::{CreateWorkoutScore, WorkoutScoreResponse};
 use crate::utils::Config;
 
 use bson::{doc, from_bson, Bson};
 use chrono::Utc;
 use futures::stream::StreamExt;
-use http::StatusCode;
-use mongodb::error::Error;
 use mongodb::options::FindOptions;
 use mongodb::{Client, Collection};
 use std::vec::Vec;
@@ -30,7 +28,7 @@ impl WorkoutScoreRepository {
         user_id: String,
         workout_id: String,
         workout_score: CreateWorkoutScore,
-    ) -> Result<WorkoutScoreResponse, ErrorResponse> {
+    ) -> Result<WorkoutScoreResponse, AppError> {
         let coll = self.get_score_collection();
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
@@ -56,16 +54,12 @@ impl WorkoutScoreRepository {
                     .unwrap()
                 {
                     Some(new_workout_score) => Ok(new_workout_score),
-                    None => Err(ErrorResponse {
-                        message: "New workout score not found after inserting".to_string(),
-                        status: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-                    }),
+                    None => Err(AppError::DbError(
+                        "Score not found after inserting".to_string(),
+                    )),
                 }
             }
-            Err(_) => Err(ErrorResponse {
-                message: "Something went wrong when inserting a workout score".to_string(),
-                status: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-            }),
+            Err(err) => Err(AppError::DbError(err.to_string())),
         }
     }
 
@@ -73,7 +67,7 @@ impl WorkoutScoreRepository {
         &self,
         user_id: String,
         workout_id: String,
-    ) -> Result<Vec<WorkoutScoreResponse>, ErrorResponse> {
+    ) -> Result<Vec<WorkoutScoreResponse>, AppError> {
         let filter = doc! { "user_id": user_id, "workout_id": workout_id };
         let find_options = FindOptions::builder()
             .sort(doc! { "created_at": 1 })
@@ -107,17 +101,18 @@ impl WorkoutScoreRepository {
         user_id: String,
         workout_id: String,
         workout_score_id: String,
-    ) -> Result<Option<WorkoutScoreResponse>, Error> {
+    ) -> Result<Option<WorkoutScoreResponse>, AppError> {
+        let filter = doc! { "user_id": user_id, "workout_id":  workout_id, "workout_score_id": workout_score_id };
         let cursor = self
             .get_score_collection()
-            .find_one(doc! { "user_id": user_id, "workout_id":  workout_id, "workout_score_id": workout_score_id }, None)
+            .find_one(filter, None)
             .await
             .unwrap();
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(Error::from(e)),
+                Err(err) => Err(AppError::DbError(err.to_string())),
             },
             None => Ok(None),
         }

@@ -2,6 +2,7 @@ use actix_web::http::ContentEncoding;
 use actix_web::{middleware, web, App, HttpServer};
 
 mod db;
+mod errors;
 mod middlewares;
 mod models;
 mod repositories;

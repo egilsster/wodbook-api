@@ -22,9 +22,3 @@ pub struct UserResponse {
     pub box_name: String,
     pub avatar_url: String,
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ErrorResponse {
-    pub message: String,
-    pub status: u16,
-}

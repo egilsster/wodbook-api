@@ -1,12 +1,10 @@
-use crate::models::response::ErrorResponse;
+use crate::errors::AppError;
 use crate::models::workout::{CreateWorkout, WorkoutModel};
 use crate::utils::Config;
 
 use bson::{doc, from_bson, Bson};
 use chrono::Utc;
 use futures::stream::StreamExt;
-use http::StatusCode;
-use mongodb::error::Error;
 use mongodb::options::FindOptions;
 use mongodb::{Client, Collection};
 use std::vec::Vec;
@@ -42,11 +40,8 @@ impl WorkoutRepository {
         &self,
         user_id: String,
         name: String,
-    ) -> Result<Option<WorkoutModel>, Error> {
-        let filter = doc! { "$or": [
-            { "user_id": user_id, "name": name },
-            { "global": true }
-        ] };
+    ) -> Result<Option<WorkoutModel>, AppError> {
+        let filter = doc! { "$or": [ { "user_id": user_id, "name": name }, { "global": true } ] };
         let cursor = self
             .get_workout_collection()
             .find_one(filter, None)
@@ -56,7 +51,7 @@ impl WorkoutRepository {
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(Error::from(e)),
+                Err(e) => Err(AppError::DbError(e.to_string())),
             },
             None => Ok(None),
         }
@@ -66,11 +61,8 @@ impl WorkoutRepository {
         &self,
         user_id: String,
         workout_id: String,
-    ) -> Result<Option<WorkoutModel>, Error> {
-        let filter = doc! { "$or": [
-            { "workout_id": workout_id, "user_id": user_id },
-            { "global": true }
-        ] };
+    ) -> Result<Option<WorkoutModel>, AppError> {
+        let filter = doc! { "$or": [ { "workout_id": workout_id, "user_id": user_id }, { "global": true } ] };
         let cursor = self
             .get_workout_collection()
             .find_one(filter, None)
@@ -80,17 +72,14 @@ impl WorkoutRepository {
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(Error::from(e)),
+                Err(e) => Err(AppError::DbError(e.to_string())),
             },
             None => Ok(None),
         }
     }
 
-    pub async fn get_workouts(&self, user_id: String) -> Result<Vec<WorkoutModel>, ErrorResponse> {
-        let filter = doc! { "$or": [
-            { "user_id": user_id },
-            { "global": true }
-        ] };
+    pub async fn get_workouts(&self, user_id: String) -> Result<Vec<WorkoutModel>, AppError> {
+        let filter = doc! { "$or": [ { "user_id": user_id }, { "global": true } ] };
         let find_options = FindOptions::builder().sort(doc! { "name": 1 }).build();
         let mut cursor = self
             .get_workout_collection()
@@ -120,7 +109,7 @@ impl WorkoutRepository {
         &self,
         user_id: String,
         workout_id: String,
-    ) -> Result<WorkoutModel, ErrorResponse> {
+    ) -> Result<WorkoutModel, AppError> {
         let workout = self
             .find_workout_by_id(user_id.to_owned(), workout_id)
             .await
@@ -128,10 +117,9 @@ impl WorkoutRepository {
 
         match workout {
             Some(_) => Ok(workout.unwrap()),
-            None => Err(ErrorResponse {
-                message: "Workout by this id does not exist".to_string(),
-                status: StatusCode::NOT_FOUND.as_u16(),
-            }),
+            None => Err(AppError::NotFound(
+                "Workout by this id does not exist".to_string(),
+            )),
         }
     }
 
@@ -139,17 +127,13 @@ impl WorkoutRepository {
         &self,
         user_id: String,
         workout: CreateWorkout,
-    ) -> Result<WorkoutModel, ErrorResponse> {
+    ) -> Result<WorkoutModel, AppError> {
         let measurement = workout.measurement.to_owned();
         if !VALID_MEASUREMENTS.contains(&measurement.as_str()) {
-            return Err(ErrorResponse {
-                message: format!(
-                    "Invalid measurement, should be one of: {}",
-                    VALID_MEASUREMENTS.join(", ")
-                )
-                .to_owned(),
-                status: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
-            });
+            return Err(AppError::UnprocessableEntity(format!(
+                "Invalid measurement, should be one of: {}",
+                VALID_MEASUREMENTS.join(", ")
+            )));
         }
 
         let workout_name = workout.name.to_string();
@@ -158,11 +142,10 @@ impl WorkoutRepository {
             .await
             .unwrap();
         match _exist {
-            Some(_) => Err(ErrorResponse {
-                message: "A workout by this name already exists, please enter another one."
-                    .to_string(),
-                status: StatusCode::CONFLICT.as_u16(),
-            }),
+            Some(_) => Err(AppError::Conflict(format!(
+                "A workout with the name '{}' already exists, please enter another one",
+                workout_name
+            ))),
             None => {
                 let coll = self.get_workout_collection();
                 let id = uuid::Uuid::new_v4().to_string();
@@ -186,16 +169,12 @@ impl WorkoutRepository {
                             .unwrap()
                         {
                             Some(new_workout) => Ok(new_workout),
-                            None => Err(ErrorResponse {
-                                message: "New workout not found after inserting".to_string(),
-                                status: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-                            }),
+                            None => Err(AppError::DbError(
+                                "New workout not found after inserting".to_string(),
+                            )),
                         }
                     }
-                    Err(_) => Err(ErrorResponse {
-                        message: "Something went wrong when inserting a workout.".to_string(),
-                        status: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-                    }),
+                    Err(err) => Err(AppError::DbError(err.to_string())),
                 }
             }
         }
