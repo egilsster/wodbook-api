@@ -38,6 +38,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             // Setup endpoints (strictest matcher first)
             .service(web::scope("/v1/users").configure(routes::users::init_routes))
+            .service(web::scope("/v1/movements").configure(routes::movements::init_routes))
             .service(web::scope("/v1/workouts").configure(routes::workouts::init_routes))
             .service(web::scope("/").configure(routes::index::init_routes))
     })

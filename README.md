@@ -15,7 +15,6 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 ## High-level TODO
 
 - Unit tests
-- Movement / movement scores
 - Uploading a sqlite file from myWOD and it parses it for your user
 - Optimize docker image for production
 - OpenAPI endpoint (probably wont need it, will be keeping an eye open for yaml parsers that enable me to write it in yaml and serve it as json)
@@ -136,6 +135,22 @@ Returns
 }
 ```
 
+#### `GET /v1/workouts/`
+
+```sh
+curl 'http://127.0.0.1:43210/v1/workouts/' \
+  -H "Content-Type: application/json" \
+  -H 'Authorization: Bearer '$TOKEN
+```
+
+Returns
+
+```json
+{
+  "data": []
+}
+```
+
 #### `POST /v1/workouts/`
 
 ```sh
@@ -187,5 +202,76 @@ Returns
   "created_at": "2020-05-28T11:32:08.962274+00:00",
   "updated_at": "2020-05-28T11:32:08.962274+00:00"
 }
+```
 
+#### `GET /v1/movements/`
+
+```sh
+curl 'http://127.0.0.1:43210/v1/movements/' \
+  -H "Content-Type: application/json" \
+  -H 'Authorization: Bearer '$TOKEN
+```
+
+Returns
+
+```json
+{
+  "data": []
+}
+```
+
+#### `POST /v1/movements/`
+
+```sh
+curl -X POST 'http://127.0.0.1:43210/v1/movements/' \
+  -H "Content-Type: application/json" \
+  -H 'Authorization: Bearer '$TOKEN \
+  --data '{
+    "name": "Shoulder Press",
+    "measurement": "reps"
+  }'
+```
+
+Returns
+
+```json
+{
+  "movement_id": "cfa7f858-9d3f-45b7-b292-9e495133d2fd",
+  "name": "Shoulder Press",
+  "measurement": "reps",
+  "global": false,
+  "created_at": "2020-05-24T14:49:56.698944+00:00",
+  "updated_at": "2020-05-24T14:49:56.698944+00:00"
+}
+
+```
+
+#### `POST /v1/movements/:id`
+
+```sh
+curl -X POST 'http://127.0.0.1:43210/v1/movements/cfa7f858-9d3f-45b7-b292-9e495133d2fd' \
+  -H "Content-Type: application/json" \
+  -H 'Authorization: Bearer '$TOKEN \
+  --data '{
+    "score": "70",
+    "reps": 2,
+    "sets": 3,
+    "notes": "After a wod"
+  }'
+```
+
+Returns
+
+```json
+{
+  "movement_score_id": "89ee566a-9eed-48ac-9313-4a3dbc7e535c",
+  "movement_id": "cfa7f858-9d3f-45b7-b292-9e495133d2fd",
+  "score": "70",
+  "sets": 3,
+  "reps": 2,
+  "distance": "",
+  "notes": "After a wod",
+  "created_at": "2020-05-24T17:26:33.702924+00:00",
+  "updated_at": "2020-05-24T17:26:33.702924+00:00"
+}
 ```

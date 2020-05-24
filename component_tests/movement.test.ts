@@ -1,11 +1,9 @@
 import { MongoClient, Db } from "mongodb";
 import * as request from "request-promise-native";
-import tokens from "./data/tokens";
+import * as HttpStatus from "http-status-codes";
+import { createUsers, getMongoClient } from "./common";
 
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://localhost:27017/wodbook-test";
-
-describe.skip("Movement component tests", () => {
+describe("/v1/movements/", () => {
   const reqOpts: request.RequestPromiseOptions = {
     json: true,
     resolveWithFullResponse: true, // Get the full response instead of just the body
@@ -16,12 +14,42 @@ describe.skip("Movement component tests", () => {
   let mongoClient: MongoClient;
   let db: Db;
 
-  beforeAll(async () => {
-    mongoClient = await MongoClient.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+  let userToken: string;
+  let adminToken: string;
+
+  const login = async ({ email, password }: LoginPayload) => {
+    const res1: LoginResponse = await request.post("users/login", {
+      ...reqOpts,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: {
+        email,
+        password,
+      },
     });
+
+    expect(res1.statusCode).toBe(HttpStatus.OK);
+    expect(res1.body).toHaveProperty("token");
+    const { token } = res1.body;
+
+    return token;
+  };
+
+  beforeAll(async () => {
+    mongoClient = await getMongoClient();
     db = mongoClient.db();
+
+    await createUsers(db);
+
+    userToken = await login({
+      email: "user@wodbook.com",
+      password: "user",
+    });
+    adminToken = await login({
+      email: "admin@wodbook.com",
+      password: "admin",
+    });
   });
 
   afterEach(async () => {
@@ -33,6 +61,28 @@ describe.skip("Movement component tests", () => {
     await mongoClient.close();
   });
 
+  describe("listing movements", () => {
+    it("should return 200 OK with a list", async (done) => {
+      try {
+        const res1: ManyMovementsResponse = await request.get("/movements/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.OK);
+        expect(res1.body).toHaveProperty("data");
+        const movements = res1.body.data;
+        expect(movements).toHaveProperty("length", 0);
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+  });
+
   describe("creating movements", () => {
     it("should create a new movement. This should return Created (201)", async (done) => {
       const movement = {
@@ -41,11 +91,11 @@ describe.skip("Movement component tests", () => {
       };
 
       try {
-        const res1 = await request.post(`/movements`, {
+        const res1: MovementResponse = await request.post("/movements/", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
+            Authorization: `Bearer ${userToken}`,
           },
           body: {
             name: movement.name,
@@ -53,26 +103,29 @@ describe.skip("Movement component tests", () => {
           },
         });
 
-        expect(res1.statusCode).toBe(201);
-        expect(res1.body).toHaveProperty("id");
-        const movementId = res1.body.id;
-        expect(res1.body).toHaveProperty("createdAt");
-        expect(res1.body).toHaveProperty("updatedAt");
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        const movementId = res1.body.movement_id;
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
         expect(res1.body).toHaveProperty("measurement", movement.measurement);
         expect(res1.body).toHaveProperty("name", movement.name);
 
-        const res2 = await request.get(`/movements/${movementId}`, {
-          ...reqOpts,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
-          },
-        });
+        const res2: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
 
-        expect(res2.statusCode).toBe(200);
-        expect(res2.body).toHaveProperty("id");
-        expect(res2.body).toHaveProperty("createdAt");
-        expect(res2.body).toHaveProperty("updatedAt");
+        expect(res2.statusCode).toBe(HttpStatus.OK);
+        expect(res2.body).toHaveProperty("movement_id");
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
         expect(res2.body).toHaveProperty("measurement", movement.measurement);
         expect(res2.body).toHaveProperty("name", movement.name);
 
@@ -93,45 +146,50 @@ describe.skip("Movement component tests", () => {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
+            Authorization: `Bearer ${userToken}`,
           },
           body: movement,
         };
 
-        const res1 = await request.post(`/movements`, payload);
+        const res1: MovementResponse = await request.post(
+          "/movements/",
+          payload
+        );
 
-        expect(res1.statusCode).toBe(201);
-        expect(res1.body).toHaveProperty("id");
-        expect(res1.body).toHaveProperty("createdAt");
-        expect(res1.body).toHaveProperty("updatedAt");
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
         expect(res1.body).toHaveProperty("measurement", movement.measurement);
         expect(res1.body).toHaveProperty("name", movement.name);
 
-        const res2 = await request.post(`/movements`, payload);
+        const res2: MovementResponse = await request.post(
+          "/movements/",
+          payload
+        );
 
-        expect(res2.statusCode).toBe(409);
-        expect(res2.body).toHaveProperty("status", 409);
+        expect(res2.statusCode).toBe(HttpStatus.CONFLICT);
         done();
       } catch (err) {
         done(err);
       }
     });
 
-    it("should get 422 Unprocessable entity if using bogus measurement", async (done) => {
+    it("should get 422 Unprocessable Entity if an invalid measurement", async (done) => {
       try {
-        const res = await request.post(`/movements`, {
+        const res: MovementResponse = await request.post("/movements/", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
+            Authorization: `Bearer ${userToken}`,
           },
           body: {
-            name: "Invalid",
-            measurement: "spliff",
+            name: "my-movement",
+            measurement: "invalid-measure",
           },
         });
 
-        expect(res.statusCode).toBe(422);
+        expect(res.statusCode).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
         done();
       } catch (err) {
         done(err);
@@ -146,14 +204,12 @@ describe.skip("Movement component tests", () => {
         measurement: "weight",
       };
 
-      const scoreDate = new Date("2012-12-24");
-
       try {
-        const res1 = await request.post(`/movements`, {
+        const res1: MovementResponse = await request.post("/movements/", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
+            Authorization: `Bearer ${userToken}`,
           },
           body: {
             name: movement.name,
@@ -161,49 +217,54 @@ describe.skip("Movement component tests", () => {
           },
         });
 
-        expect(res1.statusCode).toBe(201);
-        expect(res1.body).toHaveProperty("id");
-        const movementId = res1.body.id;
-        expect(res1.body).toHaveProperty("createdAt");
-        expect(res1.body).toHaveProperty("updatedAt");
-        expect(res1.body).toHaveProperty("measurement", movement.measurement);
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        const movementId = res1.body.movement_id;
         expect(res1.body).toHaveProperty("name", movement.name);
+        expect(res1.body).toHaveProperty("measurement", movement.measurement);
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
 
-        const res2 = await request.post(`/movements/${movementId}`, {
-          ...reqOpts,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
-          },
-          body: {
-            score: "200kg",
-            measurement: "weight",
-            createdAt: scoreDate,
-          },
-        });
+        const res2: MovementResponse = await request.post(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "200kg",
+              measurement: "weight",
+            },
+          }
+        );
 
-        expect(res2.statusCode).toBe(201);
-        expect(res2.body).toHaveProperty("id");
-        expect(res2.body).toHaveProperty("createdAt", scoreDate.toISOString());
-        expect(res2.body).toHaveProperty("updatedAt");
-        expect(res2.body).toHaveProperty("movementId", movementId);
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        expect(res2.body).toHaveProperty("movement_score_id");
+        expect(res2.body).toHaveProperty("movement_id", movementId);
         expect(res2.body).toHaveProperty("score", "200kg");
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
 
-        const res3 = await request.get(`/movements/${movementId}`, {
-          ...reqOpts,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
-          },
-        });
+        const res3: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
 
-        expect(res3.statusCode).toBe(200);
+        expect(res3.statusCode).toBe(HttpStatus.OK);
         expect(res3.body).toHaveProperty("scores");
-        expect(res3.body.scores[0]).toHaveProperty("id");
-        expect(res3.body.scores[0]).toHaveProperty("createdAt");
-        expect(res3.body.scores[0]).toHaveProperty("updatedAt");
-        expect(res3.body.scores[0]).toHaveProperty("movementId");
+        expect(res3.body.scores[0]).toHaveProperty("movement_id");
+        expect(res3.body.scores[0]).toHaveProperty("movement_score_id");
         expect(res3.body.scores[0]).toHaveProperty("score");
+        expect(res3.body.scores[0]).toHaveProperty("created_at");
+        expect(res3.body.scores[0]).toHaveProperty("updated_at");
         done();
       } catch (err) {
         done(err);
@@ -219,11 +280,11 @@ describe.skip("Movement component tests", () => {
       };
 
       try {
-        const res1 = await request.post(`/movements`, {
+        const res1: MovementResponse = await request.post("/movements/", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
+            Authorization: `Bearer ${userToken}`,
           },
           body: {
             name: movement.name,
@@ -231,38 +292,113 @@ describe.skip("Movement component tests", () => {
           },
         });
 
-        expect(res1.statusCode).toBe(201);
-        expect(res1.body).toHaveProperty("id");
-        const movementId = res1.body.id;
-        expect(res1.body).toHaveProperty("createdAt");
-        expect(res1.body).toHaveProperty("updatedAt");
-        expect(res1.body).toHaveProperty("measurement", movement.measurement);
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        const movementId = res1.body.movement_id;
         expect(res1.body).toHaveProperty("name", movement.name);
+        expect(res1.body).toHaveProperty("measurement", movement.measurement);
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
 
-        const res2 = await request.get(`/movements/${movementId}`, {
-          ...reqOpts,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.user}`,
-          },
-        });
+        const res2: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
 
-        expect(res2.statusCode).toBe(200);
-        expect(res2.body).toHaveProperty("id");
-        expect(res2.body).toHaveProperty("createdAt");
-        expect(res2.body).toHaveProperty("updatedAt");
-        expect(res2.body).toHaveProperty("measurement", movement.measurement);
+        expect(res2.statusCode).toBe(HttpStatus.OK);
+        expect(res2.body).toHaveProperty("movement_id");
         expect(res2.body).toHaveProperty("name", movement.name);
+        expect(res2.body).toHaveProperty("measurement", movement.measurement);
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
 
         const res3 = await request.get(`/movements/${movementId}`, {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${tokens.admin}`,
+            Authorization: `Bearer ${adminToken}`,
           },
         });
 
-        expect(res3.statusCode).toBe(404);
+        expect(res3.statusCode).toBe(HttpStatus.NOT_FOUND);
+
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+  });
+
+  describe("global movements", () => {
+    it("should return movements created by other users if they are marked as global", async (done) => {
+      const wod = {
+        name: "Snatch",
+        measurement: "weight",
+        global: true,
+      };
+
+      try {
+        const res1: MovementResponse = await request.post("/movements/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: wod,
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        const movementId = res1.body.movement_id;
+        expect(res1.body).toHaveProperty("name", wod.name);
+        expect(res1.body).toHaveProperty("measurement", wod.measurement);
+        expect(res1.body).toHaveProperty("global", true);
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
+
+        const res2: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.OK);
+        expect(res2.body).toHaveProperty("movement_id");
+        expect(res2.body).toHaveProperty("name", wod.name);
+        expect(res2.body).toHaveProperty("measurement", wod.measurement);
+        expect(res2.body).toHaveProperty("global", true);
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
+
+        const res3: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminToken}`,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.OK);
+        expect(res2.body).toHaveProperty("movement_id");
+        expect(res2.body).toHaveProperty("name", wod.name);
+        expect(res2.body).toHaveProperty("measurement", wod.measurement);
+        expect(res2.body).toHaveProperty("global", true);
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
 
         done();
       } catch (err) {
