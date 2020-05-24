@@ -37,7 +37,7 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 # Run the server (Add --release for an optimized build)
 λ cargo run
 ...
-Listening on http://127.0.0.1:43210/
+May 24 15:24:37.698 INFO Listening on http://127.0.0.1:43210/, v: 0.1.0
 ```
 
 ### APIs
@@ -108,7 +108,7 @@ Returns
 }
 ```
 
-**For the following calls, the `TOKEN` is set on the environment: `export TOKEN=my-token**`
+**For the following calls, the `TOKEN` is set on the environment: `export TOKEN=my-token`**
 
 #### `POST /v1/users/me`
 

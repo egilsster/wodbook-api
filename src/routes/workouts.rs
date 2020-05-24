@@ -1,16 +1,23 @@
-use crate::db::connection::Connection;
 use crate::errors::AppError;
 use crate::models::user::Claims;
 use crate::models::workout::{
     CreateWorkout, CreateWorkoutScore, ManyWorkoutsResponse, WorkoutResponse,
 };
 use crate::repositories::workout_repository::{WorkoutRepository, WorkoutScoreRepository};
+use crate::utils::AppState;
 use actix_web::{get, post, web, HttpResponse, Responder};
+use slog::{info, o};
 
 #[get("/")]
-async fn get_workouts(claims: Claims) -> Result<impl Responder, AppError> {
-    let connection = Connection.init().await.unwrap();
-    let workout_repo = WorkoutRepository { connection };
+async fn get_workouts(
+    state: web::Data<AppState>,
+    claims: Claims,
+) -> Result<impl Responder, AppError> {
+    let logger = state.logger.new(o!("handler" => "GET /workouts"));
+    info!(logger, "Getting all workouts");
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
 
     let user_id = claims.user_id.to_owned();
     let result = workout_repo.get_workouts(user_id).await;
@@ -20,11 +27,16 @@ async fn get_workouts(claims: Claims) -> Result<impl Responder, AppError> {
 
 #[post("/")]
 async fn create_workout(
+    state: web::Data<AppState>,
     claims: Claims,
     workout: web::Json<CreateWorkout>,
 ) -> Result<impl Responder, AppError> {
-    let connection = Connection.init().await.unwrap();
-    let workout_repo = WorkoutRepository { connection };
+    let logger = state.logger.new(o!("handler" => "POST /workouts"));
+    info!(logger, "Creating a new workout");
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
     let user_id = claims.user_id.to_owned();
     let result = workout_repo
         .create_workout(user_id, workout.into_inner())
@@ -35,15 +47,23 @@ async fn create_workout(
 
 #[get("/{id}")]
 async fn get_workout_by_id(
+    state: web::Data<AppState>,
     info: web::Path<String>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let connection = Connection.init().await.unwrap();
-    let workout_repo = WorkoutRepository { connection };
-    let connection = Connection.init().await.unwrap();
-    let score_repo = WorkoutScoreRepository { connection };
-
     let workout_id = info.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("GET /workouts/{}", workout_id.to_owned())));
+    info!(logger, "Getting workout by id");
+
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+    let score_repo = WorkoutScoreRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
     let user_id = claims.user_id.to_owned();
     let workout_result = workout_repo
         .get_workout_by_id(user_id.to_owned(), workout_id.to_owned())
@@ -60,12 +80,20 @@ async fn get_workout_by_id(
 
 #[post("/{id}")]
 async fn create_workout_score(
+    state: web::Data<AppState>,
     info: web::Path<String>,
     claims: Claims,
     workout_score: web::Json<CreateWorkoutScore>,
 ) -> Result<impl Responder, AppError> {
-    let connection = Connection.init().await.unwrap();
-    let score_repo = WorkoutScoreRepository { connection };
+    let workout_id = info.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("POST /workouts/{}", workout_id.to_owned())));
+    info!(logger, "Creating workout score");
+
+    let score_repo = WorkoutScoreRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
 
     let workout_id = info.to_owned();
     let user_id = claims.user_id.to_owned();

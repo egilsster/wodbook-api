@@ -61,6 +61,28 @@ describe("/v1/workouts", () => {
     await mongoClient.close();
   });
 
+  describe("listing workouts", () => {
+    it("should return 200 OK with a list", async (done) => {
+      try {
+        const res1: ManyWorkoutsResponse = await request.get("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.OK);
+        expect(res1.body).toHaveProperty("data");
+        const workouts = res1.body.data;
+        expect(workouts).toHaveProperty("length", 0);
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+  });
+
   describe("creating workouts", () => {
     it("should get 201 Created when creating a new workout", async (done) => {
       const wod = {
@@ -108,6 +130,27 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("global", false);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
+
+        const res3: ManyWorkoutsResponse = await request.get("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+
+        expect(res3.statusCode).toBe(HttpStatus.OK);
+        expect(res3.body).toHaveProperty("data");
+        const workouts = res3.body.data;
+        expect(workouts).toHaveProperty("length");
+        const [workout1] = workouts;
+        expect(workout1).toHaveProperty("workout_id");
+        expect(workout1).toHaveProperty("name", wod.name);
+        expect(workout1).toHaveProperty("description", wod.description);
+        expect(workout1).toHaveProperty("measurement", wod.measurement);
+        expect(workout1).toHaveProperty("global", false);
+        expect(workout1).toHaveProperty("created_at");
+        expect(workout1).toHaveProperty("updated_at");
         done();
       } catch (err) {
         done(err);
@@ -131,10 +174,7 @@ describe("/v1/workouts", () => {
           body: workout,
         };
 
-        const res1: ManyWorkoutsResponse = await request.post(
-          "/workouts/",
-          payload
-        );
+        const res1: WorkoutResponse = await request.post("/workouts/", payload);
 
         expect(res1.statusCode).toBe(HttpStatus.CREATED);
         expect(res1.body).toHaveProperty("workout_id");

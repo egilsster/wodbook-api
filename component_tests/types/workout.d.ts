@@ -21,5 +21,5 @@ declare type WorkoutResponse = {
 
 declare type ManyWorkoutsResponse = {
   statusCode: number;
-  body: ManyWorkoutsResponse;
+  body: ManyWorkoutsData;
 };

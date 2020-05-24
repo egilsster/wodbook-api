@@ -1,5 +1,10 @@
+use crate::db::connection::Connection;
+use crate::utils::{AppState, Config};
+
 use actix_web::http::ContentEncoding;
 use actix_web::{middleware, web, App, HttpServer};
+use dotenv::dotenv;
+use slog::info;
 
 mod db;
 mod errors;
@@ -9,22 +14,28 @@ mod repositories;
 mod routes;
 mod utils;
 
-use crate::utils::Config;
-
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
+
     let config = Config::from_env().unwrap();
+    let logger = Config::configure_log();
     let host = config.server.host;
     let port = config.server.port;
     let server_addr = format!("{}:{}", host, port);
 
-    println!("Listening on http://{}/", server_addr);
+    let mongo_client = Connection.get_client(logger.clone()).await.unwrap();
 
-    HttpServer::new(|| {
+    info!(logger, "Listening on http://{}/", server_addr);
+
+    HttpServer::new(move || {
         App::new()
+            .data(AppState {
+                mongo_client: mongo_client.clone(),
+                logger: logger.clone(),
+            })
             .wrap(middleware::Compress::new(ContentEncoding::Br))
             .wrap(middleware::Logger::default())
-            // TODO(egilsster): add error handler
             // Setup endpoints (strictest matcher first)
             .service(web::scope("/v1/users").configure(routes::users::init_routes))
             .service(web::scope("/v1/workouts").configure(routes::workouts::init_routes))
