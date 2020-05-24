@@ -67,7 +67,7 @@ impl WorkoutRepository {
             .get_workout_collection()
             .find_one(filter, None)
             .await
-            .unwrap();
+            .map_err(|err| AppError::DbError(err.to_string()))?;
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {

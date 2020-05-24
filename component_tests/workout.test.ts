@@ -194,7 +194,7 @@ describe("/v1/workouts", () => {
       }
     });
 
-    it("should get 422 Unprocessable entity if using an invalid measurement", async (done) => {
+    it("should get 422 Unprocessable Entity if using an invalid measurement", async (done) => {
       try {
         const res: WorkoutResponse = await request.post("/workouts/", {
           ...reqOpts,
@@ -284,7 +284,8 @@ describe("/v1/workouts", () => {
 
         expect(res3.statusCode).toBe(HttpStatus.OK);
         expect(res3.body).toHaveProperty("scores");
-        expect(res3.body.scores[0]).toHaveProperty("workout_id");
+        expect(res3.body.scores[0]).toHaveProperty("workout_score_id");
+        expect(res3.body.scores[0]).toHaveProperty("workout_id", workoutId);
         expect(res3.body.scores[0]).toHaveProperty("created_at");
         expect(res3.body.scores[0]).toHaveProperty("updated_at");
         expect(res3.body.scores[0]).toHaveProperty("score");
@@ -321,12 +322,12 @@ describe("/v1/workouts", () => {
         expect(res1.statusCode).toBe(HttpStatus.CREATED);
         expect(res1.body).toHaveProperty("workout_id");
         const workoutId = res1.body.workout_id;
+        expect(res1.body).toHaveProperty("name", wod.name);
+        expect(res1.body).toHaveProperty("description", wod.description);
+        expect(res1.body).toHaveProperty("measurement", wod.measurement);
+        expect(res1.body).toHaveProperty("global", false);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
-        expect(res1.body).toHaveProperty("description", wod.description);
-        expect(res1.body).toHaveProperty("global", false);
-        expect(res1.body).toHaveProperty("measurement", wod.measurement);
-        expect(res1.body).toHaveProperty("name", wod.name);
 
         const res2: WorkoutResponse = await request.get(
           `/workouts/${workoutId}`,
@@ -341,12 +342,12 @@ describe("/v1/workouts", () => {
 
         expect(res2.statusCode).toBe(HttpStatus.OK);
         expect(res2.body).toHaveProperty("workout_id");
+        expect(res2.body).toHaveProperty("name", wod.name);
+        expect(res2.body).toHaveProperty("description", wod.description);
+        expect(res2.body).toHaveProperty("measurement", wod.measurement);
+        expect(res2.body).toHaveProperty("global", false);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
-        expect(res2.body).toHaveProperty("description", wod.description);
-        expect(res2.body).toHaveProperty("global", false);
-        expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("name", wod.name);
 
         const res3: WorkoutResponse = await request.get(
           `/workouts/${workoutId}`,
@@ -390,12 +391,12 @@ describe("/v1/workouts", () => {
         expect(res1.statusCode).toBe(HttpStatus.CREATED);
         expect(res1.body).toHaveProperty("workout_id");
         const workoutId = res1.body.workout_id;
+        expect(res1.body).toHaveProperty("name", wod.name);
+        expect(res1.body).toHaveProperty("description", wod.description);
+        expect(res1.body).toHaveProperty("measurement", wod.measurement);
+        expect(res1.body).toHaveProperty("global", true);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
-        expect(res1.body).toHaveProperty("description", wod.description);
-        expect(res1.body).toHaveProperty("global", true);
-        expect(res1.body).toHaveProperty("measurement", wod.measurement);
-        expect(res1.body).toHaveProperty("name", wod.name);
 
         const res2: WorkoutResponse = await request.get(
           `/workouts/${workoutId}`,
@@ -410,12 +411,12 @@ describe("/v1/workouts", () => {
 
         expect(res2.statusCode).toBe(HttpStatus.OK);
         expect(res2.body).toHaveProperty("workout_id");
+        expect(res2.body).toHaveProperty("name", wod.name);
+        expect(res2.body).toHaveProperty("description", wod.description);
+        expect(res2.body).toHaveProperty("measurement", wod.measurement);
+        expect(res2.body).toHaveProperty("global", true);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
-        expect(res2.body).toHaveProperty("description", wod.description);
-        expect(res2.body).toHaveProperty("global", true);
-        expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("name", wod.name);
 
         const res3: WorkoutResponse = await request.get(
           `/workouts/${workoutId}`,
@@ -430,12 +431,12 @@ describe("/v1/workouts", () => {
 
         expect(res3.statusCode).toBe(HttpStatus.OK);
         expect(res2.body).toHaveProperty("workout_id");
+        expect(res2.body).toHaveProperty("name", wod.name);
+        expect(res2.body).toHaveProperty("description", wod.description);
+        expect(res2.body).toHaveProperty("measurement", wod.measurement);
+        expect(res2.body).toHaveProperty("global", true);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
-        expect(res2.body).toHaveProperty("description", wod.description);
-        expect(res2.body).toHaveProperty("global", true);
-        expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("name", wod.name);
 
         done();
       } catch (err) {
