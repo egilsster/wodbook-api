@@ -7,21 +7,21 @@ use bson::{doc, from_bson, Bson};
 use chrono::{DateTime, Duration, Utc};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use mongodb::error::Error;
 use mongodb::{Client, Collection};
 
 static COLLECTION_NAME: &'static str = "users";
 
 pub struct UserRepository {
-    pub connection: Client,
+    pub mongo_client: Client,
 }
 
 impl UserRepository {
     fn get_collection(&self) -> Collection {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
-        let db = self.connection.database(database_name.as_str());
+        let db = self.mongo_client.database(database_name.as_str());
         db.collection(COLLECTION_NAME)
     }
     pub async fn find_user_with_id(&self, user_id: Bson) -> Result<Option<UserResponse>, AppError> {
@@ -134,25 +134,9 @@ impl UserRepository {
         }
     }
 
-    pub async fn user_information(&self, token: &str) -> Result<Option<User>, AppError> {
-        let config = Config::from_env().unwrap();
-        let key = config.auth.secret.as_bytes();
-        let _decode = decode::<Claims>(
-            token,
-            &DecodingKey::from_secret(key),
-            &Validation::new(Algorithm::HS256),
-        );
-        match _decode {
-            Ok(decoded) => {
-                match self
-                    .find_user_with_email((decoded.claims.sub.to_string()).parse().unwrap())
-                    .await
-                {
-                    Ok(user) => Ok(user),
-                    Err(err) => Err(AppError::DbError(err.to_string())),
-                }
-            }
-            Err(_) => Err(AppError::Unauthorized("Invalid token".to_string())),
-        }
+    pub async fn user_information(&self, sub: String) -> Result<Option<User>, AppError> {
+        self.find_user_with_email(sub.to_string())
+            .await
+            .map_err(|err| AppError::DbError(err.to_string()))
     }
 }

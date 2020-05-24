@@ -1,13 +1,21 @@
-use crate::db::connection::Connection;
 use crate::errors::AppError;
+use crate::models::user::Claims;
 use crate::models::user::{Login, Register};
 use crate::repositories::user_repository::UserRepository;
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
+use crate::utils::AppState;
+use actix_web::{get, post, web, HttpResponse, Responder};
+use slog::{info, o};
 
 #[post("/login")]
-async fn login(user: web::Json<Login>) -> Result<impl Responder, AppError> {
-    let connection = Connection.init().await.unwrap();
-    let user_repo = UserRepository { connection };
+async fn login(
+    state: web::Data<AppState>,
+    user: web::Json<Login>,
+) -> Result<impl Responder, AppError> {
+    let logger = state.logger.new(o!("handler" => "POST /login"));
+    info!(logger, "Logging in a user");
+    let user_repo = UserRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
 
     let result = user_repo.login(user.into_inner()).await;
 
@@ -15,47 +23,50 @@ async fn login(user: web::Json<Login>) -> Result<impl Responder, AppError> {
 }
 
 #[post("/register")]
-async fn register(user: web::Json<Register>) -> Result<impl Responder, AppError> {
-    let connection = Connection.init().await.unwrap();
-    let user_repo = UserRepository { connection };
+async fn register(
+    state: web::Data<AppState>,
+    user: web::Json<Register>,
+) -> Result<impl Responder, AppError> {
+    let logger = state.logger.new(o!("handler" => "POST /register"));
+    info!(logger, "Registering new user");
+    let user_repo = UserRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
 
     let result = user_repo.register(user.into_inner()).await;
 
     result.map(|user| HttpResponse::Created().json(user))
 }
 
-#[post("/me")]
-async fn user_information(req: HttpRequest) -> Result<impl Responder, AppError> {
-    let auth_header = req.headers().get("Authorization");
-    let token_split: Vec<&str> = auth_header
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .split("Bearer")
-        .collect();
-    let token = token_split[1].trim();
-    let connection = Connection.init().await.unwrap();
-    let user_repo = UserRepository { connection };
+#[get("/me")]
+async fn get_user_information(
+    state: web::Data<AppState>,
+    claims: Claims,
+) -> Result<impl Responder, AppError> {
+    let logger = state.logger.new(o!("handler" => "GET /me"));
+    info!(logger, "Getting information about logged in user");
+    let user_repo = UserRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
 
-    let result = user_repo.user_information(token).await;
+    let result = user_repo.user_information(claims.sub.to_owned()).await;
 
     result.map(|user| HttpResponse::Ok().json(user))
 }
 
-#[get("/me")]
-async fn user_information_get(req: HttpRequest) -> Result<impl Responder, AppError> {
-    let auth_header = req.headers().get("Authorization");
-    let token_split: Vec<&str> = auth_header
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .split("Bearer")
-        .collect();
-    let token = token_split[1].trim();
-    let connection = Connection.init().await.unwrap();
-    let user_repo = UserRepository { connection };
+#[post("/me")]
+async fn update_user_information(
+    state: web::Data<AppState>,
+    claims: Claims,
+) -> Result<impl Responder, AppError> {
+    // TODO(egilsster): Implement updating user
+    let logger = state.logger.new(o!("handler" => "POST /me"));
+    info!(logger, "Updating information about logged in user");
+    let user_repo = UserRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
 
-    let result = user_repo.user_information(token).await;
+    let result = user_repo.user_information(claims.sub.to_owned()).await;
 
     result.map(|user| HttpResponse::Ok().json(user))
 }
@@ -63,6 +74,6 @@ async fn user_information_get(req: HttpRequest) -> Result<impl Responder, AppErr
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(login);
     cfg.service(register);
-    cfg.service(user_information);
-    cfg.service(user_information_get);
+    cfg.service(get_user_information);
+    cfg.service(update_user_information);
 }

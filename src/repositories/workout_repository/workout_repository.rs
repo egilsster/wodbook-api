@@ -25,14 +25,14 @@ static VALID_MEASUREMENTS: [&str; 9] = [
 ];
 
 pub struct WorkoutRepository {
-    pub connection: Client,
+    pub mongo_client: Client,
 }
 
 impl WorkoutRepository {
     fn get_workout_collection(&self) -> Collection {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
-        let db = self.connection.database(database_name.as_str());
+        let db = self.mongo_client.database(database_name.as_str());
         db.collection(WORKOUT_COLLECTION_NAME)
     }
 

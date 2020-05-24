@@ -12,14 +12,14 @@ use std::vec::Vec;
 static SCORE_COLLECTION_NAME: &'static str = "workoutscores";
 
 pub struct WorkoutScoreRepository {
-    pub connection: Client,
+    pub mongo_client: Client,
 }
 
 impl WorkoutScoreRepository {
     fn get_score_collection(&self) -> Collection {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
-        let db = self.connection.database(database_name.as_str());
+        let db = self.mongo_client.database(database_name.as_str());
         db.collection(SCORE_COLLECTION_NAME)
     }
 

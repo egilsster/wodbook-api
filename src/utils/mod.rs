@@ -1,3 +1,3 @@
 mod configuration;
 
-pub use configuration::Config;
+pub use configuration::{AppState, Config};

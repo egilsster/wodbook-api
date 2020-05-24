@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use crate::models::user::Claims;
 use crate::utils::Config;
 
@@ -6,7 +7,7 @@ use actix_web::{dev, Error, FromRequest, HttpRequest};
 use futures::future::{err, ok, Ready};
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 
-// TODO(egilsster): take whatever ir returned here and use it in an error handler to return a json response
+// TODO(egilsster): return a json response
 impl FromRequest for Claims {
     type Error = Error;
     type Future = Ready<Result<Claims, Error>>;
@@ -27,10 +28,14 @@ impl FromRequest for Claims {
                     &Validation::new(Algorithm::HS256),
                 ) {
                     Ok(token_data) => ok(token_data.claims),
-                    Err(_e) => err(ErrorUnauthorized("invalid token!")),
+                    Err(_e) => err(ErrorUnauthorized(AppError::Unauthorized(
+                        "Invalid token".to_string(),
+                    ))),
                 }
             }
-            None => err(ErrorUnauthorized("blocked!")),
+            None => err(ErrorUnauthorized(AppError::Unauthorized(
+                "No token present".to_string(),
+            ))),
         }
     }
 }
