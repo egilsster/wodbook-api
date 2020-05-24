@@ -1,4 +1,5 @@
-use crate::models::response::{ErrorResponse, LoginResponse, UserResponse};
+use crate::errors::AppError;
+use crate::models::response::{LoginResponse, UserResponse};
 use crate::models::user::{Claims, Login, Register, User};
 use crate::utils::Config;
 
@@ -23,14 +24,14 @@ impl UserRepository {
         let db = self.connection.database(database_name.as_str());
         db.collection(COLLECTION_NAME)
     }
-    pub async fn find_user_with_id(&self, user_id: Bson) -> Result<Option<UserResponse>, Error> {
+    pub async fn find_user_with_id(&self, user_id: Bson) -> Result<Option<UserResponse>, AppError> {
         let coll = self.get_collection();
         let cursor = coll.find_one(doc! { "_id":  user_id }, None).await.unwrap();
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(Error::from(e)),
+                Err(err) => Err(AppError::DbError(err.to_string())),
             },
             None => Ok(None),
         }
@@ -46,7 +47,7 @@ impl UserRepository {
             None => Ok(None),
         }
     }
-    pub async fn login(&self, user: Login) -> Result<LoginResponse, ErrorResponse> {
+    pub async fn login(&self, user: Login) -> Result<LoginResponse, AppError> {
         let user_doc = self
             .find_user_with_email(user.email.to_string())
             .await
@@ -58,8 +59,7 @@ impl UserRepository {
                 if x.password == sha.result_str() {
                     // JWT
                     let config = Config::from_env().unwrap();
-                    let _var = config.auth.secret;
-                    let key = _var.as_bytes();
+                    let key = config.auth.secret.as_bytes();
 
                     let mut _date: DateTime<Utc>;
                     // Remember Me
@@ -82,29 +82,25 @@ impl UserRepository {
                     .unwrap();
                     Ok(LoginResponse { token })
                 } else {
-                    Err(ErrorResponse {
-                        message: "Check your user information.".to_string(),
-                        status: 400,
-                    })
+                    Err(AppError::BadRequest(
+                        "Check your user information".to_string(),
+                    ))
                 }
             }
-            None => Err(ErrorResponse {
-                message: "Check your user information (user not found).".to_string(),
-                status: 400,
-            }),
+            None => Err(AppError::BadRequest(
+                "Check your user information (user not found)".to_string(),
+            )),
         }
     }
-    pub async fn register(&self, user: Register) -> Result<UserResponse, ErrorResponse> {
+    pub async fn register(&self, user: Register) -> Result<UserResponse, AppError> {
         let _exist = self
             .find_user_with_email((&user.email).parse().unwrap())
             .await
             .unwrap();
         match _exist {
-            Some(_) => Err(ErrorResponse {
-                message: "This e-mail is using by some user, please enter another e-mail."
-                    .to_string(),
-                status: 409,
-            }),
+            Some(_) => Err(AppError::Conflict(
+                "This e-mail is using by some user, please enter another e-mail.".to_string(),
+            )),
             None => {
                 let coll = self.get_collection();
                 let mut sha = Sha256::new();
@@ -128,24 +124,19 @@ impl UserRepository {
                 match insert_result {
                     Ok(result) => match self.find_user_with_id(result.inserted_id).await.unwrap() {
                         Some(new_user) => Ok(new_user),
-                        None => Err(ErrorResponse {
-                            message: "New user not found after inserting".to_string(),
-                            status: 500,
-                        }),
+                        None => Err(AppError::DbError(
+                            "New user not found after inserting".to_string(),
+                        )),
                     },
-                    Err(_) => Err(ErrorResponse {
-                        message: "Something went wrong.".to_string(),
-                        status: 500,
-                    }),
+                    Err(err) => Err(AppError::DbError(err.to_string())),
                 }
             }
         }
     }
 
-    pub async fn user_information(&self, token: &str) -> Result<Option<User>, ErrorResponse> {
+    pub async fn user_information(&self, token: &str) -> Result<Option<User>, AppError> {
         let config = Config::from_env().unwrap();
-        let _var = config.auth.secret;
-        let key = _var.as_bytes();
+        let key = config.auth.secret.as_bytes();
         let _decode = decode::<Claims>(
             token,
             &DecodingKey::from_secret(key),
@@ -158,16 +149,10 @@ impl UserRepository {
                     .await
                 {
                     Ok(user) => Ok(user),
-                    Err(_) => Err(ErrorResponse {
-                        message: "Something Wrong".to_string(),
-                        status: 500,
-                    }),
+                    Err(err) => Err(AppError::DbError(err.to_string())),
                 }
             }
-            Err(_) => Err(ErrorResponse {
-                message: "Invalid Token".to_string(),
-                status: 401,
-            }),
+            Err(_) => Err(AppError::Unauthorized("Invalid token".to_string())),
         }
     }
 }
