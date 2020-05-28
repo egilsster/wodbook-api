@@ -1,11 +1,12 @@
 # TODO(egilsster): Optimize docker image https://shaneutt.com/blog/rust-fast-small-docker-image-builds/
 # Custom healthcheck https://github.com/mastertinner/healthcheck
-FROM rust:latest
+FROM rust:1.43.1-stretch
+# FROM rust:latest
 # FROM rust:alpine3.11
 
 # RUN apk add --no-cache curl
 
-RUN apt update && apt upgrade && apt install curl
+RUN apt-get install --no-install-recommends --no-upgrade curl
 
 WORKDIR /usr/src/app
 
