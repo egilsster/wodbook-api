@@ -36,12 +36,12 @@ impl MovementRepository {
             .get_movement_collection()
             .find_one(filter, None)
             .await
-            .map_err(|err| AppError::DbError(err.to_string()))?;
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(AppError::DbError(e.to_string())),
+                Err(e) => Err(AppError::Internal(e.to_string())),
             },
             None => Ok(None),
         }
@@ -57,12 +57,12 @@ impl MovementRepository {
             .get_movement_collection()
             .find_one(filter, None)
             .await
-            .map_err(|err| AppError::DbError(err.to_string()))?;
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(AppError::DbError(e.to_string())),
+                Err(e) => Err(AppError::Internal(e.to_string())),
             },
             None => Ok(None),
         }
@@ -75,7 +75,7 @@ impl MovementRepository {
             .get_movement_collection()
             .find(filter, find_options)
             .await
-            .map_err(|err| AppError::DbError(err.to_string()))?;
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         let mut vec: Vec<MovementModel> = Vec::new();
 
@@ -103,7 +103,7 @@ impl MovementRepository {
         let movement = self
             .find_movement_by_id(user_id.to_owned(), movement_id)
             .await
-            .map_err(|err| AppError::DbError(err.to_string()))?;
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         match movement {
             Some(_) => Ok(movement.unwrap()),
@@ -150,7 +150,7 @@ impl MovementRepository {
                 let _ = coll
                     .insert_one(movement_doc, None)
                     .await
-                    .map_err(|err| AppError::DbError(err.to_string()));
+                    .map_err(|err| AppError::Internal(err.to_string()));
 
                 match self
                     .find_movement_by_name(user_id.to_owned(), movement_name.to_owned())
@@ -158,7 +158,7 @@ impl MovementRepository {
                     .unwrap()
                 {
                     Some(new_movement) => Ok(new_movement),
-                    None => Err(AppError::DbError(
+                    None => Err(AppError::Internal(
                         "New movement not found after inserting".to_string(),
                     )),
                 }

@@ -15,7 +15,7 @@ pub enum AppError {
     #[display(fmt = "{}", _0)]
     UnprocessableEntity(String),
     #[display(fmt = "{}", _0)]
-    DbError(String),
+    Internal(String),
 }
 
 #[derive(Serialize)]
@@ -31,7 +31,7 @@ impl ResponseError for AppError {
             AppError::NotFound(_) => StatusCode::NOT_FOUND,
             AppError::Conflict(_) => StatusCode::CONFLICT,
             AppError::UnprocessableEntity(_) => StatusCode::UNPROCESSABLE_ENTITY,
-            AppError::DbError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
     fn error_response(&self) -> HttpResponse {

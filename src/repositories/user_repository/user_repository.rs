@@ -31,7 +31,7 @@ impl UserRepository {
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(err) => Err(AppError::DbError(err.to_string())),
+                Err(err) => Err(AppError::Internal(err.to_string())),
             },
             None => Ok(None),
         }
@@ -124,11 +124,11 @@ impl UserRepository {
                 match insert_result {
                     Ok(result) => match self.find_user_with_id(result.inserted_id).await.unwrap() {
                         Some(new_user) => Ok(new_user),
-                        None => Err(AppError::DbError(
+                        None => Err(AppError::Internal(
                             "New user not found after inserting".to_string(),
                         )),
                     },
-                    Err(err) => Err(AppError::DbError(err.to_string())),
+                    Err(err) => Err(AppError::Internal(err.to_string())),
                 }
             }
         }
@@ -137,6 +137,6 @@ impl UserRepository {
     pub async fn user_information(&self, sub: String) -> Result<Option<User>, AppError> {
         self.find_user_with_email(sub.to_string())
             .await
-            .map_err(|err| AppError::DbError(err.to_string()))
+            .map_err(|err| AppError::Internal(err.to_string()))
     }
 }

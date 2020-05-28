@@ -51,7 +51,7 @@ impl WorkoutRepository {
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(AppError::DbError(e.to_string())),
+                Err(e) => Err(AppError::Internal(e.to_string())),
             },
             None => Ok(None),
         }
@@ -67,12 +67,12 @@ impl WorkoutRepository {
             .get_workout_collection()
             .find_one(filter, None)
             .await
-            .map_err(|err| AppError::DbError(err.to_string()))?;
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(AppError::DbError(e.to_string())),
+                Err(e) => Err(AppError::Internal(e.to_string())),
             },
             None => Ok(None),
         }
@@ -169,12 +169,12 @@ impl WorkoutRepository {
                             .unwrap()
                         {
                             Some(new_workout) => Ok(new_workout),
-                            None => Err(AppError::DbError(
+                            None => Err(AppError::Internal(
                                 "New workout not found after inserting".to_string(),
                             )),
                         }
                     }
-                    Err(err) => Err(AppError::DbError(err.to_string())),
+                    Err(err) => Err(AppError::Internal(err.to_string())),
                 }
             }
         }

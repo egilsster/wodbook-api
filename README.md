@@ -55,6 +55,20 @@ Returns
 }
 ```
 
+#### `GET /openapi`
+
+```sh
+curl http://localhost:43210/openapi
+```
+
+Returns
+
+```json
+{
+  "openapi": "3.0.0",
+  ...
+```
+
 #### `POST /v1/users/register`
 
 ```sh
