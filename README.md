@@ -1,6 +1,6 @@
 # wodbook-api
 
-![Build Status](https://github.com/egilsster/wodbook-api/workflows/tests/badge.svg?branch=master)
+![Build Status](https://github.com/egilsster/wodbook-api/workflows/build/badge.svg?branch=master)
 
 Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
