@@ -12,4 +12,9 @@ describe("Open endpoints", () => {
     const res = await request.get("/health", reqOpts);
     expect(res.statusCode).toBe(200);
   });
+
+  it("/openapi should return 200 OK", async () => {
+    const res = await request.get("/openapi", reqOpts);
+    expect(res.statusCode).toBe(200);
+  });
 });
