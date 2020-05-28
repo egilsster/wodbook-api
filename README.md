@@ -1,25 +1,18 @@
 # wodbook-api
 
+![Build Status](https://github.com/egilsster/wodbook-api/workflows/tests/badge.svg?branch=master)
+
 Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
-## Requirements
+## Prerequisites
 
 - Rust (1.43.0+)
 - Docker
 - docker-compose
 
-## To read
+## Materials
 
-- [ ] <https://blog.burntsushi.net/rust-error-handling/>
-
-## High-level TODO
-
-- Unit tests
-- Uploading a sqlite file from myWOD and it parses it for your user
-- Optimize docker image for production
-- OpenAPI endpoint (probably wont need it, will be keeping an eye open for yaml parsers that enable me to write it in yaml and serve it as json)
-- Improve CI (evaluating github actions, might switch back to circleci)
-- Investigate how component tests are generally written for Rust APIs. I will admit my Jest setup is quite nice but everything in Rust would be nice as well
+- <https://blog.burntsushi.net/rust-error-handling/>
 
 ## Usage
 
