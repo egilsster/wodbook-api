@@ -1,0 +1,37 @@
+name: Pull request workflow
+
+on: pull_request
+
+jobs:
+  docker_comp_test:
+    name: Run component tests against Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: make build-image
+      - run: ./run-component-tests.sh
+
+  unit_test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo test
+
+  build_release:
+    name: Release optimized build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo build --release
+
+# bench: # TODO(bgd): https://github.com/marketplace/actions/continuous-benchmark
