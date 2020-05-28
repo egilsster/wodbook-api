@@ -1,6 +1,6 @@
-name: Pull request workflow
+name: Push workflow
 
-on: pull_request
+on: push
 
 jobs:
   docker_comp_test:
