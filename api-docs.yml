@@ -1,4 +1,4 @@
-swagger: "3.0"
+openapi: "3.0.0"
 info:
   title: Wodbook API
   version: 0.0.1
@@ -8,18 +8,110 @@ info:
     The Wodbook API is a back-end for a mobile application that helps
     you keep track of all your CrossFit related things like workouts
     and movements.
-basePath: /v1
-schemes:
-  - http
-consumes:
-  - application/json
-produces:
-  - application/json
-securityDefinitions:
-  bearer:
-    type: apiKey
-    name: Authorization
-    in: header
+tags:
+  - name: workouts
+    description: Workouts are combinations of movements made with the purpose of measuring your performance via specified measurement.
 security:
-  - bearer: []
+  - bearerAuth: []
+servers:
+  - url: /v1
 paths:
+  /workouts:
+    get:
+      summary: List all workouts.
+      operationId: getWorkouts
+      tags:
+        - workouts
+      responses:
+        200:
+          description: OK. Lists all workouts.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workouts"
+    post:
+      summary: Creates a new workout.
+      operationId: createExtension
+      tags:
+        - workouts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/workout"
+      responses:
+        201:
+          description: Created. Creates a new workout and returns it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workout"
+        409:
+          description: Conflict. Resource with same unique identity already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        422:
+          description: Unprocessable entity. Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    workouts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/workout"
+    workout:
+      type: object
+      description: The workout model.
+      properties:
+        workout_id:
+          type: string
+          readOnly: true
+        user_id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          description: The display name of this workout.
+        measurement:
+          type: string
+          description: What type of measurement used to record this workout.
+        description:
+          type: string
+          description: Description of the workout.
+        created_at:
+          type: string
+          format: date
+          readOnly: true
+        update_at:
+          type: string
+          format: date
+          readOnly: true
+    error:
+      description: An error object.
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: Description of what happened.

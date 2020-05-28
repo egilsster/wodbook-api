@@ -15,7 +15,7 @@ impl Connection {
         Client::with_uri_str(&mongo_addr).await.map_err(|err| {
             let sub_logger = logger.new(o!("cause" => err.to_string()));
             crit!(sub_logger, "Error connecting to mongo");
-            AppError::DbError(err.to_string())
+            AppError::Internal(err.to_string())
         })
     }
 }

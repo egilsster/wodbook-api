@@ -48,11 +48,11 @@ impl MovementScoreRepository {
         let _ = coll
             .insert_one(movement_score_doc, None)
             .await
-            .map_err(|err| AppError::DbError(err.to_string()));
+            .map_err(|err| AppError::Internal(err.to_string()));
 
         self.get_movement_score_by_id(user_id.to_owned(), movement_id.to_owned(), id.to_owned())
             .await
-            .map_err(|_| AppError::DbError("Score not found after inserting".to_string()))
+            .map_err(|_| AppError::Internal("Score not found after inserting".to_string()))
     }
 
     pub async fn get_movement_scores(
@@ -100,12 +100,12 @@ impl MovementScoreRepository {
             .get_score_collection()
             .find_one(filter, None)
             .await
-            .map_err(|err| AppError::DbError(err.to_string()))?;
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(err) => Err(AppError::DbError(err.to_string())),
+                Err(err) => Err(AppError::Internal(err.to_string())),
             },
             None => Err(AppError::NotFound("Entity not found".to_string())),
         }
