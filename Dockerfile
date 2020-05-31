@@ -1,4 +1,5 @@
 # TODO(egilsster): Optimize docker image https://shaneutt.com/blog/rust-fast-small-docker-image-builds/
+# https://dev.to/sergeyzenchenko/actix-web-in-docker-how-to-build-small-and-secure-images-2mjd
 # Custom healthcheck https://github.com/mastertinner/healthcheck
 FROM rust:1.43.1-stretch
 # FROM rust:alpine3.11
