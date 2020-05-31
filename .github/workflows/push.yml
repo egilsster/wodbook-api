@@ -23,15 +23,14 @@ jobs:
         with:
           toolchain: stable
       - run: cargo test
-
-  build_release:
-    name: Release optimized build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - run: cargo build --release
-
-# bench: # TODO(bgd): https://github.com/marketplace/actions/continuous-benchmark
+  # TODO(egilsster): Move to a master only build
+  # build_release:
+  #   name: Release optimized build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: stable
+  #     - run: cargo build --release
+  # bench: # TODO(egilsster): https://github.com/marketplace/actions/continuous-benchmark
