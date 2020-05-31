@@ -9,14 +9,77 @@ info:
     you keep track of all your CrossFit related things like workouts
     and movements.
 tags:
+  - name: users
+    description: A user account in the system.
   - name: workouts
-    description: Workouts are combinations of movements made with the purpose of measuring your performance via specified measurement.
+    description: Workouts are combinations of movements done with the purpose of measuring your performance.
+  - name: movements
+    description: Movements are execises for users to track their progress.
 security:
   - bearerAuth: []
 servers:
   - url: /v1
 paths:
-  /workouts:
+  /users/login/:
+    post:
+      summary: Logs in user with given credentials.
+      security: []
+      operationId: loginUser
+      tags:
+        - users
+      responses:
+        200:
+          description: Login successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/token"
+        400:
+          description: Login unsuccessful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+  /users/register/:
+    post:
+      summary: Creates a user with the provided information.
+      security: []
+      operationId: registerUser
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/user"
+      responses:
+        201:
+          description: Registration successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+        400:
+          description: Registration unsuccessful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error" # TODO(egilsster): API actually returns empty response at the moment
+  /users/me/:
+    get:
+      summary: Shows information about the logged in user.
+      operationId: aboutUser
+      tags:
+        - users
+      responses:
+        201:
+          description: OK. Returns user information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+  /workouts/:
     get:
       summary: List all workouts.
       operationId: getWorkouts
@@ -31,7 +94,7 @@ paths:
                 $ref: "#/components/schemas/workouts"
     post:
       summary: Creates a new workout.
-      operationId: createExtension
+      operationId: createWorkout
       tags:
         - workouts
       requestBody:
@@ -65,7 +128,193 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-
+  /workouts/{id}:
+    get:
+      summary: Returns a specific workout.
+      operationId: getWorkoutById
+      tags:
+        - workouts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workout identifier
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK. Returns workout with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workout"
+        403:
+          description: Forbidden. User is not authorized to read workout with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        404:
+          description: Not found. Could not find the workout with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    post:
+      summary: Creates a score for the workout with {id}.
+      operationId: createWorkoutScore
+      tags:
+        - workouts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workout identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/workoutScore"
+      responses:
+        200:
+          description: OK. Returns workout score.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workoutScore"
+        403:
+          description: Forbidden. User is not authorized to create score for workout with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        404:
+          description: Not found. Could not find the workout with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+  /movements/:
+    get:
+      summary: List all movements.
+      operationId: getMovements
+      tags:
+        - movements
+      responses:
+        200:
+          description: OK. Lists all movements.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/movements"
+    post:
+      summary: Creates a new movement.
+      operationId: createMovement
+      tags:
+        - movements
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/movement"
+      responses:
+        201:
+          description: Created. Creates a new movement and returns it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/movement"
+        409:
+          description: Conflict. Resource with same unique identity already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        422:
+          description: Unprocessable entity. Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+  /movements/{id}:
+    get:
+      summary: Returns a specific movement.
+      operationId: getMovementById
+      tags:
+        - movements
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Movement identifier
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK. Returns movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/movement"
+        403:
+          description: Forbidden. User is not authorized to read movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        404:
+          description: Not found. Could not find the movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    post:
+      summary: Creates a score for the movement with {id}.
+      operationId: createMovementScore
+      tags:
+        - movements
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Movement identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/movementScore"
+      responses:
+        200:
+          description: OK. Returns movement score.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/movementScore"
+        403:
+          description: Forbidden. User is not authorized to create score for movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        404:
+          description: Not found. Could not find the movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
 components:
   securitySchemes:
     bearerAuth:
@@ -73,6 +322,39 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    token:
+      type: object
+      properties:
+        token:
+          type: string
+    user:
+      type: object
+      properties:
+        user_id:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+          description: Hash of the password.
+        box_name:
+          type: string
+          description: The box name, if the user associates with one.
+        height:
+          type: number
+        weight:
+          type: number
+        date_of_birth:
+          type: string
+          format: yyyy-mm-dd
+        avatar_url:
+          type: string
+          description: An image that the user adds to his account.
     workouts:
       type: object
       properties:
@@ -87,23 +369,118 @@ components:
         workout_id:
           type: string
           readOnly: true
-        user_id:
-          type: string
-          readOnly: true
         name:
           type: string
-          description: The display name of this workout.
+          description: The name of this workout.
         measurement:
           type: string
-          description: What type of measurement used to record this workout.
+          description: How this workout is scored.
         description:
           type: string
           description: Description of the workout.
+        scores:
+          type: array
+          items:
+            $ref: "#/components/schemas/workoutScore"
+        global:
+          type: boolean
+          description: Whether this is for all users of bound to the creator. Known benchmarks should only be global.
         created_at:
           type: string
           format: date
           readOnly: true
-        update_at:
+        updated_at:
+          type: string
+          format: date
+          readOnly: true
+    workoutScore:
+      type: object
+      description: Score for a workout.
+      properties:
+        workout_score_id:
+          type: string
+          readOnly: true
+        workout_id:
+          type: string
+          readOnly: true
+          description: The workout this score belongs to.
+        score:
+          type: string
+        rx:
+          type: boolean
+        created_at:
+          type: string
+          format: date
+          readOnly: true
+        updated_at:
+          type: string
+          format: date
+          readOnly: true
+    movements:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/movement"
+    movement:
+      type: object
+      description: The movement model.
+      properties:
+        movement_id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          description: The name of this movement.
+        measurement:
+          type: string
+          description: How this movement is scored.
+        description:
+          type: string
+          description: Description of the workout.
+        scores:
+          type: array
+          items:
+            $ref: "#/components/schemas/movementScore"
+        global:
+          type: boolean
+          description: Whether this is for all users of bound to the creator.
+        created_at:
+          type: string
+          format: date
+          readOnly: true
+        updated_at:
+          type: string
+          format: date
+          readOnly: true
+    movementScore:
+      type: object
+      description: Score for a movement.
+      properties:
+        movement_score_id:
+          type: string
+          readOnly: true
+        movement_id:
+          type: string
+          readOnly: true
+          description: The movement this score belongs to.
+        score:
+          type: string
+        sets:
+          type: number
+        reps:
+          type: number
+        distance:
+          type: string
+        notes:
+          type: string
+          description: Any notes to mention for this score (after a wod, etc.).
+        created_at:
+          type: string
+          format: date
+          readOnly: true
+        updated_at:
           type: string
           format: date
           readOnly: true
