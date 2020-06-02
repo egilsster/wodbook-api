@@ -23,7 +23,7 @@ services:
     mem_limit: 512M
 
   mongo:
-    image: mongo:3.6
+    image: mongo:4.0
     container_name: mongo
     restart: always
     healthcheck:
