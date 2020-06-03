@@ -46,7 +46,7 @@ dependencies = [
  "actix-service",
  "actix-threadpool",
  "actix-utils",
- "base64",
+ "base64 0.11.0",
  "bitflags",
  "brotli2",
  "bytes 0.5.4",
@@ -339,7 +339,7 @@ dependencies = [
  "actix-http",
  "actix-rt",
  "actix-service",
- "base64",
+ "base64 0.11.0",
  "bytes 0.5.4",
  "derive_more 0.99.7",
  "futures-core",
@@ -379,6 +379,12 @@ name = "base64"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
+
+[[package]]
+name = "base64"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53d1ccbaf7d9ec9537465a97bf19edc1a4e158ecb49fc16178202238c569cc42"
 
 [[package]]
 name = "bitflags"
@@ -444,6 +450,25 @@ version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c177ed0122f24ce5e0f05bf9b29e79f3ac1a359bc504e0e14c3b34896c71c00"
 dependencies = [
+ "byteorder",
+ "chrono",
+ "hex 0.3.2",
+ "libc",
+ "linked-hash-map 0.5.3",
+ "md5",
+ "rand 0.7.3",
+ "serde 1.0.111",
+ "serde_json",
+ "time",
+]
+
+[[package]]
+name = "bson"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24aa9746a1fa811b92bbd5e29a3a7d2b512da6ed2ce49ee57e0b1ffa15a0b591"
+dependencies = [
+ "base64 0.12.1",
  "byteorder",
  "chrono",
  "hex 0.3.2",
@@ -1149,7 +1174,7 @@ version = "7.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d11f9e80a85927748a334df8e4f6782a04033517bb28f3863a563daad882da7f"
 dependencies = [
- "base64",
+ "base64 0.11.0",
  "pem",
  "ring",
  "serde 1.0.111",
@@ -1355,9 +1380,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9231cc6884a51ecad604342df6bf166eb41e742de09fb6107dc7f02dedafd37a"
 dependencies = [
  "async-trait",
- "base64",
+ "base64 0.11.0",
  "bitflags",
- "bson",
+ "bson 0.14.1",
  "chrono",
  "derivative",
  "err-derive",
@@ -1550,7 +1575,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1581760c757a756a41f0ee3ff01256227bdf64cb752839779b95ffb01c59793"
 dependencies = [
- "base64",
+ "base64 0.11.0",
  "lazy_static",
  "regex",
 ]
@@ -1839,7 +1864,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2bc8af4bda8e1ff4932523b94d3dd20ee30a87232323eda55903ffd71d2fb017"
 dependencies = [
- "base64",
+ "base64 0.11.0",
  "blake2b_simd",
  "constant_time_eq",
  "crossbeam-utils",
@@ -1891,7 +1916,7 @@ version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0d4a31f5d68413404705d6982529b0e11a9aacd4839d1d6222ee3b8cb4015e1"
 dependencies = [
- "base64",
+ "base64 0.11.0",
  "log",
  "ring",
  "sct",
@@ -2751,7 +2776,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "actix-web",
- "bson",
+ "bson 0.15.0",
  "chrono",
  "config",
  "derive_more 0.99.7",
