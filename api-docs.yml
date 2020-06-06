@@ -14,7 +14,7 @@ tags:
   - name: workouts
     description: Workouts are combinations of movements done with the purpose of measuring your performance.
   - name: movements
-    description: Movements are execises for users to track their progress.
+    description: Movements are exercises for users to track their progress.
 security:
   - bearerAuth: []
 servers:
@@ -79,6 +79,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/user"
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    patch:
+      summary: Updates information about the logged in user.
+      operationId: updateUser
+      tags:
+        - users
+      responses:
+        200:
+          description: OK. User has been updated and returns user information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
   /workouts/:
     get:
       summary: List all workouts.

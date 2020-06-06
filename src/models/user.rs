@@ -38,7 +38,7 @@ pub struct Claims {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Register {
+pub struct CreateUser {
     pub email: String,
     pub password: String,
     pub first_name: String,
@@ -47,4 +47,17 @@ pub struct Register {
     pub height: i32,
     pub weight: i32,
     pub box_name: String,
+    pub avatar_url: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateUser {
+    pub password: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub date_of_birth: Option<String>,
+    pub height: Option<i32>,
+    pub weight: Option<i32>,
+    pub box_name: Option<String>,
+    pub avatar_url: Option<String>,
 }
