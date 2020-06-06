@@ -45,7 +45,7 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 
-  docker_comp_test:
+  docker-component-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
