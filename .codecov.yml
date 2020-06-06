@@ -1,8 +1,6 @@
 codecov:
   require_ci_to_pass: yes
 
-ignore:
-
 coverage:
   precision: 1
   round: down
@@ -20,3 +18,5 @@ parsers:
       loop: yes
       method: yes
       macro: no
+
+comment: false

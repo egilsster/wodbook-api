@@ -3,24 +3,7 @@ name: build
 on: push
 
 jobs:
-  test-stable:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace --all-targets
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --no-fail-fast
-
-  codecov:
+  unit-test-coverage:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -63,12 +46,16 @@ jobs:
           path: cobertura.xml
 
   docker_comp_test:
-    name: Run component tests against Docker image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: make build-image
-      - run: ./run-component-tests.sh
+          override: true
+      - name: Build docker image
+        run: make build-image
+      - name: Run component tests
+        run: ./run-component-tests.sh
