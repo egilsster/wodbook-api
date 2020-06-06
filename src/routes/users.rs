@@ -3,7 +3,7 @@ use crate::models::user::Claims;
 use crate::models::user::{CreateUser, Login, UpdateUser};
 use crate::repositories::user_repository::UserRepository;
 use crate::utils::AppState;
-use actix_web::{get, post, patch, web, HttpResponse, Responder};
+use actix_web::{get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};
 
 #[post("/login")]

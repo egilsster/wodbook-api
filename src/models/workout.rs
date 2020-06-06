@@ -40,7 +40,7 @@ impl WorkoutResponse {
             global: model.global,
             created_at: model.created_at,
             updated_at: model.updated_at,
-         }
+        }
     }
 }
 
