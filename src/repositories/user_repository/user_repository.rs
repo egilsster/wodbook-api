@@ -1,14 +1,11 @@
 use crate::errors::AppError;
 use crate::models::response::{LoginResponse, UserResponse};
-use crate::models::user::{Claims, Login, Register, User};
-use crate::utils::Config;
+use crate::models::user::{Claims, CreateUser, Login, UpdateUser, User};
+use crate::utils::{resources, Config};
 
 use bson::{doc, from_bson, Bson};
 use chrono::{DateTime, Duration, Utc};
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
 use jsonwebtoken::{encode, EncodingKey, Header};
-use mongodb::error::Error;
 use mongodb::{Client, Collection};
 
 static COLLECTION_NAME: &'static str = "users";
@@ -24,6 +21,7 @@ impl UserRepository {
         let db = self.mongo_client.database(database_name.as_str());
         db.collection(COLLECTION_NAME)
     }
+
     pub async fn find_user_with_id(&self, user_id: Bson) -> Result<Option<UserResponse>, AppError> {
         let coll = self.get_collection();
         let cursor = coll.find_one(doc! { "_id":  user_id }, None).await.unwrap();
@@ -36,17 +34,66 @@ impl UserRepository {
             None => Ok(None),
         }
     }
-    pub async fn find_user_with_email(&self, email: String) -> Result<Option<User>, Error> {
+
+    pub async fn update_user_with_email(
+        &self,
+        email: String,
+        user: UpdateUser,
+    ) -> Result<User, AppError> {
+        // TODO(egilsster): Refactor this. There is probably a better way to perform updates.
+        let existing_user = self.find_user_with_email(email.to_owned()).await?.unwrap();
+
+        let mut new_password = existing_user.password;
+        if user.password.is_some() {
+            new_password = resources::create_hash(user.password.unwrap());
+        }
+        let new_first_name = user.first_name.unwrap_or(existing_user.first_name);
+        let new_last_name = user.last_name.unwrap_or(existing_user.last_name);
+        let new_date_of_birth = user.date_of_birth.unwrap_or(existing_user.date_of_birth);
+        let new_height = user.height.unwrap_or(existing_user.height);
+        let new_weight = user.weight.unwrap_or(existing_user.weight);
+        let new_box_name = user.box_name.unwrap_or(existing_user.box_name);
+        let new_avatar_url = user.avatar_url.unwrap_or(existing_user.avatar_url);
+
+        let user_doc = doc! {
+            "user_id": existing_user.user_id.to_owned(),
+            "email": existing_user.email,
+            "password": new_password,
+            "first_name": new_first_name,
+            "last_name": new_last_name,
+            "date_of_birth": new_date_of_birth,
+            "height": new_height,
+            "weight": new_weight,
+            "box_name": new_box_name,
+            "avatar_url": new_avatar_url,
+        };
+
+        let coll = self.get_collection();
+        coll.update_one(doc! { "user_id": existing_user.user_id }, user_doc, None)
+            .await
+            .map_err(|_| AppError::Internal("Could not update user".to_owned()))?;
+
+        let model = self
+            .find_user_with_email(email)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))?
+            .unwrap();
+
+        Ok(model)
+    }
+
+    pub async fn find_user_with_email(&self, email: String) -> Result<Option<User>, AppError> {
         let coll = self.get_collection();
         let cursor = coll.find_one(doc! {"email": email}, None).await.unwrap();
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
                 Ok(model) => Ok(model),
-                Err(e) => Err(Error::from(e)),
+                Err(_) => Err(AppError::Internal("Invalid document".to_owned())),
             },
             None => Ok(None),
         }
     }
+
     pub async fn login(&self, user: Login) -> Result<LoginResponse, AppError> {
         let user_doc = self
             .find_user_with_email(user.email.to_string())
@@ -54,9 +101,7 @@ impl UserRepository {
             .unwrap();
         match user_doc {
             Some(x) => {
-                let mut sha = Sha256::new();
-                sha.input_str(user.password.as_str());
-                if x.password == sha.result_str() {
+                if x.password == resources::create_hash(user.password) {
                     // JWT
                     let config = Config::from_env().unwrap();
                     let key = config.auth.secret.as_bytes();
@@ -92,7 +137,8 @@ impl UserRepository {
             )),
         }
     }
-    pub async fn register(&self, user: Register) -> Result<UserResponse, AppError> {
+
+    pub async fn register(&self, user: CreateUser) -> Result<UserResponse, AppError> {
         let _exist = self
             .find_user_with_email((&user.email).parse().unwrap())
             .await
@@ -103,9 +149,7 @@ impl UserRepository {
             )),
             None => {
                 let coll = self.get_collection();
-                let mut sha = Sha256::new();
-                sha.input_str(user.password.as_str());
-                let hash_pw = sha.result_str();
+                let hash_pw = resources::create_hash(user.password);
                 let id = uuid::Uuid::new_v4().to_string();
                 let user_doc = doc! {
                     "user_id": id,

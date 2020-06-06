@@ -20,6 +20,9 @@ describe("/users", () => {
     mongoClient = await MongoClient.connect(MONGO_URI, {
       useUnifiedTopology: true,
     });
+  });
+
+  beforeEach(async () => {
     const db = mongoClient.db();
     const coll = db.collection("users");
     await coll.deleteMany({});
@@ -162,6 +165,222 @@ describe("/users", () => {
           expect(res2.body).toHaveProperty("weight", 85000);
           expect(res2.body).toHaveProperty("date_of_birth");
           expect(res2.body).toHaveProperty("password");
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+    });
+
+    describe("PATCH", () => {
+      it("should update user information", async (done) => {
+        try {
+          const user = {
+            first_name: "Hansel",
+            last_name: "Dude",
+            box_name: "Zoolander",
+            email: "hansel@zoolander.com",
+            height: 183,
+            weight: 82000,
+            date_of_birth: "1985-05-01",
+            password: "so-hot-right-now",
+          };
+
+          const res1 = await request.post("users/register", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: user,
+          });
+
+          expect(res1.statusCode).toBe(HttpStatus.CREATED);
+          expect(res1.body).toHaveProperty("user_id");
+          expect(res1.body).toHaveProperty("first_name", user.first_name);
+          expect(res1.body).toHaveProperty("last_name", user.last_name);
+          expect(res1.body).toHaveProperty("box_name", user.box_name);
+          expect(res1.body).toHaveProperty("email", user.email);
+          expect(res1.body).toHaveProperty("height", user.height);
+          expect(res1.body).toHaveProperty("weight", user.weight);
+          expect(res1.body).toHaveProperty("date_of_birth", user.date_of_birth);
+          expect(res1.body).not.toHaveProperty("password");
+
+          const res2 = await request.post("users/login", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: {
+              email: user.email,
+              password: user.password,
+            },
+          });
+
+          expect(res2.statusCode).toBe(HttpStatus.OK);
+          expect(res2.body).toHaveProperty("token");
+          const { token } = res2.body;
+
+          const res3 = await request.get("users/me", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          expect(res3.statusCode).toBe(HttpStatus.OK);
+          expect(res3.body).toHaveProperty("user_id");
+          expect(res3.body).toHaveProperty("first_name", user.first_name);
+          expect(res3.body).toHaveProperty("last_name", user.last_name);
+          expect(res3.body).toHaveProperty("box_name", user.box_name);
+          expect(res3.body).toHaveProperty("email", user.email);
+          expect(res3.body).toHaveProperty("height", user.height);
+          expect(res3.body).toHaveProperty("weight", user.weight);
+          expect(res3.body).toHaveProperty("date_of_birth", user.date_of_birth);
+          expect(res3.body).toHaveProperty("password");
+
+          const res4 = await request.patch("users/me", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              first_name: "new first_name",
+              last_name: "new last_name",
+              box_name: "new box_name",
+            },
+          });
+
+          expect(res4.statusCode).toBe(HttpStatus.OK);
+          // Verify new data
+          expect(res4.body).toHaveProperty("first_name", "new first_name");
+          expect(res4.body).toHaveProperty("last_name", "new last_name");
+          expect(res4.body).toHaveProperty("box_name", "new box_name");
+          // Verify that unchanged data remains there
+          expect(res4.body).toHaveProperty("email", user.email);
+          expect(res4.body).toHaveProperty("height", user.height);
+          expect(res4.body).toHaveProperty("weight", user.weight);
+          expect(res4.body).toHaveProperty("date_of_birth", user.date_of_birth);
+          expect(res4.body).toHaveProperty("password");
+
+          // Verify that the GET requests returns the same data
+          const res5 = await request.get("users/me", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          expect(res5.statusCode).toBe(HttpStatus.OK);
+          expect(res5.body).toHaveProperty("user_id");
+          expect(res5.body).toHaveProperty("first_name", "new first_name");
+          expect(res5.body).toHaveProperty("last_name", "new last_name");
+          expect(res5.body).toHaveProperty("box_name", "new box_name");
+          expect(res5.body).toHaveProperty("email", user.email);
+          expect(res5.body).toHaveProperty("height", user.height);
+          expect(res5.body).toHaveProperty("weight", user.weight);
+          expect(res5.body).toHaveProperty("date_of_birth", user.date_of_birth);
+          expect(res5.body).toHaveProperty("password");
+
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+
+      it("should change password", async (done) => {
+        try {
+          const user = {
+            first_name: "Hansel",
+            last_name: "Dude",
+            box_name: "Zoolander",
+            email: "hansel@zoolander.com",
+            height: 183,
+            weight: 82000,
+            date_of_birth: "1985-05-01",
+            password: "so-hot-right-now",
+          };
+
+          const res1 = await request.post("users/register", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: user,
+          });
+
+          expect(res1.statusCode).toBe(HttpStatus.CREATED);
+          expect(res1.body).toHaveProperty("user_id");
+          expect(res1.body).toHaveProperty("first_name", user.first_name);
+          expect(res1.body).toHaveProperty("last_name", user.last_name);
+          expect(res1.body).toHaveProperty("box_name", user.box_name);
+          expect(res1.body).toHaveProperty("email", user.email);
+          expect(res1.body).toHaveProperty("height", user.height);
+          expect(res1.body).toHaveProperty("weight", user.weight);
+          expect(res1.body).toHaveProperty("date_of_birth", user.date_of_birth);
+          expect(res1.body).not.toHaveProperty("password");
+
+          const res2 = await request.post("users/login", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: {
+              email: user.email,
+              password: user.password,
+            },
+          });
+
+          expect(res2.statusCode).toBe(HttpStatus.OK);
+          expect(res2.body).toHaveProperty("token");
+          const { token } = res2.body;
+
+          const new_pass = "my-new-password";
+
+          const res3 = await request.patch("users/me", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              password: new_pass,
+            },
+          });
+
+          expect(res3.statusCode).toBe(HttpStatus.OK);
+
+          // Verify that login works with the new password
+          const res4 = await request.post("users/login", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: {
+              email: user.email,
+              password: new_pass,
+            },
+          });
+
+          expect(res4.statusCode).toBe(HttpStatus.OK);
+          expect(res4.body).toHaveProperty("token");
+
+          // Verify that login does NOT work with the old password
+          const res5 = await request.post("users/login", {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: {
+              email: user.email,
+              password: user.password,
+            },
+          });
+
+          expect(res5.statusCode).toBe(HttpStatus.BAD_REQUEST);
+
           done();
         } catch (err) {
           done(err);
