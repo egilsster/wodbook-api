@@ -62,6 +62,7 @@ Returns
 {
   "openapi": "3.0.0",
   ...
+}
 ```
 
 #### `POST /v1/users/register`
