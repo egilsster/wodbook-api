@@ -9,7 +9,7 @@ use mongodb::options::FindOptions;
 use mongodb::{Client, Collection};
 use std::vec::Vec;
 
-static SCORE_COLLECTION_NAME: &'static str = "workoutscores";
+static SCORE_COLLECTION_NAME: &str = "workoutscores";
 
 pub struct WorkoutScoreRepository {
     pub mongo_client: Client,

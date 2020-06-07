@@ -2,9 +2,6 @@ pub use config::ConfigError;
 use mongodb::Client;
 use serde::Deserialize;
 use slog::{o, Drain, Logger};
-use slog_async;
-use slog_envlogger;
-use slog_term;
 
 #[derive(Clone)]
 pub struct AppState {

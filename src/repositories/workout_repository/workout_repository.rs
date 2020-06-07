@@ -9,7 +9,7 @@ use mongodb::options::FindOptions;
 use mongodb::{Client, Collection};
 use std::vec::Vec;
 
-static WORKOUT_COLLECTION_NAME: &'static str = "workouts";
+static WORKOUT_COLLECTION_NAME: &str = "workouts";
 
 // TODO(egilsster): Can this be done with enum (and match?)?
 static VALID_MEASUREMENTS: [&str; 9] = [
