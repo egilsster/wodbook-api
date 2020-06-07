@@ -6,7 +6,7 @@ type MovementData = {
   global: boolean;
   scores: any[]; // TODO(egilsster): add scores for movements
   created_at: string;
-  update_at: string;
+  updated_at: string;
 };
 
 type ManyMovementsData = {

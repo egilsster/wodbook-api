@@ -68,6 +68,11 @@ pub struct CreateMovement {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateMovement {
+    pub name: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMovementScore {
     pub score: String,
     #[serde(default = "default_as_one")]
