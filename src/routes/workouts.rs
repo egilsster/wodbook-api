@@ -3,7 +3,7 @@ use crate::models::user::Claims;
 use crate::models::workout::{
     CreateWorkout, CreateWorkoutScore, ManyWorkoutsResponse, UpdateWorkout, WorkoutResponse,
 };
-use crate::repositories::workout_repository::{WorkoutRepository, WorkoutScoreRepository};
+use crate::repositories::{WorkoutRepository, WorkoutScoreRepository};
 use crate::utils::AppState;
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};

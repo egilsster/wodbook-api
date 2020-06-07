@@ -4,11 +4,11 @@ use crate::models::user::{Claims, CreateUser, Login, UpdateUser, User};
 use crate::utils::{resources, Config};
 
 use bson::{doc, from_bson, Bson};
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use mongodb::{Client, Collection};
 
-static COLLECTION_NAME: &'static str = "users";
+static COLLECTION_NAME: &str = "users";
 
 pub struct UserRepository {
     pub mongo_client: Client,
@@ -43,10 +43,11 @@ impl UserRepository {
         // TODO(egilsster): Refactor this. There is probably a better way to perform updates.
         let existing_user = self.find_user_with_email(email.to_owned()).await?.unwrap();
 
-        let mut new_password = existing_user.password;
-        if user.password.is_some() {
-            new_password = resources::create_hash(user.password.unwrap());
-        }
+        let new_password = if user.password.is_some() {
+            resources::create_hash(user.password.unwrap())
+        } else {
+            existing_user.password
+        };
         let new_first_name = user.first_name.unwrap_or(existing_user.first_name);
         let new_last_name = user.last_name.unwrap_or(existing_user.last_name);
         let new_date_of_birth = user.date_of_birth.unwrap_or(existing_user.date_of_birth);
@@ -106,13 +107,12 @@ impl UserRepository {
                     let config = Config::from_env().unwrap();
                     let key = config.auth.secret.as_bytes();
 
-                    let mut _date: DateTime<Utc>;
                     // Remember Me
-                    if !user.remember_me {
-                        _date = Utc::now() + Duration::hours(1);
+                    let _date = if !user.remember_me {
+                        Utc::now() + Duration::hours(1)
                     } else {
-                        _date = Utc::now() + Duration::days(365);
-                    }
+                        Utc::now() + Duration::days(365)
+                    };
                     let my_claims = Claims {
                         sub: user.email,
                         exp: _date.timestamp() as usize,

@@ -36,7 +36,7 @@ impl WorkoutResponse {
             name: model.name,
             measurement: model.measurement,
             description: model.description,
-            scores: scores,
+            scores,
             global: model.global,
             created_at: model.created_at,
             updated_at: model.updated_at,
