@@ -312,7 +312,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-    post:
+    patch:
       summary: Updates an existing movement.
       operationId: updateMovement
       tags:
