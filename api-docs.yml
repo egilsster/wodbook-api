@@ -74,7 +74,7 @@ paths:
         - users
       responses:
         201:
-          description: OK. Returns user information.
+          description: Returns user information.
           content:
             application/json:
               schema:
@@ -86,13 +86,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/error"
     patch:
-      summary: Updates information about the logged in user.
+      summary: Updates information about the logged in user and returns the updated user model.
       operationId: updateUser
       tags:
         - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateUser"
       responses:
         200:
-          description: OK. User has been updated and returns user information.
+          description: User has been updated and returns user information.
           content:
             application/json:
               schema:
@@ -111,7 +117,7 @@ paths:
         - workouts
       responses:
         200:
-          description: OK. Lists all workouts.
+          description: Lists all workouts.
           content:
             application/json:
               schema:
@@ -129,13 +135,49 @@ paths:
               $ref: "#/components/schemas/workout"
       responses:
         201:
-          description: Created. Creates a new workout and returns it.
+          description: Creates a new workout and returns it.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/workout"
         409:
-          description: Conflict. Resource with same unique identity already exists.
+          description: Resource with same unique identity already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        422:
+          description: Unprocessable entity. Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    patch:
+      summary: Update an existing workout.
+      operationId: updateWorkout
+      tags:
+        - workouts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateWorkout"
+      responses:
+        200:
+          description: Updates the workout and returns it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workout"
+        409:
+          description: Resource with same unique identity already exists.
           content:
             application/json:
               schema:
@@ -167,7 +209,7 @@ paths:
             type: string
       responses:
         200:
-          description: OK. Returns workout with {id}.
+          description: Returns workout with {id}.
           content:
             application/json:
               schema:
@@ -179,7 +221,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/error"
         404:
-          description: Not found. Could not find the workout with {id}.
+          description: Could not find the workout with {id}.
           content:
             application/json:
               schema:
@@ -204,7 +246,7 @@ paths:
               $ref: "#/components/schemas/workoutScore"
       responses:
         200:
-          description: OK. Returns workout score.
+          description: Returns workout score.
           content:
             application/json:
               schema:
@@ -216,7 +258,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/error"
         404:
-          description: Not found. Could not find the workout with {id}.
+          description: Could not find the workout with {id}.
           content:
             application/json:
               schema:
@@ -229,7 +271,7 @@ paths:
         - movements
       responses:
         200:
-          description: OK. Lists all movements.
+          description: Lists all movements.
           content:
             application/json:
               schema:
@@ -247,13 +289,49 @@ paths:
               $ref: "#/components/schemas/movement"
       responses:
         201:
-          description: Created. Creates a new movement and returns it.
+          description: Creates a new movement and returns it.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/movement"
         409:
-          description: Conflict. Resource with same unique identity already exists.
+          description: Resource with same unique identity already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        422:
+          description: Unprocessable entity. Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    post:
+      summary: Updates an existing movement.
+      operationId: updateMovement
+      tags:
+        - movements
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateMovement"
+      responses:
+        200:
+          description: Updates the movement and returns it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/movement"
+        409:
+          description: Resource with same unique identity already exists.
           content:
             application/json:
               schema:
@@ -285,7 +363,7 @@ paths:
             type: string
       responses:
         200:
-          description: OK. Returns movement with {id}.
+          description: Returns movement with {id}.
           content:
             application/json:
               schema:
@@ -297,7 +375,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/error"
         404:
-          description: Not found. Could not find the movement with {id}.
+          description: Could not find the movement with {id}.
           content:
             application/json:
               schema:
@@ -322,7 +400,7 @@ paths:
               $ref: "#/components/schemas/movementScore"
       responses:
         200:
-          description: OK. Returns movement score.
+          description: Returns movement score.
           content:
             application/json:
               schema:
@@ -334,7 +412,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/error"
         404:
-          description: Not found. Could not find the movement with {id}.
+          description: Could not find the movement with {id}.
           content:
             application/json:
               schema:
@@ -362,6 +440,30 @@ components:
         last_name:
           type: string
         email:
+          type: string
+        password:
+          type: string
+          description: Hash of the password.
+        box_name:
+          type: string
+          description: The box name, if the user associates with one.
+        height:
+          type: number
+        weight:
+          type: number
+        date_of_birth:
+          type: string
+          format: yyyy-mm-dd
+        avatar_url:
+          type: string
+          description: An image that the user adds to his account.
+    updateUser:
+      type: object
+      description: The update user model.
+      properties:
+        first_name:
+          type: string
+        last_name:
           type: string
         password:
           type: string
@@ -417,6 +519,16 @@ components:
           type: string
           format: date
           readOnly: true
+    updateWorkout:
+      type: object
+      description: The workout update model.
+      properties:
+        name:
+          type: string
+          description: The name of this workout.
+        description:
+          type: string
+          description: Description of the workout.
     workoutScore:
       type: object
       description: Score for a workout.
@@ -478,6 +590,16 @@ components:
           type: string
           format: date
           readOnly: true
+    updateMovement:
+      type: object
+      description: The movement update model.
+      properties:
+        name:
+          type: string
+          description: The name of this movement.
+        description:
+          type: string
+          description: Description of the workout.
     movementScore:
       type: object
       description: Score for a movement.

@@ -217,6 +217,185 @@ describe("/v1/workouts", () => {
     });
   });
 
+  describe("updating workouts", () => {
+    it("should be able to workout name and description", async (done) => {
+      const wrongDesc = "21-15-9 Truster (42.5kg / 30kg) / Push ups";
+      const correctDesc = "21-15-9 Thruster (42.5kg / 30kg) / Pull ups";
+      const wod = {
+        name: "Fran",
+        measurement: "time",
+        description: wrongDesc,
+      };
+
+      try {
+        const res1: WorkoutResponse = await request.post("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: wod,
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("workout_id");
+        const workoutId = res1.body.workout_id;
+        expect(res1.body).toHaveProperty("name", wod.name);
+        expect(res1.body).toHaveProperty("description", wod.description);
+        expect(res1.body).toHaveProperty("measurement", wod.measurement);
+        expect(res1.body).toHaveProperty("global", false);
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
+
+        const res2: WorkoutResponse = await request.get(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.OK);
+        expect(res2.body).toHaveProperty("workout_id");
+        expect(res2.body).toHaveProperty("name", wod.name);
+        expect(res2.body).toHaveProperty("description", wrongDesc);
+        expect(res2.body).toHaveProperty("measurement", wod.measurement);
+        expect(res2.body).toHaveProperty("global", false);
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
+        expect(res2.body.created_at).toEqual(res2.body.updated_at);
+
+        const res3: WorkoutResponse = await request.patch(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              name: "Fran!",
+              description: correctDesc,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.OK);
+        expect(res3.body).toHaveProperty("workout_id");
+        expect(res3.body).toHaveProperty("name", "Fran!");
+        expect(res3.body).toHaveProperty("description", correctDesc);
+        expect(res3.body).toHaveProperty("measurement", wod.measurement);
+        expect(res3.body).toHaveProperty("global", false);
+        expect(res3.body).toHaveProperty("created_at");
+        expect(res3.body).toHaveProperty("updated_at");
+        expect(res3.body.created_at).not.toEqual(res3.body.updated_at);
+
+        const res4: WorkoutResponse = await request.get(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.OK);
+        expect(res4.body).toHaveProperty("workout_id");
+        expect(res4.body).toHaveProperty("name", "Fran!");
+        expect(res4.body).toHaveProperty("description", correctDesc);
+        expect(res4.body).toHaveProperty("measurement", wod.measurement);
+        expect(res4.body).toHaveProperty("global", false);
+        expect(res4.body).toHaveProperty("created_at");
+        expect(res4.body).toHaveProperty("updated_at");
+        expect(res4.body.created_at).not.toEqual(res4.body.updated_at);
+
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+
+    it("should get 409 Conflict if you set to a name that already exists", async (done) => {
+      const wod = {
+        name: "Fran",
+        measurement: "time",
+        description: "21-15-9 Thruster (42.5kg / 30kg) / Pull ups",
+      };
+
+      try {
+        const res1: WorkoutResponse = await request.post("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: wod,
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("workout_id");
+        const workoutId = res1.body.workout_id;
+        expect(res1.body).toHaveProperty("name", wod.name);
+        expect(res1.body).toHaveProperty("description", wod.description);
+        expect(res1.body).toHaveProperty("measurement", wod.measurement);
+
+        const res2: WorkoutResponse = await request.post("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: {
+            ...wod,
+            name: "Fran!",
+          },
+        });
+
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        expect(res2.body).toHaveProperty("name", "Fran!");
+
+        const res3: WorkoutResponse = await request.patch(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              name: "Fran",
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.CONFLICT);
+
+        const res4: WorkoutResponse = await request.get(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.OK);
+        expect(res4.body).toHaveProperty("name", "Fran");
+
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+  });
+
   describe("workout scores", () => {
     it("should create a new workout and add scores to it", async (done) => {
       const wod = {

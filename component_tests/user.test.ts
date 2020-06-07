@@ -22,7 +22,7 @@ describe("/users", () => {
     });
   });
 
-  beforeEach(async () => {
+  afterEach(async () => {
     const db = mongoClient.db();
     const coll = db.collection("users");
     await coll.deleteMany({});

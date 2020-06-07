@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use crate::models::movement::{CreateMovement, MovementModel};
+use crate::models::movement::{CreateMovement, MovementModel, UpdateMovement};
 use crate::utils::Config;
 
 use bson::{doc, from_bson, Bson};
@@ -164,5 +164,63 @@ impl MovementRepository {
                 }
             }
         }
+    }
+
+    pub async fn update_movement(
+        &self,
+        user_id: String,
+        movement_id: String,
+        movement_update: UpdateMovement,
+    ) -> Result<MovementModel, AppError> {
+        let existing_movement = self
+            .find_movement_by_id(user_id.to_owned(), movement_id.to_owned())
+            .await?;
+
+        if existing_movement.is_none() {
+            return Err(AppError::NotFound("Movement not found".to_owned()));
+        }
+
+        let existing_movement = existing_movement.unwrap();
+
+        let new_name = movement_update.name.unwrap_or(existing_movement.name);
+
+        // Check if there exists a movement with the new name
+        let conflicting_movement = self
+            .find_movement_by_name(user_id.to_owned(), new_name.to_owned())
+            .await?;
+
+        if conflicting_movement.is_some() {
+            return Err(AppError::Conflict(
+                "Movement with this name already exists".to_owned(),
+            ));
+        }
+
+        let now = Utc::now().to_rfc3339();
+        let movement_doc = doc! {
+            "movement_id": existing_movement.movement_id,
+            "user_id": user_id.to_owned(),
+            "name": new_name,
+            "measurement": existing_movement.measurement,
+            "global": existing_movement.global,
+            "created_at": existing_movement.created_at,
+            "updated_at": now.to_owned(),
+        };
+
+        let coll = self.get_movement_collection();
+        coll.update_one(
+            doc! { "movement_id": movement_id.to_owned() },
+            movement_doc,
+            None,
+        )
+        .await
+        .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
+
+        let model = self
+            .find_movement_by_id(user_id, movement_id)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))?
+            .unwrap();
+
+        Ok(model)
     }
 }

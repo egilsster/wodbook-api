@@ -1,11 +1,11 @@
 use crate::errors::AppError;
 use crate::models::user::Claims;
 use crate::models::workout::{
-    CreateWorkout, CreateWorkoutScore, ManyWorkoutsResponse, WorkoutResponse,
+    CreateWorkout, CreateWorkoutScore, ManyWorkoutsResponse, UpdateWorkout, WorkoutResponse,
 };
 use crate::repositories::workout_repository::{WorkoutRepository, WorkoutScoreRepository};
 use crate::utils::AppState;
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};
 
 #[get("/")]
@@ -43,6 +43,30 @@ async fn create_workout(
         .await;
 
     result.map(|workout| HttpResponse::Created().json(workout))
+}
+
+#[patch("/{id}")]
+async fn update_workout(
+    state: web::Data<AppState>,
+    info: web::Path<String>,
+    claims: Claims,
+    workout: web::Json<UpdateWorkout>,
+) -> Result<impl Responder, AppError> {
+    let workout_id = info.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("PATCH /workouts/{}", workout_id.to_owned())));
+    info!(logger, "Creating a new workout");
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let user_id = claims.user_id.to_owned();
+    let result = workout_repo
+        .update_workout(user_id, workout_id, workout.into_inner())
+        .await;
+
+    result.map(|workout| HttpResponse::Ok().json(workout))
 }
 
 #[get("/{id}")]
@@ -107,6 +131,7 @@ async fn create_workout_score(
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_workouts);
     cfg.service(create_workout);
+    cfg.service(update_workout);
     cfg.service(get_workout_by_id);
     cfg.service(create_workout_score);
 }

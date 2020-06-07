@@ -64,6 +64,12 @@ pub struct CreateWorkout {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateWorkout {
+    pub name: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkoutScore {
     pub score: String,
     pub rx: bool,

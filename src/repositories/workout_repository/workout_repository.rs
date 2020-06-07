@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use crate::models::workout::{CreateWorkout, WorkoutModel};
+use crate::models::workout::{CreateWorkout, UpdateWorkout, WorkoutModel};
 use crate::utils::Config;
 
 use bson::{doc, from_bson, Bson};
@@ -178,5 +178,67 @@ impl WorkoutRepository {
                 }
             }
         }
+    }
+
+    pub async fn update_workout(
+        &self,
+        user_id: String,
+        workout_id: String,
+        workout_update: UpdateWorkout,
+    ) -> Result<WorkoutModel, AppError> {
+        let existing_workout = self
+            .find_workout_by_id(user_id.to_owned(), workout_id.to_owned())
+            .await?;
+
+        if existing_workout.is_none() {
+            return Err(AppError::NotFound("Workout not found".to_owned()));
+        }
+
+        let existing_workout = existing_workout.unwrap();
+
+        let new_name = workout_update.name.unwrap_or(existing_workout.name);
+        let new_desc = workout_update
+            .description
+            .unwrap_or(existing_workout.description);
+
+        // Check if there exists a workout with the new name
+        let conflicting_workout = self
+            .find_workout_by_name(user_id.to_owned(), new_name.to_owned())
+            .await?;
+
+        if conflicting_workout.is_some() {
+            return Err(AppError::Conflict(
+                "Workout with this name already exists".to_owned(),
+            ));
+        }
+
+        let now = Utc::now().to_rfc3339();
+        let workout_doc = doc! {
+            "workout_id": existing_workout.workout_id,
+            "user_id": user_id.to_owned(),
+            "name": new_name,
+            "description": new_desc,
+            "measurement": existing_workout.measurement,
+            "global": existing_workout.global,
+            "created_at": existing_workout.created_at,
+            "updated_at": now.to_owned(),
+        };
+
+        let coll = self.get_workout_collection();
+        coll.update_one(
+            doc! { "workout_id": workout_id.to_owned() },
+            workout_doc,
+            None,
+        )
+        .await
+        .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
+
+        let model = self
+            .find_workout_by_id(user_id, workout_id)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))?
+            .unwrap();
+
+        Ok(model)
     }
 }
