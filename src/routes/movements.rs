@@ -3,7 +3,7 @@ use crate::models::movement::{
     CreateMovement, CreateMovementScore, ManyMovementsResponse, MovementResponse, UpdateMovement,
 };
 use crate::models::user::Claims;
-use crate::repositories::movement_repository::{MovementRepository, MovementScoreRepository};
+use crate::repositories::{MovementRepository, MovementScoreRepository};
 use crate::utils::AppState;
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};
