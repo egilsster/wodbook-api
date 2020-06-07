@@ -5,8 +5,8 @@ on:
     paths:
       - "Cargo.toml"
       - "Cargo.lock"
-    schedule:
-      - cron: "0 4 * * *" # “At 04:00.” (https://crontab.guru/#0_4_*_*_*)
+  schedule:
+    - cron: "0 4 * * *" # “At 04:00.” (https://crontab.guru/#0_4_*_*_*)
 
 jobs:
   security-audit:
