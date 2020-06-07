@@ -223,4 +223,25 @@ impl MovementRepository {
 
         Ok(model)
     }
+
+    pub async fn delete_movement(
+        &self,
+        user_id: String,
+        movement_id: String,
+    ) -> Result<(), AppError> {
+        let movement = self
+            .find_movement_by_id(user_id.to_owned(), movement_id.to_owned())
+            .await?;
+
+        if movement.is_none() {
+            return Err(AppError::NotFound("Movement does not exist".to_owned()));
+        }
+
+        let coll = self.get_movement_collection();
+        coll.delete_one(doc! { "movement_id": movement_id.to_owned() }, None)
+            .await
+            .map_err(|_| AppError::Internal("Movement could not be deleted".to_owned()))?;
+
+        Ok(())
+    }
 }

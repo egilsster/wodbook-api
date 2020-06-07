@@ -241,4 +241,25 @@ impl WorkoutRepository {
 
         Ok(model)
     }
+
+    pub async fn delete_workout(
+        &self,
+        user_id: String,
+        workout_id: String,
+    ) -> Result<(), AppError> {
+        let workout = self
+            .find_workout_by_id(user_id.to_owned(), workout_id.to_owned())
+            .await?;
+
+        if workout.is_none() {
+            return Err(AppError::NotFound("Workout does not exist".to_owned()));
+        }
+
+        let coll = self.get_workout_collection();
+        coll.delete_one(doc! { "workout_id": workout_id.to_owned() }, None)
+            .await
+            .map_err(|_| AppError::Internal("Workout could not be deleted".to_owned()))?;
+
+        Ok(())
+    }
 }

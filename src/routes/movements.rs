@@ -5,7 +5,7 @@ use crate::models::movement::{
 use crate::models::user::Claims;
 use crate::repositories::movement_repository::{MovementRepository, MovementScoreRepository};
 use crate::utils::AppState;
-use actix_web::{get, patch, post, web, HttpResponse, Responder};
+use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};
 
 #[get("/")]
@@ -67,6 +67,27 @@ async fn update_movement(
         .await;
 
     result.map(|movement| HttpResponse::Ok().json(movement))
+}
+
+#[delete("/{id}")]
+async fn delete_movement(
+    state: web::Data<AppState>,
+    info: web::Path<String>,
+    claims: Claims,
+) -> Result<impl Responder, AppError> {
+    let movement_id = info.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("DELETE /movements/{}", movement_id.to_owned())));
+    info!(logger, "Creating a new movement");
+    let movement_repo = MovementRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let user_id = claims.user_id.to_owned();
+    let result = movement_repo.delete_movement(user_id, movement_id).await;
+
+    result.map(|_| HttpResponse::NoContent())
 }
 
 #[get("/{id}")]
@@ -132,6 +153,7 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_movements);
     cfg.service(create_movement);
     cfg.service(update_movement);
+    cfg.service(delete_movement);
     cfg.service(get_movement_by_id);
     cfg.service(create_movement_score);
 }
