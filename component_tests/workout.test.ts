@@ -396,6 +396,74 @@ describe("/v1/workouts", () => {
     });
   });
 
+  describe("deleting workouts", () => {
+    it("should delete a workout", async (done) => {
+      const wod = {
+        name: "Fran",
+        measurement: "time",
+        description: "21-15-9 Thruster (42.5kg / 30kg) / Pull ups",
+      };
+
+      try {
+        const res1: WorkoutResponse = await request.post("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: wod,
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("workout_id");
+        const workoutId = res1.body.workout_id;
+
+        const res2: WorkoutResponse = await request.get(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.OK);
+
+        const res3: DeleteResponse = await request.delete(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.NO_CONTENT);
+
+        const res4: WorkoutResponse = await request.get(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.NOT_FOUND);
+
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+  });
+
   describe("workout scores", () => {
     it("should create a new workout and add scores to it", async (done) => {
       const wod = {

@@ -365,6 +365,73 @@ describe("/v1/movements/", () => {
     });
   });
 
+  describe("deleting movements", () => {
+    it("should delete a movement", async (done) => {
+      const movement = {
+        name: "Snatch",
+        measurement: "weight",
+      };
+
+      try {
+        const res1: MovementResponse = await request.post("/movements/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: movement,
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        const movementId = res1.body.movement_id;
+
+        const res2: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.OK);
+
+        const res3: DeleteResponse = await request.delete(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.NO_CONTENT);
+
+        const res4: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.NOT_FOUND);
+
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+  });
+
   describe("movement scores", () => {
     it("should create a new movement and add a score for it", async (done) => {
       const movement = {

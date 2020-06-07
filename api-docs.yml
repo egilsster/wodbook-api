@@ -158,42 +158,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-    patch:
-      summary: Update an existing workout.
-      operationId: updateWorkout
-      tags:
-        - workouts
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/updateWorkout"
-      responses:
-        200:
-          description: Updates the workout and returns it.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/workout"
-        409:
-          description: Resource with same unique identity already exists.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error"
-        422:
-          description: Unprocessable entity. Validation error.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error"
-        default:
-          description: Unexpected error.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error"
   /workouts/{id}:
     get:
       summary: Returns a specific workout.
@@ -222,6 +186,82 @@ paths:
                 $ref: "#/components/schemas/error"
         404:
           description: Could not find the workout with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    patch:
+      summary: Update an existing workout.
+      operationId: updateWorkout
+      tags:
+        - workouts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workout identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateWorkout"
+      responses:
+        200:
+          description: Updates the workout and returns it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/workout"
+        404:
+          description: Workout not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        409:
+          description: Resource with same unique identity already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        422:
+          description: Unprocessable entity. Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    delete:
+      summary: Deletes an existing workout.
+      operationId: deleteWorkout
+      tags:
+        - workouts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workout identifier
+          schema:
+            type: string
+      responses:
+        204:
+          description: Workout deleted.
+        404:
+          description: Workout not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
           content:
             application/json:
               schema:
@@ -312,11 +352,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
+  /movements/{id}:
+    get:
+      summary: Returns a specific movement.
+      operationId: getMovementById
+      tags:
+        - movements
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Movement identifier
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/movement"
+        403:
+          description: Forbidden. User is not authorized to read movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        404:
+          description: Could not find the movement with {id}.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
     patch:
       summary: Updates an existing movement.
       operationId: updateMovement
       tags:
         - movements
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Movement identifier
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -348,10 +427,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-  /movements/{id}:
-    get:
-      summary: Returns a specific movement.
-      operationId: getMovementById
+    delete:
+      summary: Deletes an existing movement.
+      operationId: deleteMovement
       tags:
         - movements
       parameters:
@@ -362,20 +440,16 @@ paths:
           schema:
             type: string
       responses:
-        200:
-          description: Returns movement with {id}.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/movement"
-        403:
-          description: Forbidden. User is not authorized to read movement with {id}.
+        204:
+          description: Movement deleted.
+        404:
+          description: Movement not found.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
-          description: Could not find the movement with {id}.
+        default:
+          description: Unexpected error.
           content:
             application/json:
               schema:
