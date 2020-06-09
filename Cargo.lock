@@ -464,6 +464,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "bson"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95cba0c807bb47ef40cce9c699e74ecd2aa77ae5ab838e0a645c58569495e406"
+dependencies = [
+ "base64 0.12.1",
+ "byteorder",
+ "chrono",
+ "hex 0.3.2",
+ "libc",
+ "linked-hash-map 0.5.3",
+ "md5",
+ "rand 0.7.3",
+ "serde 1.0.111",
+ "serde_json",
+ "time",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1357,14 +1376,14 @@ dependencies = [
 
 [[package]]
 name = "mongodb"
-version = "0.11.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d08b7d005c47d9ffff2c3864e562bb448c7cfe37072b38264fd7c7477b9517da"
+checksum = "ebc1d76122e3038a8bffe7fcb45a882f464d53517ba71139dc9f42a97cd39f77"
 dependencies = [
  "async-trait",
  "base64 0.11.0",
  "bitflags",
- "bson",
+ "bson 1.0.0",
  "chrono",
  "derivative",
  "err-derive",
@@ -2756,7 +2775,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "actix-web",
- "bson",
+ "bson 0.15.0",
  "chrono",
  "config",
  "derive_more 0.99.7",
