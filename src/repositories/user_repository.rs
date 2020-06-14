@@ -44,7 +44,7 @@ impl UserRepository {
         let existing_user = self.find_user_with_email(email.to_owned()).await?.unwrap();
 
         let new_password = if user.password.is_some() {
-            resources::create_hash(user.password.unwrap())
+            resources::create_hash(&user.password.unwrap())
         } else {
             existing_user.password
         };
@@ -102,7 +102,7 @@ impl UserRepository {
             .unwrap();
         match user_doc {
             Some(x) => {
-                if x.password == resources::create_hash(user.password) {
+                if x.password == resources::create_hash(&user.password) {
                     // JWT
                     let config = Config::from_env().unwrap();
                     let key = config.auth.secret.as_bytes();
@@ -149,7 +149,7 @@ impl UserRepository {
             )),
             None => {
                 let coll = self.get_collection();
-                let hash_pw = resources::create_hash(user.password);
+                let hash_pw = resources::create_hash(&user.password);
                 let id = uuid::Uuid::new_v4().to_string();
                 let user_doc = doc! {
                     "user_id": id,
