@@ -19,7 +19,7 @@ async fn get_workouts(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let result = workout_repo.get_workouts(user_id).await;
 
     result.map(|workouts| HttpResponse::Ok().json(ManyWorkoutsResponse { data: workouts }))
@@ -37,7 +37,7 @@ async fn create_workout(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let result = workout_repo
         .create_workout(user_id, workout.into_inner())
         .await;
@@ -52,18 +52,18 @@ async fn update_workout(
     claims: Claims,
     workout: web::Json<UpdateWorkout>,
 ) -> Result<impl Responder, AppError> {
-    let workout_id = info.to_owned();
+    let workout_id = info;
     let logger = state
         .logger
-        .new(o!("handler" => format!("PATCH /workouts/{}", workout_id.to_owned())));
+        .new(o!("handler" => format!("PATCH /workouts/{}", workout_id)));
     info!(logger, "Creating a new workout");
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let result = workout_repo
-        .update_workout(user_id, workout_id, workout.into_inner())
+        .update_workout(user_id, &workout_id, workout.into_inner())
         .await;
 
     result.map(|workout| HttpResponse::Ok().json(workout))
@@ -75,17 +75,17 @@ async fn delete_workout(
     info: web::Path<String>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let workout_id = info.to_owned();
+    let workout_id = info;
     let logger = state
         .logger
-        .new(o!("handler" => format!("DELETE /workouts/{}", workout_id.to_owned())));
+        .new(o!("handler" => format!("DELETE /workouts/{}", workout_id)));
     info!(logger, "Creating a new workout");
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
-    let result = workout_repo.delete_workout(user_id, workout_id).await;
+    let user_id = claims.user_id.as_ref();
+    let result = workout_repo.delete_workout(user_id, &workout_id).await;
 
     result.map(|_| HttpResponse::NoContent())
 }
@@ -96,10 +96,10 @@ async fn get_workout_by_id(
     info: web::Path<String>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let workout_id = info.to_owned();
+    let workout_id = info;
     let logger = state
         .logger
-        .new(o!("handler" => format!("GET /workouts/{}", workout_id.to_owned())));
+        .new(o!("handler" => format!("GET /workouts/{}", workout_id)));
     info!(logger, "Getting workout by id");
 
     let workout_repo = WorkoutRepository {
@@ -109,13 +109,9 @@ async fn get_workout_by_id(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
-    let workout_result = workout_repo
-        .get_workout_by_id(user_id.to_owned(), workout_id.to_owned())
-        .await;
-    let scores_result = score_repo
-        .get_workout_scores(user_id.to_owned(), workout_id.to_owned())
-        .await;
+    let user_id = claims.user_id.as_ref();
+    let workout_result = workout_repo.get_workout_by_id(user_id, &workout_id).await;
+    let scores_result = score_repo.get_workout_scores(user_id, &workout_id).await;
 
     workout_result.map(|workout| {
         scores_result
@@ -130,20 +126,19 @@ async fn create_workout_score(
     claims: Claims,
     workout_score: web::Json<CreateWorkoutScore>,
 ) -> Result<impl Responder, AppError> {
-    let workout_id = info.to_owned();
+    let workout_id = info;
     let logger = state
         .logger
-        .new(o!("handler" => format!("POST /workouts/{}", workout_id.to_owned())));
+        .new(o!("handler" => format!("POST /workouts/{}", workout_id)));
     info!(logger, "Creating workout score");
 
     let score_repo = WorkoutScoreRepository {
         mongo_client: state.mongo_client.clone(),
     };
 
-    let workout_id = info.to_owned();
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id;
     let scores_result = score_repo
-        .create_workout_score(user_id, workout_id, workout_score.into_inner())
+        .create_workout_score(&user_id, &workout_id, workout_score.into_inner())
         .await;
 
     scores_result.map(|score| HttpResponse::Created().json(score))
