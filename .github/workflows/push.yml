@@ -65,13 +65,10 @@ jobs:
         uses: actions-rs/tarpaulin@v0.1
         env:
           CARGO_INCREMENTAL: 0
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
         with:
           version: 0.13.3
-          args: --all -- --test-threads 1
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1.0.2
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
+          args: --all --ciserver github-ci --coveralls $COVERALLS_REPO_TOKEN -- --test-threads 1
       - name: Archive code coverage results
         uses: actions/upload-artifact@v1
         with:
