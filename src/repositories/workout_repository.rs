@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::models::workout::{CreateWorkout, UpdateWorkout, WorkoutModel};
-use crate::utils::Config;
+use crate::utils::{query_utils, Config};
 
 use bson::{doc, from_bson, Bson};
 use chrono::Utc;
@@ -38,13 +38,13 @@ impl WorkoutRepository {
 
     pub async fn find_workout_by_name(
         &self,
-        user_id: String,
-        name: String,
+        user_id: &str,
+        name: &str,
     ) -> Result<Option<WorkoutModel>, AppError> {
-        let filter = doc! { "$or": [ { "user_id": user_id, "name": name }, { "global": true } ] };
+        let query = query_utils::for_one(doc! {"name": name }, user_id);
         let cursor = self
             .get_workout_collection()
-            .find_one(filter, None)
+            .find_one(query, None)
             .await
             .unwrap();
 
@@ -59,13 +59,13 @@ impl WorkoutRepository {
 
     pub async fn find_workout_by_id(
         &self,
-        user_id: String,
-        workout_id: String,
+        user_id: &str,
+        workout_id: &str,
     ) -> Result<Option<WorkoutModel>, AppError> {
-        let filter = doc! { "$or": [ { "workout_id": workout_id, "user_id": user_id }, { "global": true } ] };
+        let query = query_utils::for_one(doc! {"workout_id": workout_id }, user_id);
         let cursor = self
             .get_workout_collection()
-            .find_one(filter, None)
+            .find_one(query, None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -78,12 +78,12 @@ impl WorkoutRepository {
         }
     }
 
-    pub async fn get_workouts(&self, user_id: String) -> Result<Vec<WorkoutModel>, AppError> {
-        let filter = doc! { "$or": [ { "user_id": user_id }, { "global": true } ] };
+    pub async fn get_workouts(&self, user_id: &str) -> Result<Vec<WorkoutModel>, AppError> {
+        let query = query_utils::for_many(user_id);
         let find_options = FindOptions::builder().sort(doc! { "name": 1 }).build();
         let mut cursor = self
             .get_workout_collection()
-            .find(filter, find_options)
+            .find(query, find_options)
             .await
             .unwrap();
 
@@ -107,13 +107,10 @@ impl WorkoutRepository {
 
     pub async fn get_workout_by_id(
         &self,
-        user_id: String,
-        workout_id: String,
+        user_id: &str,
+        workout_id: &str,
     ) -> Result<WorkoutModel, AppError> {
-        let workout = self
-            .find_workout_by_id(user_id.to_owned(), workout_id)
-            .await
-            .unwrap();
+        let workout = self.find_workout_by_id(user_id, workout_id).await.unwrap();
 
         match workout {
             Some(_) => Ok(workout.unwrap()),
@@ -125,7 +122,7 @@ impl WorkoutRepository {
 
     pub async fn create_workout(
         &self,
-        user_id: String,
+        user_id: &str,
         workout: CreateWorkout,
     ) -> Result<WorkoutModel, AppError> {
         let measurement = workout.measurement.to_owned();
@@ -136,9 +133,9 @@ impl WorkoutRepository {
             )));
         }
 
-        let workout_name = workout.name.to_string();
+        let workout_name = workout.name.as_ref();
         let _exist = self
-            .find_workout_by_name(user_id.to_owned(), workout_name.to_owned())
+            .find_workout_by_name(user_id, workout_name)
             .await
             .unwrap();
         match _exist {
@@ -153,7 +150,7 @@ impl WorkoutRepository {
                 let workout_doc = doc! {
                     "workout_id": id,
                     "user_id": user_id.to_owned(),
-                    "name": workout.name,
+                    "name": workout.name.to_owned(),
                     "description": workout.description,
                     "measurement": workout.measurement,
                     "global": workout.global,
@@ -164,7 +161,7 @@ impl WorkoutRepository {
                 match coll.insert_one(workout_doc, None).await {
                     Ok(_) => {
                         match self
-                            .find_workout_by_name(user_id.to_owned(), workout_name.to_owned())
+                            .find_workout_by_name(user_id, workout_name)
                             .await
                             .unwrap()
                         {
@@ -182,13 +179,11 @@ impl WorkoutRepository {
 
     pub async fn update_workout(
         &self,
-        user_id: String,
-        workout_id: String,
+        user_id: &str,
+        workout_id: &str,
         workout_update: UpdateWorkout,
     ) -> Result<WorkoutModel, AppError> {
-        let existing_workout = self
-            .find_workout_by_id(user_id.to_owned(), workout_id.to_owned())
-            .await?;
+        let existing_workout = self.find_workout_by_id(user_id, workout_id).await?;
 
         if existing_workout.is_none() {
             return Err(AppError::NotFound("Workout not found".to_owned()));
@@ -202,9 +197,7 @@ impl WorkoutRepository {
             .unwrap_or(existing_workout.description);
 
         // Check if there exists a workout with the new name
-        let conflicting_workout = self
-            .find_workout_by_name(user_id.to_owned(), new_name.to_owned())
-            .await?;
+        let conflicting_workout = self.find_workout_by_name(user_id, &new_name).await?;
 
         if conflicting_workout.is_some() {
             return Err(AppError::Conflict(
@@ -242,14 +235,8 @@ impl WorkoutRepository {
         Ok(model)
     }
 
-    pub async fn delete_workout(
-        &self,
-        user_id: String,
-        workout_id: String,
-    ) -> Result<(), AppError> {
-        let workout = self
-            .find_workout_by_id(user_id.to_owned(), workout_id.to_owned())
-            .await?;
+    pub async fn delete_workout(&self, user_id: &str, workout_id: &str) -> Result<(), AppError> {
+        let workout = self.find_workout_by_id(user_id, workout_id).await?;
 
         if workout.is_none() {
             return Err(AppError::NotFound("Workout does not exist".to_owned()));

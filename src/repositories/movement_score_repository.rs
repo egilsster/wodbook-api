@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::models::movement::{CreateMovementScore, MovementScoreResponse};
-use crate::utils::Config;
+use crate::utils::{query_utils, Config};
 
 use bson::{doc, from_bson, Bson};
 use chrono::Utc;
@@ -25,8 +25,8 @@ impl MovementScoreRepository {
 
     pub async fn create_movement_score(
         &self,
-        user_id: String,
-        movement_id: String,
+        user_id: &str,
+        movement_id: &str,
         movement_score: CreateMovementScore,
     ) -> Result<MovementScoreResponse, AppError> {
         let coll = self.get_score_collection();
@@ -50,23 +50,26 @@ impl MovementScoreRepository {
             .await
             .map_err(|err| AppError::Internal(err.to_string()));
 
-        self.get_movement_score_by_id(user_id.to_owned(), movement_id.to_owned(), id.to_owned())
+        self.get_movement_score_by_id(user_id, movement_id, &id)
             .await
             .map_err(|_| AppError::Internal("Score not found after inserting".to_string()))
     }
 
     pub async fn get_movement_scores(
         &self,
-        user_id: String,
-        movement_id: String,
+        user_id: &str,
+        movement_id: &str,
     ) -> Result<Vec<MovementScoreResponse>, AppError> {
-        let filter = doc! { "user_id": user_id, "movement_id": movement_id };
+        let query = query_utils::for_many_with_filter(
+            doc! { "user_id": user_id, "movement_id": movement_id },
+            user_id,
+        );
         let find_options = FindOptions::builder()
             .sort(doc! { "created_at": 1 })
             .build();
         let mut cursor = self
             .get_score_collection()
-            .find(filter, find_options)
+            .find(query, find_options)
             .await
             .unwrap();
 
@@ -91,14 +94,17 @@ impl MovementScoreRepository {
 
     pub async fn get_movement_score_by_id(
         &self,
-        user_id: String,
-        movement_id: String,
-        movement_score_id: String,
+        user_id: &str,
+        movement_id: &str,
+        movement_score_id: &str,
     ) -> Result<MovementScoreResponse, AppError> {
-        let filter = doc! { "user_id": user_id, "movement_id":  movement_id, "movement_score_id": movement_score_id };
+        let query = query_utils::for_one(
+            doc! { "movement_id":  movement_id, "movement_score_id": movement_score_id },
+            user_id,
+        );
         let cursor = self
             .get_score_collection()
-            .find_one(filter, None)
+            .find_one(query, None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 

@@ -84,13 +84,29 @@ describe("/v1/movements/", () => {
   });
 
   describe("creating movements", () => {
-    it("should create a new movement. This should return Created (201)", async (done) => {
+    it("should get 201 Created when creating a new movement", async (done) => {
       const movement = {
         name: "Snatch",
         measurement: "weight",
       };
 
       try {
+        const placeholder_movement = {
+          name: "A placeholder",
+          measurement: "weight",
+          global: true,
+        };
+        const res0: MovementResponse = await request.post("/movements/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: placeholder_movement,
+        });
+
+        expect(res0.statusCode).toBe(HttpStatus.CREATED);
+
         const res1: MovementResponse = await request.post("/movements/", {
           ...reqOpts,
           headers: {
@@ -128,6 +144,27 @@ describe("/v1/movements/", () => {
         expect(res2.body).toHaveProperty("updated_at");
         expect(res2.body).toHaveProperty("measurement", movement.measurement);
         expect(res2.body).toHaveProperty("name", movement.name);
+
+        const res3: ManyMovementsResponse = await request.get("/movements/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+
+        expect(res3.statusCode).toBe(HttpStatus.OK);
+        expect(res3.body).toHaveProperty("data");
+        const movements = res3.body.data;
+        expect(movements).toHaveProperty("length", 2);
+        const [movement1, movement2] = movements;
+        expect(movement1).toHaveProperty("name", placeholder_movement.name);
+        expect(movement2).toHaveProperty("movement_id");
+        expect(movement2).toHaveProperty("name", movement.name);
+        expect(movement2).toHaveProperty("measurement", movement.measurement);
+        expect(movement2).toHaveProperty("global", false);
+        expect(movement2).toHaveProperty("created_at");
+        expect(movement2).toHaveProperty("updated_at");
 
         done();
       } catch (err) {

@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::models::movement::{CreateMovement, MovementModel, UpdateMovement};
-use crate::utils::Config;
+use crate::utils::{query_utils, Config};
 
 use bson::{doc, from_bson, Bson};
 use chrono::Utc;
@@ -28,13 +28,13 @@ impl MovementRepository {
 
     pub async fn find_movement_by_name(
         &self,
-        user_id: String,
-        name: String,
+        user_id: &str,
+        name: &str,
     ) -> Result<Option<MovementModel>, AppError> {
-        let filter = doc! { "$or": [ { "user_id": user_id, "name": name }, { "global": true } ] };
+        let query = query_utils::for_one(doc! {"name": name }, user_id);
         let cursor = self
             .get_movement_collection()
-            .find_one(filter, None)
+            .find_one(query, None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -49,13 +49,13 @@ impl MovementRepository {
 
     pub async fn find_movement_by_id(
         &self,
-        user_id: String,
-        movement_id: String,
+        user_id: &str,
+        movement_id: &str,
     ) -> Result<Option<MovementModel>, AppError> {
-        let filter = doc! { "$or": [ { "movement_id": movement_id, "user_id": user_id }, { "global": true } ] };
+        let query = query_utils::for_one(doc! {"movement_id": movement_id }, user_id);
         let cursor = self
             .get_movement_collection()
-            .find_one(filter, None)
+            .find_one(query, None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -68,12 +68,12 @@ impl MovementRepository {
         }
     }
 
-    pub async fn get_movements(&self, user_id: String) -> Result<Vec<MovementModel>, AppError> {
-        let filter = doc! { "$or": [ { "user_id": user_id }, { "global": true } ] };
+    pub async fn get_movements(&self, user_id: &str) -> Result<Vec<MovementModel>, AppError> {
+        let query = query_utils::for_many(user_id);
         let find_options = FindOptions::builder().sort(doc! { "name": 1 }).build();
         let mut cursor = self
             .get_movement_collection()
-            .find(filter, find_options)
+            .find(query, find_options)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -97,11 +97,11 @@ impl MovementRepository {
 
     pub async fn get_movement_by_id(
         &self,
-        user_id: String,
-        movement_id: String,
+        user_id: &str,
+        movement_id: &str,
     ) -> Result<MovementModel, AppError> {
         let movement = self
-            .find_movement_by_id(user_id.to_owned(), movement_id)
+            .find_movement_by_id(user_id, movement_id)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -113,7 +113,7 @@ impl MovementRepository {
 
     pub async fn create_movement(
         &self,
-        user_id: String,
+        user_id: &str,
         movement: CreateMovement,
     ) -> Result<MovementModel, AppError> {
         let measurement = movement.measurement.to_owned();
@@ -124,9 +124,9 @@ impl MovementRepository {
             )));
         }
 
-        let movement_name = movement.name.to_string();
+        let movement_name = movement.name.as_ref();
         let _exist = self
-            .find_movement_by_name(user_id.to_owned(), movement_name.to_owned())
+            .find_movement_by_name(user_id, movement_name)
             .await
             .unwrap();
         match _exist {
@@ -140,7 +140,7 @@ impl MovementRepository {
                 let movement_doc = doc! {
                     "movement_id": id,
                     "user_id": user_id.to_owned(),
-                    "name": movement.name,
+                    "name": movement.name.to_owned(),
                     "measurement": movement.measurement,
                     "global": movement.global,
                     "created_at": now.to_owned(),
@@ -153,7 +153,7 @@ impl MovementRepository {
                     .map_err(|err| AppError::Internal(err.to_string()));
 
                 match self
-                    .find_movement_by_name(user_id.to_owned(), movement_name.to_owned())
+                    .find_movement_by_name(user_id, movement_name)
                     .await
                     .unwrap()
                 {
@@ -168,13 +168,11 @@ impl MovementRepository {
 
     pub async fn update_movement(
         &self,
-        user_id: String,
-        movement_id: String,
+        user_id: &str,
+        movement_id: &str,
         movement_update: UpdateMovement,
     ) -> Result<MovementModel, AppError> {
-        let existing_movement = self
-            .find_movement_by_id(user_id.to_owned(), movement_id.to_owned())
-            .await?;
+        let existing_movement = self.find_movement_by_id(user_id, movement_id).await?;
 
         if existing_movement.is_none() {
             return Err(AppError::NotFound("Movement not found".to_owned()));
@@ -185,9 +183,7 @@ impl MovementRepository {
         let new_name = movement_update.name.unwrap_or(existing_movement.name);
 
         // Check if there exists a movement with the new name
-        let conflicting_movement = self
-            .find_movement_by_name(user_id.to_owned(), new_name.to_owned())
-            .await?;
+        let conflicting_movement = self.find_movement_by_name(user_id, &new_name).await?;
 
         if conflicting_movement.is_some() {
             return Err(AppError::Conflict(
@@ -224,14 +220,8 @@ impl MovementRepository {
         Ok(model)
     }
 
-    pub async fn delete_movement(
-        &self,
-        user_id: String,
-        movement_id: String,
-    ) -> Result<(), AppError> {
-        let movement = self
-            .find_movement_by_id(user_id.to_owned(), movement_id.to_owned())
-            .await?;
+    pub async fn delete_movement(&self, user_id: &str, movement_id: &str) -> Result<(), AppError> {
+        let movement = self.find_movement_by_id(user_id, movement_id).await?;
 
         if movement.is_none() {
             return Err(AppError::NotFound("Movement does not exist".to_owned()));

@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::models::workout::{CreateWorkoutScore, WorkoutScoreResponse};
-use crate::utils::Config;
+use crate::utils::{query_utils, Config};
 
 use bson::{doc, from_bson, Bson};
 use chrono::Utc;
@@ -25,8 +25,8 @@ impl WorkoutScoreRepository {
 
     pub async fn create_workout_score(
         &self,
-        user_id: String,
-        workout_id: String,
+        user_id: &str,
+        workout_id: &str,
         workout_score: CreateWorkoutScore,
     ) -> Result<WorkoutScoreResponse, AppError> {
         let coll = self.get_score_collection();
@@ -45,11 +45,7 @@ impl WorkoutScoreRepository {
         match coll.insert_one(workout_score_doc, None).await {
             Ok(_) => {
                 match self
-                    .get_workout_score_by_id(
-                        user_id.to_owned(),
-                        workout_id.to_owned(),
-                        id.to_owned(),
-                    )
+                    .get_workout_score_by_id(user_id, workout_id, &id)
                     .await
                     .unwrap()
                 {
@@ -65,16 +61,19 @@ impl WorkoutScoreRepository {
 
     pub async fn get_workout_scores(
         &self,
-        user_id: String,
-        workout_id: String,
+        user_id: &str,
+        workout_id: &str,
     ) -> Result<Vec<WorkoutScoreResponse>, AppError> {
-        let filter = doc! { "user_id": user_id, "workout_id": workout_id };
+        let query = query_utils::for_many_with_filter(
+            doc! { "user_id": user_id, "workout_id": workout_id },
+            user_id,
+        );
         let find_options = FindOptions::builder()
             .sort(doc! { "created_at": 1 })
             .build();
         let mut cursor = self
             .get_score_collection()
-            .find(filter, find_options)
+            .find(query, find_options)
             .await
             .unwrap();
 
@@ -98,14 +97,17 @@ impl WorkoutScoreRepository {
 
     pub async fn get_workout_score_by_id(
         &self,
-        user_id: String,
-        workout_id: String,
-        workout_score_id: String,
+        user_id: &str,
+        workout_id: &str,
+        workout_score_id: &str,
     ) -> Result<Option<WorkoutScoreResponse>, AppError> {
-        let filter = doc! { "user_id": user_id, "workout_id":  workout_id, "workout_score_id": workout_score_id };
+        let query = query_utils::for_one(
+            doc! { "workout_id":  workout_id, "workout_score_id": workout_score_id },
+            user_id,
+        );
         let cursor = self
             .get_score_collection()
-            .find_one(filter, None)
+            .find_one(query, None)
             .await
             .unwrap();
 

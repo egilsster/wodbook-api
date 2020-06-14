@@ -19,7 +19,7 @@ async fn get_movements(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let result = movement_repo.get_movements(user_id).await;
 
     result.map(|movements| HttpResponse::Ok().json(ManyMovementsResponse { data: movements }))
@@ -37,7 +37,7 @@ async fn create_movement(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let result = movement_repo
         .create_movement(user_id, movement.into_inner())
         .await;
@@ -61,9 +61,9 @@ async fn update_movement(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let result = movement_repo
-        .update_movement(user_id, movement_id, movement.into_inner())
+        .update_movement(user_id, &movement_id, movement.into_inner())
         .await;
 
     result.map(|movement| HttpResponse::Ok().json(movement))
@@ -75,17 +75,17 @@ async fn delete_movement(
     info: web::Path<String>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let movement_id = info.to_owned();
+    let movement_id = info;
     let logger = state
         .logger
-        .new(o!("handler" => format!("DELETE /movements/{}", movement_id.to_owned())));
+        .new(o!("handler" => format!("DELETE /movements/{}", movement_id)));
     info!(logger, "Creating a new movement");
     let movement_repo = MovementRepository {
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
-    let result = movement_repo.delete_movement(user_id, movement_id).await;
+    let user_id = claims.user_id.as_ref();
+    let result = movement_repo.delete_movement(user_id, &movement_id).await;
 
     result.map(|_| HttpResponse::NoContent())
 }
@@ -96,10 +96,10 @@ async fn get_movement_by_id(
     info: web::Path<String>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let movement_id = info.to_owned();
+    let movement_id = info;
     let logger = state
         .logger
-        .new(o!("handler" => format!("GET /movements/{}", movement_id.to_owned())));
+        .new(o!("handler" => format!("GET /movements/{}", movement_id)));
     info!(logger, "Getting movement by id");
 
     let movement_repo = MovementRepository {
@@ -109,13 +109,11 @@ async fn get_movement_by_id(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let movement_result = movement_repo
-        .get_movement_by_id(user_id.to_owned(), movement_id.to_owned())
+        .get_movement_by_id(user_id, &movement_id)
         .await;
-    let scores_result = score_repo
-        .get_movement_scores(user_id.to_owned(), movement_id.to_owned())
-        .await;
+    let scores_result = score_repo.get_movement_scores(user_id, &movement_id).await;
 
     movement_result.map(|movement| {
         scores_result
@@ -130,20 +128,19 @@ async fn create_movement_score(
     claims: Claims,
     movement_score: web::Json<CreateMovementScore>,
 ) -> Result<impl Responder, AppError> {
-    let movement_id = info.to_owned();
+    let movement_id = info;
     let logger = state
         .logger
-        .new(o!("handler" => format!("POST /movements/{}", movement_id.to_owned())));
+        .new(o!("handler" => format!("POST /movements/{}", movement_id)));
     info!(logger, "Creating movement score");
 
     let score_repo = MovementScoreRepository {
         mongo_client: state.mongo_client.clone(),
     };
 
-    let movement_id = info.to_owned();
-    let user_id = claims.user_id.to_owned();
+    let user_id = claims.user_id.as_ref();
     let scores_result = score_repo
-        .create_movement_score(user_id, movement_id, movement_score.into_inner())
+        .create_movement_score(user_id, &movement_id, movement_score.into_inner())
         .await;
 
     scores_result.map(|score| HttpResponse::Created().json(score))

@@ -92,6 +92,23 @@ describe("/v1/workouts", () => {
       };
 
       try {
+        const placeholder_wod = {
+          name: "A placeholder",
+          measurement: "time",
+          description: "Do some work",
+          global: true,
+        };
+        const res0: WorkoutResponse = await request.post("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: placeholder_wod,
+        });
+
+        expect(res0.statusCode).toBe(HttpStatus.CREATED);
+
         const res1: WorkoutResponse = await request.post("/workouts/", {
           ...reqOpts,
           headers: {
@@ -142,15 +159,17 @@ describe("/v1/workouts", () => {
         expect(res3.statusCode).toBe(HttpStatus.OK);
         expect(res3.body).toHaveProperty("data");
         const workouts = res3.body.data;
-        expect(workouts).toHaveProperty("length");
-        const [workout1] = workouts;
-        expect(workout1).toHaveProperty("workout_id");
-        expect(workout1).toHaveProperty("name", wod.name);
-        expect(workout1).toHaveProperty("description", wod.description);
-        expect(workout1).toHaveProperty("measurement", wod.measurement);
-        expect(workout1).toHaveProperty("global", false);
-        expect(workout1).toHaveProperty("created_at");
-        expect(workout1).toHaveProperty("updated_at");
+        expect(workouts).toHaveProperty("length", 2);
+        const [workout1, workout2] = workouts;
+        expect(workout1).toHaveProperty("name", placeholder_wod.name);
+        expect(workout1).toHaveProperty("global", true);
+        expect(workout2).toHaveProperty("workout_id");
+        expect(workout2).toHaveProperty("name", wod.name);
+        expect(workout2).toHaveProperty("description", wod.description);
+        expect(workout2).toHaveProperty("measurement", wod.measurement);
+        expect(workout2).toHaveProperty("global", false);
+        expect(workout2).toHaveProperty("created_at");
+        expect(workout2).toHaveProperty("updated_at");
         done();
       } catch (err) {
         done(err);
