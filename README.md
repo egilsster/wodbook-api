@@ -1,8 +1,8 @@
 # wodbook-api
 
-![Build status](https://github.com/egilsster/wodbook-api/workflows/build/badge.svg?branch=master)
-![Audit status](https://github.com/egilsster/wodbook-api/workflows/audit/badge.svg?branch=master)
-[![Coverage Status](https://coveralls.io/repos/github/egilsster/wodbook-api/badge.svg?branch=master)](https://coveralls.io/github/egilsster/wodbook-api?branch=master)
+![Build status](https://github.com/egilsster/wodbook-api/workflows/build/badge.svg?branch=main)
+![Audit status](https://github.com/egilsster/wodbook-api/workflows/audit/badge.svg?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/egilsster/wodbook-api/badge.svg?branch=main)](https://coveralls.io/github/egilsster/wodbook-api?branch=main)
 
 Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
