@@ -25,7 +25,7 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
- "derive_more 0.99.7",
+ "derive_more 0.99.8",
  "either",
  "futures",
  "http 0.2.1",
@@ -52,7 +52,7 @@ dependencies = [
  "bytes 0.5.4",
  "chrono",
  "copyless",
- "derive_more 0.99.7",
+ "derive_more 0.99.8",
  "either",
  "encoding_rs",
  "failure",
@@ -169,7 +169,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf4082192601de5f303013709ff84d81ca6a1bc4af7fb24f367a500a23c6e84e"
 dependencies = [
- "derive_more 0.99.7",
+ "derive_more 0.99.8",
  "futures-channel",
  "lazy_static",
  "log",
@@ -188,7 +188,7 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
- "derive_more 0.99.7",
+ "derive_more 0.99.8",
  "either",
  "futures",
  "log",
@@ -232,7 +232,7 @@ dependencies = [
  "actix-web-codegen",
  "awc",
  "bytes 0.5.4",
- "derive_more 0.99.7",
+ "derive_more 0.99.8",
  "encoding_rs",
  "futures",
  "fxhash",
@@ -341,7 +341,7 @@ dependencies = [
  "actix-service",
  "base64 0.11.0",
  "bytes 0.5.4",
- "derive_more 0.99.7",
+ "derive_more 0.99.8",
  "futures-core",
  "log",
  "mime",
@@ -689,9 +689,9 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.7"
+version = "0.99.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2127768764f1556535c01b5326ef94bd60ff08dcfbdc544d53e69ed155610f5d"
+checksum = "bc655351f820d774679da6cdc23355a93de496867d8203496675162e17b1d671"
 dependencies = [
  "proc-macro2 1.0.12",
  "quote 1.0.4",
@@ -2688,7 +2688,7 @@ dependencies = [
  "chrono",
  "config",
  "data-encoding",
- "derive_more 0.99.7",
+ "derive_more 0.99.8",
  "dotenv",
  "futures",
  "jsonwebtoken",
