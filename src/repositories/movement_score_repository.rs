@@ -141,7 +141,7 @@ impl MovementScoreRepository {
     //                 "name": movement.name,
     //                 "description": movement.description,
     //                 "measurement": movement.measurement,
-    //                 "global": movement.global,
+    //                 "public": movement.public,
     //                 "created_at": now.to_owned(),
     //                 "updated_at": now.to_owned(),
     //             };

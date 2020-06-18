@@ -142,7 +142,7 @@ impl MovementRepository {
                     "user_id": user_id.to_owned(),
                     "name": movement.name.to_owned(),
                     "measurement": movement.measurement,
-                    "global": movement.global,
+                    "public": movement.public,
                     "created_at": now.to_owned(),
                     "updated_at": now.to_owned(),
                 };
@@ -197,7 +197,7 @@ impl MovementRepository {
             "user_id": user_id.to_owned(),
             "name": new_name,
             "measurement": existing_movement.measurement,
-            "global": existing_movement.global,
+            "public": existing_movement.public,
             "created_at": existing_movement.created_at,
             "updated_at": now.to_owned(),
         };

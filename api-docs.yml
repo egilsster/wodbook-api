@@ -631,9 +631,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/workoutScore"
-        global:
+        public:
           type: boolean
-          description: Whether this is for all users of bound to the creator. Known benchmarks should only be global.
+          description: Whether this is for all users of bound to the creator. Known benchmarks should only be public.
         created_at:
           type: string
           format: date
@@ -702,9 +702,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/movementScore"
-        global:
+        public:
           type: boolean
-          description: Whether this is for all users of bound to the creator.
+          description: Whether this is for all users or bound to the creator.
         created_at:
           type: string
           format: date

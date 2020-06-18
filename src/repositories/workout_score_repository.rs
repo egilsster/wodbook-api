@@ -144,7 +144,7 @@ impl WorkoutScoreRepository {
     //                 "name": workout.name,
     //                 "description": workout.description,
     //                 "measurement": workout.measurement,
-    //                 "global": workout.global,
+    //                 "public": workout.public,
     //                 "created_at": now.to_owned(),
     //                 "updated_at": now.to_owned(),
     //             };

@@ -96,7 +96,7 @@ describe("/v1/workouts", () => {
           name: "A placeholder",
           measurement: "time",
           description: "Do some work",
-          global: true,
+          public: true,
         };
         const res0: WorkoutResponse = await request.post("/workouts/", {
           ...reqOpts,
@@ -124,7 +124,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("name", wod.name);
         expect(res1.body).toHaveProperty("description", wod.description);
         expect(res1.body).toHaveProperty("measurement", wod.measurement);
-        expect(res1.body).toHaveProperty("global", false);
+        expect(res1.body).toHaveProperty("public", false);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
@@ -144,7 +144,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("name", wod.name);
         expect(res2.body).toHaveProperty("description", wod.description);
         expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("global", false);
+        expect(res2.body).toHaveProperty("public", false);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 
@@ -162,12 +162,12 @@ describe("/v1/workouts", () => {
         expect(workouts).toHaveProperty("length", 2);
         const [workout1, workout2] = workouts;
         expect(workout1).toHaveProperty("name", placeholder_wod.name);
-        expect(workout1).toHaveProperty("global", true);
+        expect(workout1).toHaveProperty("public", true);
         expect(workout2).toHaveProperty("workout_id");
         expect(workout2).toHaveProperty("name", wod.name);
         expect(workout2).toHaveProperty("description", wod.description);
         expect(workout2).toHaveProperty("measurement", wod.measurement);
-        expect(workout2).toHaveProperty("global", false);
+        expect(workout2).toHaveProperty("public", false);
         expect(workout2).toHaveProperty("created_at");
         expect(workout2).toHaveProperty("updated_at");
         done();
@@ -200,7 +200,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("name", workout.name);
         expect(res1.body).toHaveProperty("description", workout.description);
         expect(res1.body).toHaveProperty("measurement", workout.measurement);
-        expect(res1.body).toHaveProperty("global", false);
+        expect(res1.body).toHaveProperty("public", false);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
@@ -262,7 +262,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("name", wod.name);
         expect(res1.body).toHaveProperty("description", wod.description);
         expect(res1.body).toHaveProperty("measurement", wod.measurement);
-        expect(res1.body).toHaveProperty("global", false);
+        expect(res1.body).toHaveProperty("public", false);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
@@ -282,7 +282,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("name", wod.name);
         expect(res2.body).toHaveProperty("description", wrongDesc);
         expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("global", false);
+        expect(res2.body).toHaveProperty("public", false);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
         expect(res2.body.created_at).toEqual(res2.body.updated_at);
@@ -307,7 +307,7 @@ describe("/v1/workouts", () => {
         expect(res3.body).toHaveProperty("name", "Fran!");
         expect(res3.body).toHaveProperty("description", correctDesc);
         expect(res3.body).toHaveProperty("measurement", wod.measurement);
-        expect(res3.body).toHaveProperty("global", false);
+        expect(res3.body).toHaveProperty("public", false);
         expect(res3.body).toHaveProperty("created_at");
         expect(res3.body).toHaveProperty("updated_at");
         expect(res3.body.created_at).not.toEqual(res3.body.updated_at);
@@ -328,7 +328,7 @@ describe("/v1/workouts", () => {
         expect(res4.body).toHaveProperty("name", "Fran!");
         expect(res4.body).toHaveProperty("description", correctDesc);
         expect(res4.body).toHaveProperty("measurement", wod.measurement);
-        expect(res4.body).toHaveProperty("global", false);
+        expect(res4.body).toHaveProperty("public", false);
         expect(res4.body).toHaveProperty("created_at");
         expect(res4.body).toHaveProperty("updated_at");
         expect(res4.body.created_at).not.toEqual(res4.body.updated_at);
@@ -511,7 +511,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
         expect(res1.body).toHaveProperty("description", wod.description);
-        expect(res1.body).toHaveProperty("global", false);
+        expect(res1.body).toHaveProperty("public", false);
         expect(res1.body).toHaveProperty("measurement", wod.measurement);
         expect(res1.body).toHaveProperty("name", wod.name);
 
@@ -591,7 +591,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("name", wod.name);
         expect(res1.body).toHaveProperty("description", wod.description);
         expect(res1.body).toHaveProperty("measurement", wod.measurement);
-        expect(res1.body).toHaveProperty("global", false);
+        expect(res1.body).toHaveProperty("public", false);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
@@ -611,7 +611,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("name", wod.name);
         expect(res2.body).toHaveProperty("description", wod.description);
         expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("global", false);
+        expect(res2.body).toHaveProperty("public", false);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 
@@ -635,13 +635,13 @@ describe("/v1/workouts", () => {
     });
   });
 
-  describe("global workouts", () => {
-    it("should return workouts created by other users if they are marked as global", async (done) => {
+  describe("public workouts", () => {
+    it("should return workouts created by other users if they are marked as public", async (done) => {
       const wod = {
         name: "Annie",
         measurement: "time",
         description: "50-40-30-20-10 Double unders / Sit ups",
-        global: true,
+        public: true,
       };
 
       try {
@@ -660,7 +660,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("name", wod.name);
         expect(res1.body).toHaveProperty("description", wod.description);
         expect(res1.body).toHaveProperty("measurement", wod.measurement);
-        expect(res1.body).toHaveProperty("global", true);
+        expect(res1.body).toHaveProperty("public", true);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
@@ -680,7 +680,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("name", wod.name);
         expect(res2.body).toHaveProperty("description", wod.description);
         expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("global", true);
+        expect(res2.body).toHaveProperty("public", true);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 
@@ -700,7 +700,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("name", wod.name);
         expect(res2.body).toHaveProperty("description", wod.description);
         expect(res2.body).toHaveProperty("measurement", wod.measurement);
-        expect(res2.body).toHaveProperty("global", true);
+        expect(res2.body).toHaveProperty("public", true);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 

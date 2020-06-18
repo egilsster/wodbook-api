@@ -1,7 +1,7 @@
 use bson::{doc, Document};
 
 /// Creates a query that gets all documents that have
-/// the given `user_id` as well as global resources.
+/// the given `user_id` as well as public resources.
 ///
 /// ## Example
 ///
@@ -12,13 +12,13 @@ pub fn for_many(user_id: &str) -> Document {
     doc! {
         "$or": [
             { "user_id": user_id },
-            { "global": true }
+            { "public": true }
         ]
     }
 }
 
 /// Creates a query that uses the provided filter and only returns
-/// resources owned by `user_id` or global resources. The `filter`
+/// resources owned by `user_id` or public resources. The `filter`
 /// is a bson document with some additional restrictions.
 ///
 /// ## Examples
@@ -33,7 +33,7 @@ pub fn for_many_with_filter(filter: Document, user_id: &str) -> Document {
             {
                 "$or": [
                     { "user_id": user_id },
-                    { "global": true }
+                    { "public": true }
                 ]
             }
         ]
@@ -41,7 +41,7 @@ pub fn for_many_with_filter(filter: Document, user_id: &str) -> Document {
 }
 
 /// Creates a query to get a single document decided by the filter.
-/// This query can only get documents owned by `user_id` or global
+/// This query can only get documents owned by `user_id` or public
 /// documents.
 ///
 /// ## Example
@@ -56,7 +56,7 @@ pub fn for_one(filter: Document, user_id: &str) -> Document {
             {
                 "$or": [
                     { "user_id": user_id },
-                    { "global": true }
+                    { "public": true }
                 ]
             }
         ]
@@ -73,7 +73,7 @@ mod tests {
         let expected = doc! {
             "$or": [
                 { "user_id": "user_id" },
-                { "global": true }
+                { "public": true }
             ]
         };
         assert_eq!(res, expected);
@@ -89,7 +89,7 @@ mod tests {
                 {
                     "$or": [
                         { "user_id": "user_id" },
-                        { "global": true }
+                        { "public": true }
                     ]
                 }
             ]
@@ -107,7 +107,7 @@ mod tests {
             {
                 "$or": [
                     { "user_id": "user_id" },
-                    { "global": true }
+                    { "public": true }
                 ]
             }
         ]

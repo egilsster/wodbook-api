@@ -153,7 +153,7 @@ impl WorkoutRepository {
                     "name": workout.name.to_owned(),
                     "description": workout.description,
                     "measurement": workout.measurement,
-                    "global": workout.global,
+                    "public": workout.public,
                     "created_at": now.to_owned(),
                     "updated_at": now,
                 };
@@ -212,7 +212,7 @@ impl WorkoutRepository {
             "name": new_name,
             "description": new_desc,
             "measurement": existing_workout.measurement,
-            "global": existing_workout.global,
+            "public": existing_workout.public,
             "created_at": existing_workout.created_at,
             "updated_at": now,
         };
