@@ -56,9 +56,6 @@ pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
     let db = Connection::open(filename)
         .map_err(|_| AppError::Internal("Error opening connection".to_owned()))?;
 
-    // NOTE(egilsster): Gut feel says I will come back to those and
-    // clean up up once I get the hang of the language and the std methods.
-
     // READING ATHLETE DATA
     let athlete = db
         .prepare("SELECT * FROM Athlete LIMIT 1;")
@@ -130,16 +127,12 @@ pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
         .map_err(|_| AppError::Internal("Error reading movement session information".to_owned()))?
         .query_map(params![], |row| {
             Ok(MovementSession {
-                // primary_client_id: row.get(0)?,
-                // primary_record_id: row.get(1)?,
                 foreign_movement_client_id: row.get(2)?,
                 foreign_movement_record_id: row.get(3)?,
-                // has_changes_for_server: row.get(4)?,
-                // parse_id: row.get(5)?,
                 date: row.get(6)?,
                 measurement_a_value: row.get(7)?,
                 measurement_a_units_code: row.get(8)?,
-                measurement_b: row.get(9)?, // reps?
+                measurement_b: row.get(9)?,
                 sets: row.get(10)?,
                 notes: row.get(11)?,
             })
@@ -158,15 +151,10 @@ pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
         .map_err(|_| AppError::Internal("Error reading movement session information".to_owned()))?
         .query_map(params![], |row| {
             Ok(MyWOD {
-                // primary_client_id: row.get(0)?,
-                // primary_record_id: row.get(1)?,
-                // has_changes_for_server: row.get(2)?,
-                // parse_id: row.get(3)?,
                 title: row.get(4)?,
                 date: row.get(5)?,
                 score_type: row.get(6)?,
                 score: row.get(7)?,
-                // personal_record: row.get(8)?,
                 as_prescribed: row.get(9)?,
                 description: row.get(10)?,
                 notes: row.get(11)?,
@@ -179,26 +167,21 @@ pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
             }
         });
 
-    // TODO(egilsster): Verify this is needed, taken from old implementation
-    workout_scores.sort_by(|a, b| a.title.cmp(&b.title));
-
-    let res = MyWodData {
+    Ok(MyWodData {
         athlete,
         workouts,
         movements,
         movement_scores,
         workout_scores,
-    };
-
-    Ok(res)
+    })
 }
 
-// public saveAvatar(userId: string, avatar: Buffer) {
-//     const filename = `${userId}.png`;
-//     const filepath = path.join(MyWodService.AVATAR_LOCATION, filename);
-//     fs.ensureDirSync(MyWodService.AVATAR_LOCATION);
-//     fs.writeFileSync(filepath, avatar);
-//     return `/public/avatars/${filename}`;
+// pub fn save_avatar(userId: &str, avatar: Blob) {
+//     let filename = format!("{}.png", user_id.to_owned());
+//     let filepath = format!("{}/{}", AVATAR_FILE_LOCATION, filename);
+//     // ensure directory: MyWodService.AVATAR_LOCATION
+//     // write the file 'filepath' with 'avatar' contents
+//     return format!("/public/avatars/{}", filename);
 // }
 
 // Maps the string value from the myWOD database to a one_word string value.
@@ -331,12 +314,8 @@ mod tests {
 
     #[async_test]
     async fn test_read_contents() -> Result<(), AppError> {
-        let _res = read_contents("data.mywod").await?;
-        // println!("{:?}", res.athlete);
-        // println!("{:?}", res.workouts.first().unwrap());
-        // println!("{:?}", res.movements.first().unwrap());
-        // println!("{:?}", res.movement_scores);
-        // println!("{:?}", res.workout_scores);
+        let res = read_contents("data.mywod").await;
+        assert!(res.is_ok());
         Ok(())
     }
 
@@ -364,11 +343,17 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_short_date() {
+        let res = parse_short_date("1991-12-06");
+        assert_eq!(res, "1991-12-06T00:00:00+00:00");
+    }
+
+    #[test]
     fn test_adjust_movement_score_to_measurement_weight() {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 12,
-            measurement_a_value: 70 as f64,
+            measurement_a_value: 70f64,
             measurement_a_units_code: 1,
             measurement_b: 1.to_string(),
             sets: 1.to_string(),
@@ -389,7 +374,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 13,
-            measurement_a_value: 126 as f64,
+            measurement_a_value: 126f64,
             measurement_a_units_code: 1,
             measurement_b: 1.to_string(),
             sets: 1.to_string(),
@@ -410,7 +395,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 14,
-            measurement_a_value: 1000 as f64,
+            measurement_a_value: 1000f64,
             measurement_a_units_code: 1,
             measurement_b: "2:50".to_string(),
             sets: 1.to_string(),
@@ -431,7 +416,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 15,
-            measurement_a_value: 7 as f64,
+            measurement_a_value: 7f64,
             measurement_a_units_code: 1,
             measurement_b: "".to_string(),
             sets: 1.to_string(),
@@ -445,6 +430,22 @@ mod tests {
         assert_eq!(res.distance, "");
         assert_eq!(res.notes, "hspu");
         assert_eq!(res.created_at.unwrap(), "2012-10-13T00:00:00+00:00");
+    }
+
+    #[test]
+    fn test_adjust_movement_score_to_measurement_invalid_score_type() {
+        let score = MovementSession {
+            foreign_movement_client_id: "".to_string(),
+            foreign_movement_record_id: 0,
+            measurement_a_value: 0f64,
+            measurement_a_units_code: 1,
+            measurement_b: "".to_string(),
+            sets: 1.to_string(),
+            notes: "hspu".to_string(),
+            date: "2012-10-13".to_owned(),
+        };
+        let res = adjust_movement_score_to_measurement("invalid", &score);
+        assert!(res.is_none());
     }
 
     #[test]
@@ -464,37 +465,10 @@ mod tests {
         assert_eq!(res.rx, true);
         assert_eq!(res.notes, "");
         assert_eq!(res.created_at.unwrap(), "2017-11-18T00:00:00+00:00");
-        // TODO: I probably need to add these to create workouts from the scores when
-        // the score acts as a workout as well.
-        // assert_eq!(res.name, score.title);
-        // assert_eq!(res.description, score.description);
-        // assert_eq!(res.measurement, score.measurement);
     }
 
     #[test]
     fn test_get_scores_for_movement() {
-        // let movements: Vec<Movement> = vec![
-        //     Movement {
-        //         primary_client_id: "initial".to_owned(),
-        //         primary_record_id: 1,
-        //         name: "Thruster".to_owned(),
-        //         score_type: 0,
-        //     },
-        //     Movement {
-        //         primary_client_id: "initial".to_owned(),
-        //         primary_record_id: 3,
-        //         name: "Snatch".to_owned(),
-        //         score_type: 0,
-        //     },
-        //     Movement {
-        //         primary_client_id: "i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000"
-        //             .to_owned(),
-        //         primary_record_id: 5,
-        //         name: "HSPU".to_owned(),
-        //         score_type: 2,
-        //     },
-        // ];
-
         let movement = Movement {
             primary_client_id: "i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000"
                 .to_owned(),
@@ -505,9 +479,6 @@ mod tests {
 
         let movement_scores: Vec<MovementSession> = vec![
             MovementSession {
-                // primary_client_id: "i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000"
-                //     .to_owned(),
-                // primary_record_id: 50,
                 foreign_movement_client_id:
                     "i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000".to_owned(),
                 foreign_movement_record_id: 5,
@@ -519,9 +490,6 @@ mod tests {
                 notes: "HSPU score".to_owned(),
             },
             MovementSession {
-                // primary_client_id: "i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000"
-                //     .to_owned(),
-                // primary_record_id: 44,
                 foreign_movement_client_id: "initial".to_owned(),
                 foreign_movement_record_id: 3,
                 date: "2017-04-11".to_owned(),
@@ -537,14 +505,5 @@ mod tests {
         assert_eq!(res.len(), 1);
         let my_score: &CreateMovementScore = res.get(0).unwrap();
         assert_eq!(&my_score.notes, "HSPU score");
-    }
-
-    // https://github.com/egilsster/wodbook-api/blob/630703b211dcca928bfb3ec506bc83dfc8abe763/src/utils/my.wod.utils.ts
-    // https://github.com/egilsster/wodbook-api/blob/630703b211dcca928bfb3ec506bc83dfc8abe763/tests/utils/my.wod.utils.spec.ts
-
-    #[test]
-    fn test_parse_short_date() {
-        let res = parse_short_date("1991-12-06");
-        assert_eq!(res, "1991-12-06T00:00:00+00:00");
     }
 }

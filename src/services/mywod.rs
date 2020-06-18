@@ -76,10 +76,24 @@ pub async fn save_workouts_and_scores(
 
     // TODO: Fix duplication with workout scores
     for score in workout_scores {
-        let workout = workout_repo
-            .find_workout_by_name(user_id, &score.title)
+        let workout_title = score.title.to_owned();
+        let workout_description = score.description.to_owned();
+
+        let mut workout = workout_repo
+            .find_workout_by_name(user_id, &workout_title)
             .await?;
-        // TODO: Create a workout if it doesn't exist
+
+        if workout.is_none() {
+            let new_workout = CreateWorkout {
+                name: workout_title,
+                description: workout_description,
+                measurement: map_workout_measurement(&score.score_type),
+                global: false,
+            };
+            workout = Some(workout_repo.create_workout(user_id, new_workout).await?);
+            added_workouts += 1;
+        }
+
         if workout.is_some() {
             let workout = workout.unwrap();
             let score_data = parse_workout_score(score);
