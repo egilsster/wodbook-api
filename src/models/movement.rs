@@ -83,6 +83,7 @@ pub struct CreateMovementScore {
     pub distance: String,
     #[serde(default = "default_as_empty_string")]
     pub notes: String,
+    pub created_at: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

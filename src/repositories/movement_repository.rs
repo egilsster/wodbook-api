@@ -203,13 +203,9 @@ impl MovementRepository {
         };
 
         let coll = self.get_movement_collection();
-        coll.update_one(
-            doc! { "movement_id": movement_id.to_owned() },
-            movement_doc,
-            None,
-        )
-        .await
-        .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
+        coll.update_one(doc! { "movement_id": movement_id }, movement_doc, None)
+            .await
+            .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
 
         let model = self
             .find_movement_by_id(user_id, movement_id)
@@ -228,7 +224,7 @@ impl MovementRepository {
         }
 
         let coll = self.get_movement_collection();
-        coll.delete_one(doc! { "movement_id": movement_id.to_owned() }, None)
+        coll.delete_one(doc! { "movement_id": movement_id }, None)
             .await
             .map_err(|_| AppError::Internal("Movement could not be deleted".to_owned()))?;
 

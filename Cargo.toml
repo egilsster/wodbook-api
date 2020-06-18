@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 actix-web = "2.0.0"
 actix-rt = "1.0.0"
+actix-multipart = "0.2.0"
 mongodb = "1.0.0"
 bson = "1.0.0"
 lazy_static = "1.4.0"
@@ -26,5 +27,9 @@ slog-term = "2.6.0"
 slog-async = "2.4.0"
 slog-envlogger = "2.2.0"
 oas3 = "0.0.1"
+rusqlite = { version = "0.23.1", features = ["blob"] }
 ring = "0.16.15"
 data-encoding = "2.2.1"
+
+[dev-dependencies]
+futures-await-test = "0.3.0"

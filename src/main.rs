@@ -12,6 +12,7 @@ mod middlewares;
 mod models;
 mod repositories;
 mod routes;
+mod services;
 mod utils;
 
 #[actix_rt::main]

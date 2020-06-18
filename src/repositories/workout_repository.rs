@@ -155,7 +155,7 @@ impl WorkoutRepository {
                     "measurement": workout.measurement,
                     "global": workout.global,
                     "created_at": now.to_owned(),
-                    "updated_at": now.to_owned(),
+                    "updated_at": now,
                 };
 
                 match coll.insert_one(workout_doc, None).await {
@@ -208,23 +208,19 @@ impl WorkoutRepository {
         let now = Utc::now().to_rfc3339();
         let workout_doc = doc! {
             "workout_id": existing_workout.workout_id,
-            "user_id": user_id.to_owned(),
+            "user_id": user_id,
             "name": new_name,
             "description": new_desc,
             "measurement": existing_workout.measurement,
             "global": existing_workout.global,
             "created_at": existing_workout.created_at,
-            "updated_at": now.to_owned(),
+            "updated_at": now,
         };
 
         let coll = self.get_workout_collection();
-        coll.update_one(
-            doc! { "workout_id": workout_id.to_owned() },
-            workout_doc,
-            None,
-        )
-        .await
-        .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
+        coll.update_one(doc! { "workout_id": workout_id }, workout_doc, None)
+            .await
+            .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
 
         let model = self
             .find_workout_by_id(user_id, workout_id)
@@ -243,7 +239,7 @@ impl WorkoutRepository {
         }
 
         let coll = self.get_workout_collection();
-        coll.delete_one(doc! { "workout_id": workout_id.to_owned() }, None)
+        coll.delete_one(doc! { "workout_id": workout_id }, None)
             .await
             .map_err(|_| AppError::Internal("Workout could not be deleted".to_owned()))?;
 

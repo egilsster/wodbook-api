@@ -6,6 +6,10 @@ fn default_as_false() -> bool {
     false
 }
 
+fn default_as_empty_string() -> String {
+    "".to_string()
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkoutModel {
     pub workout_id: String,
@@ -73,6 +77,9 @@ pub struct UpdateWorkout {
 pub struct CreateWorkoutScore {
     pub score: String,
     pub rx: bool,
+    #[serde(default = "default_as_empty_string")]
+    pub notes: String,
+    pub created_at: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

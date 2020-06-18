@@ -1,8 +1,15 @@
 use crate::errors::AppError;
+use crate::models::mywod::MyWodResponse;
 use crate::models::user::Claims;
 use crate::models::user::{CreateUser, Login, UpdateUser};
-use crate::repositories::UserRepository;
+use crate::repositories::{
+    MovementRepository, MovementScoreRepository, UserRepository, WorkoutRepository,
+    WorkoutScoreRepository,
+};
+use crate::services::mywod;
+use crate::utils::mywod::{delete_payload_file, read_contents, write_payload_to_file};
 use crate::utils::AppState;
+use actix_multipart::Multipart;
 use actix_web::{get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};
 
@@ -73,9 +80,73 @@ async fn update_user_information(
     result.map(|user| HttpResponse::Ok().json(user))
 }
 
+#[post("/mywod")]
+async fn sync_mywod(
+    state: web::Data<AppState>,
+    claims: Claims,
+    payload: Multipart,
+) -> Result<impl Responder, AppError> {
+    let user_id = claims.user_id.as_ref();
+    let user_email = claims.sub.as_ref();
+    let logger = state.logger.new(o!("handler" => "POST /mywod"));
+    info!(logger, "Syncing myWOD workouts for user");
+
+    let user_repo = UserRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+    let workout_score_repo = WorkoutScoreRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let written_filename = write_payload_to_file(payload).await?;
+    info!(logger, "File written: {}", written_filename);
+
+    let mywod_data = read_contents(&written_filename).await?;
+    let user_updated = mywod::save_athlete(user_repo, user_email, mywod_data.athlete).await?;
+    let added_workouts_and_scores = mywod::save_workouts_and_scores(
+        workout_repo,
+        workout_score_repo,
+        mywod_data.workouts,
+        &mywod_data.workout_scores,
+        user_id,
+    )
+    .await?;
+
+    let movement_repo = MovementRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+    let movement_score_repo = MovementScoreRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let added_movements_and_scores = mywod::save_movements_and_scores(
+        movement_repo,
+        movement_score_repo,
+        mywod_data.movements,
+        &mywod_data.movement_scores,
+        user_id,
+    )
+    .await?;
+
+    let deleted = delete_payload_file(written_filename).await?;
+    info!(logger, "File deleted after handling: {}", deleted);
+
+    Ok(HttpResponse::Ok().json(MyWodResponse {
+        user_updated,
+        added_workouts: added_workouts_and_scores.0,
+        added_workout_scores: added_workouts_and_scores.1,
+        added_movements: added_movements_and_scores.0,
+        added_movement_scores: added_movements_and_scores.1,
+    }))
+}
+
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(login);
     cfg.service(register);
     cfg.service(get_user_information);
     cfg.service(update_user_information);
+    cfg.service(sync_mywod);
 }

@@ -41,7 +41,7 @@ impl MovementScoreRepository {
             "reps": movement_score.reps,
             "distance": movement_score.distance,
             "notes": movement_score.notes,
-            "created_at": now.to_owned(),
+            "created_at": movement_score.created_at.unwrap_or_else(|| now.to_owned()),
             "updated_at": now.to_owned(),
         };
 
