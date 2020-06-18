@@ -78,7 +78,7 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 
-  docker-component-test:
+  docker-integration-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -90,5 +90,5 @@ jobs:
           override: true
       - name: Build docker image
         run: make build-image
-      - name: Run component tests
-        run: ./run-component-tests.sh
+      - name: Run integration tests
+        run: ./run-integration-tests.sh

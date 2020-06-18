@@ -2,11 +2,11 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "esnext",
-    "rootDir": "./component_tests",
+    "rootDir": "integration_tests",
     "outDir": "./build",
     "inlineSourceMap": true,
     "strict": true
   },
-  "include": ["component_tests"],
+  "include": ["integration_tests"],
   "exclude": ["src", "node_modules", "build", ".vscode"]
 }
