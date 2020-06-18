@@ -1,5 +1,11 @@
-/target
+/.github
+/.vscode
 /integration_tests
 /node_modules
+/target
+/tmp
 
 data.mywod
+mongo.seed
+
+*.yml
