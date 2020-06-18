@@ -1,11 +1,11 @@
 #!/bin/bash
 
 compose_down() {
-  docker-compose -f docker-compose.component-test.yml down -v
+  docker-compose -f docker-compose.integration-test.yml down -v
 }
 
 compose_up() {
-  docker-compose -f docker-compose.component-test.yml up -d
+  docker-compose -f docker-compose.integration-test.yml up -d
 }
 
 run_tests() {
@@ -21,7 +21,7 @@ run_tests() {
   compose_up
 
   # Run tests
-  yarn component-test
+  yarn integration-test
 }
 
 run_tests

@@ -9,7 +9,7 @@
   "author": "egilsster",
   "license": "ISC",
   "scripts": {
-    "component-test": "jest --config component-test.config.json --runInBand --detectOpenHandles --forceExit"
+    "integration-test": "jest --config integration-test.config.json --runInBand --detectOpenHandles --forceExit"
   },
   "dependencies": {},
   "devDependencies": {

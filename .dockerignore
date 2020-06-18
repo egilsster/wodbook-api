@@ -1,5 +1,5 @@
 /target
-/component_tests
+/integration_tests
 /node_modules
 
 data.mywod
