@@ -183,7 +183,7 @@ Returns
   "measurement": "time",
   "description": "21-15-9 Thruster (42.5kg / 30kg) / Pull ups",
   "scores": [],
-  "global": false,
+  "public": false,
   "created_at": "2020-05-22T11:32:08.962274+00:00",
   "updated_at": "2020-05-22T11:32:08.962274+00:00"
 }
@@ -249,7 +249,7 @@ Returns
   "movement_id": "cfa7f858-9d3f-45b7-b292-9e495133d2fd",
   "name": "Shoulder Press",
   "measurement": "reps",
-  "global": false,
+  "public": false,
   "created_at": "2020-05-24T14:49:56.698944+00:00",
   "updated_at": "2020-05-24T14:49:56.698944+00:00"
 }

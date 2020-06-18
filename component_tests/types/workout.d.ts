@@ -4,7 +4,7 @@ type WorkoutData = {
   name: string;
   description: string;
   measurement: string;
-  global: boolean;
+  public: boolean;
   scores: any[]; // TODO(egilsster): add scores for workouts
   created_at: string;
   updated_at: string;

@@ -16,7 +16,7 @@ pub struct WorkoutModel {
     pub name: String,
     pub measurement: String,
     pub description: String,
-    pub global: bool,
+    pub public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -28,7 +28,7 @@ pub struct WorkoutResponse {
     pub measurement: String,
     pub description: String,
     pub scores: Vec<WorkoutScoreResponse>,
-    pub global: bool,
+    pub public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -41,7 +41,7 @@ impl WorkoutResponse {
             measurement: model.measurement,
             description: model.description,
             scores,
-            global: model.global,
+            public: model.public,
             created_at: model.created_at,
             updated_at: model.updated_at,
         }
@@ -64,7 +64,7 @@ pub struct CreateWorkout {
     pub description: String,
     pub measurement: String,
     #[serde(default = "default_as_false")]
-    pub global: bool,
+    pub public: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

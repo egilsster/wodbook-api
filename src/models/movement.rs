@@ -19,7 +19,7 @@ pub struct MovementModel {
     pub movement_id: String,
     pub name: String,
     pub measurement: String,
-    pub global: bool,
+    pub public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -30,7 +30,7 @@ pub struct MovementResponse {
     pub name: String,
     pub measurement: String,
     pub scores: Vec<MovementScoreResponse>,
-    pub global: bool,
+    pub public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -42,7 +42,7 @@ impl MovementResponse {
             name: model.name,
             measurement: model.measurement,
             scores,
-            global: model.global,
+            public: model.public,
             created_at: model.created_at,
             updated_at: model.updated_at,
         }
@@ -64,7 +64,7 @@ pub struct CreateMovement {
     pub name: String,
     pub measurement: String,
     #[serde(default = "default_as_false")]
-    pub global: bool,
+    pub public: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
