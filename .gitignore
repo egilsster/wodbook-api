@@ -3,3 +3,6 @@
 
 # API tests, will be migrated from typescript later
 /node_modules
+
+# file uploads
+/tmp

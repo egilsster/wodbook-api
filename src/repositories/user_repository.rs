@@ -60,6 +60,7 @@ impl UserRepository {
             "user_id": existing_user.user_id.to_owned(),
             "email": existing_user.email,
             "password": new_password,
+            "admin": existing_user.admin,
             "first_name": new_first_name,
             "last_name": new_last_name,
             "date_of_birth": new_date_of_birth,

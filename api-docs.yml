@@ -109,6 +109,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
+  /users/mywod/:
+    post:
+      summary: Migrates data in a mywod backup to wodbook.
+      operationId: mywodMigration
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  description: myWOD backup file (sqlite database file).
+                  format: binary
+      responses:
+        200:
+          description: User has been updated and returns user information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/migrationResults"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
   /workouts/:
     get:
       summary: List all workouts.
@@ -555,6 +585,25 @@ components:
         avatar_url:
           type: string
           description: An image that the user adds to his account.
+    migrationResults:
+      type: object
+      description: Data describing what was migrated.
+      properties:
+        user_updated:
+          type: boolean
+          description: If the user information was updated successfully or not
+        added_workouts:
+          type: number
+          description: How many workouts were added from the backup.
+        added_workout_scores:
+          type: number
+          description: How many workout scores were added from the backup.
+        added_movements:
+          type: number
+          description: How many movements were added from the backup.
+        added_movement_scores:
+          type: number
+          description: How many movement scores were added from the backup.
     workouts:
       type: object
       properties:

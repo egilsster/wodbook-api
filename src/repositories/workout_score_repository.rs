@@ -38,8 +38,8 @@ impl WorkoutScoreRepository {
             "workout_id": workout_id.to_owned(),
             "score": workout_score.score,
             "rx": workout_score.rx,
-            "created_at": now.to_owned(),
-            "updated_at": now.to_owned(),
+            "created_at": workout_score.created_at.unwrap_or_else(|| now.to_owned()),
+            "updated_at": now,
         };
 
         match coll.insert_one(workout_score_doc, None).await {
