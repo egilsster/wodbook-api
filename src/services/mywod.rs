@@ -3,10 +3,7 @@ use crate::models::movement::CreateMovement;
 use crate::models::mywod::{Athlete, CustomWOD, Movement, MovementSession, MyWOD};
 use crate::models::user::UpdateUser;
 use crate::models::workout::CreateWorkout;
-use crate::repositories::{
-    MovementRepository, MovementScoreRepository, UserRepository, WorkoutRepository,
-    WorkoutScoreRepository,
-};
+use crate::repositories::{MovementRepository, UserRepository, WorkoutRepository};
 use crate::utils::mywod::{
     get_scores_for_movement, map_movement_measurement, map_workout_measurement, parse_workout_score,
 };
@@ -53,7 +50,6 @@ pub async fn save_athlete(
 
 pub async fn save_workouts_and_scores(
     workout_repo: WorkoutRepository,
-    workout_score_repo: WorkoutScoreRepository,
     workouts: Vec<CustomWOD>,
     workout_scores: &[MyWOD],
     user_id: &str,
@@ -97,7 +93,7 @@ pub async fn save_workouts_and_scores(
         if workout.is_some() {
             let workout = workout.unwrap();
             let score_data = parse_workout_score(score);
-            let added_score = workout_score_repo
+            let added_score = workout_repo
                 .create_workout_score(user_id, &workout.workout_id, score_data)
                 .await;
             if added_score.is_ok() {
@@ -111,7 +107,6 @@ pub async fn save_workouts_and_scores(
 
 pub async fn save_movements_and_scores(
     movement_repo: MovementRepository,
-    movement_score_repo: MovementScoreRepository,
     movements: Vec<Movement>,
     movement_scores: &[MovementSession],
     user_id: &str,
@@ -130,7 +125,7 @@ pub async fn save_movements_and_scores(
             added_movements += 1;
             let all_scores = get_scores_for_movement(m, &movement_scores);
             for score in all_scores {
-                movement_score_repo
+                movement_repo
                     .create_movement_score(user_id, &created_movement.movement_id, score)
                     .await?;
                 added_movement_scores += 1;

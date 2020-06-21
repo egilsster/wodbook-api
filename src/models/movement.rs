@@ -1,3 +1,4 @@
+use bson::{doc, Document};
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
 
@@ -87,6 +88,15 @@ pub struct CreateMovementScore {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateMovementScore {
+    pub score: Option<String>,
+    pub sets: Option<u32>,
+    pub reps: Option<u32>,
+    pub distance: Option<String>,
+    pub notes: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MovementScoreResponse {
     pub movement_score_id: String,
     pub movement_id: String,
@@ -97,4 +107,21 @@ pub struct MovementScoreResponse {
     pub notes: String,
     pub created_at: String,
     pub updated_at: String,
+}
+
+impl MovementScoreResponse {
+    pub fn to_doc(&self, user_id: &str) -> Document {
+        doc! {
+            "movement_score_id": self.movement_score_id.to_owned(),
+            "movement_id": self.movement_id.to_owned(),
+            "user_id": user_id.to_owned(),
+            "score": self.score.to_owned(),
+            "sets": self.sets.to_owned(),
+            "reps": self.reps.to_owned(),
+            "distance": self.distance.to_owned(),
+            "notes": self.notes.to_owned(),
+            "created_at": self.created_at.to_owned(),
+            "updated_at": self.updated_at.to_owned(),
+        }
+    }
 }

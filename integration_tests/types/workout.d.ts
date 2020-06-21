@@ -5,7 +5,7 @@ type WorkoutData = {
   description: string;
   measurement: string;
   public: boolean;
-  scores: any[]; // TODO(egilsster): add scores for workouts
+  scores: WorkoutScoreData[];
   created_at: string;
   updated_at: string;
 };
@@ -22,4 +22,20 @@ declare type WorkoutResponse = {
 declare type ManyWorkoutsResponse = {
   statusCode: number;
   body: ManyWorkoutsData;
+};
+
+type WorkoutScoreData = {
+  workout_id: string;
+  workout_score_id: string;
+  score: string;
+  rx: boolean;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
+
+declare type WorkoutScoreResponse = {
+  statusCode: number;
+  body: WorkoutScoreData;
 };

@@ -1,5 +1,8 @@
 use crate::errors::AppError;
-use crate::models::movement::{CreateMovement, MovementModel, UpdateMovement};
+use crate::models::movement::{
+    CreateMovement, CreateMovementScore, MovementModel, MovementScoreResponse, UpdateMovement,
+    UpdateMovementScore,
+};
 use crate::utils::{query_utils, Config};
 
 use bson::{doc, from_bson, Bson};
@@ -10,6 +13,7 @@ use mongodb::{Client, Collection};
 use std::vec::Vec;
 
 static WORKOUT_COLLECTION_NAME: &str = "movements";
+static SCORE_COLLECTION_NAME: &str = "movementscores";
 
 // TODO(egilsster): Can this be done with enum (and match?)?
 static VALID_MEASUREMENTS: [&str; 4] = ["weight", "distance", "reps", "height"];
@@ -19,6 +23,13 @@ pub struct MovementRepository {
 }
 
 impl MovementRepository {
+    fn get_score_collection(&self) -> Collection {
+        let config = Config::from_env().unwrap();
+        let database_name = config.mongo.db_name;
+        let db = self.mongo_client.database(database_name.as_str());
+        db.collection(SCORE_COLLECTION_NAME)
+    }
+
     fn get_movement_collection(&self) -> Collection {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
@@ -125,10 +136,7 @@ impl MovementRepository {
         }
 
         let movement_name = movement.name.as_ref();
-        let _exist = self
-            .find_movement_by_name(user_id, movement_name)
-            .await
-            .unwrap();
+        let _exist = self.find_movement_by_name(user_id, movement_name).await?;
         match _exist {
             Some(_) => Err(AppError::Conflict(
                 "Movement with this name already exists".to_string(),
@@ -216,6 +224,7 @@ impl MovementRepository {
         Ok(model)
     }
 
+    /// TODO: Delete all scores belonging to the movement when the movement is deleted
     pub async fn delete_movement(&self, user_id: &str, movement_id: &str) -> Result<(), AppError> {
         let movement = self.find_movement_by_id(user_id, movement_id).await?;
 
@@ -229,5 +238,146 @@ impl MovementRepository {
             .map_err(|_| AppError::Internal("Movement could not be deleted".to_owned()))?;
 
         Ok(())
+    }
+
+    pub async fn create_movement_score(
+        &self,
+        user_id: &str,
+        movement_id: &str,
+        movement_score: CreateMovementScore,
+    ) -> Result<MovementScoreResponse, AppError> {
+        let coll = self.get_score_collection();
+        let id = uuid::Uuid::new_v4().to_string();
+        let now = Utc::now().to_rfc3339();
+        let movement_score_doc = doc! {
+            "movement_score_id": id.to_owned(),
+            "user_id": user_id.to_owned(),
+            "movement_id": movement_id.to_owned(),
+            "score": movement_score.score,
+            "sets": movement_score.sets,
+            "reps": movement_score.reps,
+            "distance": movement_score.distance,
+            "notes": movement_score.notes,
+            "created_at": movement_score.created_at.unwrap_or_else(|| now.to_owned()),
+            "updated_at": now.to_owned(),
+        };
+
+        let _ = coll
+            .insert_one(movement_score_doc, None)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()));
+
+        self.get_movement_score_by_id(user_id, movement_id, &id)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))
+    }
+
+    pub async fn get_movement_scores(
+        &self,
+        user_id: &str,
+        movement_id: &str,
+    ) -> Result<Vec<MovementScoreResponse>, AppError> {
+        let query = query_utils::for_many_with_filter(
+            doc! { "user_id": user_id, "movement_id": movement_id },
+            user_id,
+        );
+        let find_options = FindOptions::builder()
+            .sort(doc! { "created_at": 1 })
+            .build();
+        let mut cursor = self
+            .get_score_collection()
+            .find(query, find_options)
+            .await
+            .unwrap();
+
+        let mut vec: Vec<MovementScoreResponse> = Vec::new();
+
+        while let Some(result) = cursor.next().await {
+            match result {
+                Ok(document) => {
+                    let movement_score =
+                        from_bson::<MovementScoreResponse>(Bson::Document(document));
+                    match movement_score {
+                        Ok(result) => vec.push(result),
+                        Err(e) => println!("Error parsing movement: {:?}", e),
+                    }
+                }
+                Err(e) => println!("Error reading movement: {:?}", e),
+            }
+        }
+
+        Ok(vec)
+    }
+
+    pub async fn get_movement_score_by_id(
+        &self,
+        user_id: &str,
+        movement_id: &str,
+        movement_score_id: &str,
+    ) -> Result<MovementScoreResponse, AppError> {
+        let query = query_utils::for_one(
+            doc! { "movement_id":  movement_id, "movement_score_id": movement_score_id },
+            user_id,
+        );
+        let cursor = self
+            .get_score_collection()
+            .find_one(query, None)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))?;
+
+        match cursor {
+            Some(doc) => match from_bson(Bson::Document(doc)) {
+                Ok(model) => Ok(model),
+                Err(err) => Err(AppError::Internal(err.to_string())),
+            },
+            None => Err(AppError::NotFound("Entity not found".to_string())),
+        }
+    }
+
+    pub async fn update_movement_score_by_id(
+        &self,
+        user_id: &str,
+        movement_id: &str,
+        movement_score_id: &str,
+        new_score: UpdateMovementScore,
+    ) -> Result<MovementScoreResponse, AppError> {
+        let mut score = self
+            .get_movement_score_by_id(user_id, movement_id, movement_score_id)
+            .await?;
+
+        let now = Utc::now().to_rfc2822();
+
+        score.score = new_score.score.unwrap_or(score.score);
+        score.reps = new_score.reps.unwrap_or(score.reps);
+        score.sets = new_score.sets.unwrap_or(score.sets);
+        score.notes = new_score.notes.unwrap_or(score.notes);
+        score.distance = new_score.distance.unwrap_or(score.distance);
+        score.updated_at = now;
+
+        let movement_doc = score.to_doc(user_id);
+
+        let query = query_utils::for_one(doc! { "movement_score_id": movement_score_id }, user_id);
+        let update_result = self
+            .get_score_collection()
+            .update_one(query, movement_doc, None)
+            .await;
+
+        if update_result.is_err() {
+            return Err(AppError::Internal(
+                "Something went wrong when inserting a score.".to_owned(),
+            ));
+        }
+
+        let res = self
+            .get_movement_score_by_id(user_id, movement_id, movement_score_id)
+            .await;
+
+        if res.is_err() {
+            return Err(AppError::Internal(
+                "New score not found after inserting".to_owned(),
+            ));
+        }
+
+        Ok(res.unwrap())
     }
 }

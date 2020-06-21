@@ -4,7 +4,7 @@ type MovementData = {
   name: string;
   measurement: string;
   public: boolean;
-  scores: any[]; // TODO(egilsster): add scores for movements
+  scores: MovementScoreData[];
   created_at: string;
   updated_at: string;
 };
@@ -21,4 +21,21 @@ declare type MovementResponse = {
 declare type ManyMovementsResponse = {
   statusCode: number;
   body: ManyMovementsData;
+};
+
+type MovementScoreData = {
+  movement_id: string;
+  movement_score_id: string;
+  score: string;
+  reps: number;
+  sets: number;
+  distance: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+};
+
+declare type MovementScoreResponse = {
+  statusCode: number;
+  body: MovementScoreData;
 };

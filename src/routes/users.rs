@@ -2,10 +2,7 @@ use crate::errors::AppError;
 use crate::models::mywod::MyWodResponse;
 use crate::models::user::Claims;
 use crate::models::user::{CreateUser, Login, UpdateUser};
-use crate::repositories::{
-    MovementRepository, MovementScoreRepository, UserRepository, WorkoutRepository,
-    WorkoutScoreRepository,
-};
+use crate::repositories::{MovementRepository, UserRepository, WorkoutRepository};
 use crate::services::mywod;
 use crate::utils::mywod::{delete_payload_file, read_contents, write_payload_to_file};
 use crate::utils::AppState;
@@ -97,9 +94,6 @@ async fn sync_mywod(
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
-    let workout_score_repo = WorkoutScoreRepository {
-        mongo_client: state.mongo_client.clone(),
-    };
 
     let written_filename = write_payload_to_file(payload).await?;
     info!(logger, "File written: {}", written_filename);
@@ -108,7 +102,6 @@ async fn sync_mywod(
     let user_updated = mywod::save_athlete(user_repo, user_email, mywod_data.athlete).await?;
     let added_workouts_and_scores = mywod::save_workouts_and_scores(
         workout_repo,
-        workout_score_repo,
         mywod_data.workouts,
         &mywod_data.workout_scores,
         user_id,
@@ -118,13 +111,9 @@ async fn sync_mywod(
     let movement_repo = MovementRepository {
         mongo_client: state.mongo_client.clone(),
     };
-    let movement_score_repo = MovementScoreRepository {
-        mongo_client: state.mongo_client.clone(),
-    };
 
     let added_movements_and_scores = mywod::save_movements_and_scores(
         movement_repo,
-        movement_score_repo,
         mywod_data.movements,
         &mywod_data.movement_scores,
         user_id,

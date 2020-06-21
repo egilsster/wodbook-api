@@ -1,9 +1,10 @@
 use crate::errors::AppError;
 use crate::models::movement::{
     CreateMovement, CreateMovementScore, ManyMovementsResponse, MovementResponse, UpdateMovement,
+    UpdateMovementScore,
 };
 use crate::models::user::Claims;
-use crate::repositories::{MovementRepository, MovementScoreRepository};
+use crate::repositories::MovementRepository;
 use crate::utils::AppState;
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};
@@ -105,15 +106,14 @@ async fn get_movement_by_id(
     let movement_repo = MovementRepository {
         mongo_client: state.mongo_client.clone(),
     };
-    let score_repo = MovementScoreRepository {
-        mongo_client: state.mongo_client.clone(),
-    };
 
     let user_id = claims.user_id.as_ref();
     let movement_result = movement_repo
         .get_movement_by_id(user_id, &movement_id)
         .await;
-    let scores_result = score_repo.get_movement_scores(user_id, &movement_id).await;
+    let scores_result = movement_repo
+        .get_movement_scores(user_id, &movement_id)
+        .await;
 
     movement_result.map(|movement| {
         scores_result
@@ -134,16 +134,47 @@ async fn create_movement_score(
         .new(o!("handler" => format!("POST /movements/{}", movement_id)));
     info!(logger, "Creating movement score");
 
-    let score_repo = MovementScoreRepository {
+    let movement_repo = MovementRepository {
         mongo_client: state.mongo_client.clone(),
     };
 
     let user_id = claims.user_id.as_ref();
-    let scores_result = score_repo
+    let scores_result = movement_repo
         .create_movement_score(user_id, &movement_id, movement_score.into_inner())
         .await;
 
     scores_result.map(|score| HttpResponse::Created().json(score))
+}
+
+#[patch("/{movement_id}/{score_id}")]
+async fn update_movement_score(
+    state: web::Data<AppState>,
+    info: web::Path<(String, String)>,
+    claims: Claims,
+    movement_score_update: web::Json<UpdateMovementScore>,
+) -> Result<impl Responder, AppError> {
+    let movement_id = info.0.to_owned();
+    let score_id = info.1.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("PATCH /movements/{}/{}", movement_id, score_id)));
+    info!(logger, "Creating movement score");
+
+    let movement_repo = MovementRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let user_id = claims.user_id.as_ref();
+    let scores_result = movement_repo
+        .update_movement_score_by_id(
+            user_id,
+            &movement_id,
+            &score_id,
+            movement_score_update.into_inner(),
+        )
+        .await;
+
+    scores_result.map(|score| HttpResponse::Ok().json(score))
 }
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
@@ -153,4 +184,5 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(delete_movement);
     cfg.service(get_movement_by_id);
     cfg.service(create_movement_score);
+    cfg.service(update_movement_score);
 }

@@ -52,7 +52,7 @@ describe("/v1/workouts", () => {
     });
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await db.collection("workouts").deleteMany({});
     await db.collection("workoutscores").deleteMany({});
   });
@@ -556,6 +556,111 @@ describe("/v1/workouts", () => {
         expect(res3.body.scores[0]).toHaveProperty("updated_at");
         expect(res3.body.scores[0]).toHaveProperty("score");
         expect(res3.body.scores[0]).toHaveProperty("rx");
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+
+    it("should updated an existing workout score", async (done) => {
+      const wod = {
+        name: "Heavy Fran",
+        measurement: "time",
+        description: "15-12-9 Thruster (60kg / 45kg) / Chest to bar (weighted)",
+      };
+
+      try {
+        const res1: WorkoutResponse = await request.post("/workouts/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: {
+            name: wod.name,
+            measurement: wod.measurement,
+            description: wod.description,
+          },
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("workout_id");
+        const workoutId = res1.body.workout_id;
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
+        expect(res1.body).toHaveProperty("description", wod.description);
+        expect(res1.body).toHaveProperty("public", false);
+        expect(res1.body).toHaveProperty("measurement", wod.measurement);
+        expect(res1.body).toHaveProperty("name", wod.name);
+
+        const res2: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "4:20",
+              rx: false,
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        expect(res2.body).toHaveProperty("workout_id", workoutId);
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
+        expect(res2.body).toHaveProperty("score", "4:20");
+        expect(res2.body).toHaveProperty("rx", false);
+
+        const res3: WorkoutResponse = await request.get(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.OK);
+        expect(res3.body).toHaveProperty("scores");
+        expect(res3.body.scores[0]).toHaveProperty("workout_score_id");
+        expect(res3.body.scores[0]).toHaveProperty("workout_id", workoutId);
+        expect(res3.body.scores[0]).toHaveProperty("created_at");
+        expect(res3.body.scores[0]).toHaveProperty("updated_at");
+        expect(res3.body.scores[0]).toHaveProperty("score", "4:20");
+        expect(res3.body.scores[0]).toHaveProperty("rx", false);
+
+        const workoutScore = res3.body.scores[0];
+
+        const res4: WorkoutScoreResponse = await request.patch(
+          `/workouts/${workoutId}/${workoutScore.workout_score_id}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "4:10",
+              rx: true,
+              notes: "Deadly!",
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.OK);
+        expect(res4.body).toHaveProperty("workout_id", workoutId);
+        expect(res4.body).toHaveProperty("created_at");
+        expect(res4.body).toHaveProperty("updated_at");
+        expect(res4.body).toHaveProperty("score", "4:10");
+        expect(res4.body).toHaveProperty("rx", true);
+        expect(res4.body).toHaveProperty("notes", "Deadly!");
+
         done();
       } catch (err) {
         done(err);
