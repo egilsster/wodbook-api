@@ -25,6 +25,7 @@ async fn main() -> std::io::Result<()> {
     let port = config.server.port;
     let server_addr = format!("{}:{}", host, port);
 
+    // TODO(egilsster): Handle when mongo isn't up, with a warning or something
     let mongo_client = Connection.get_client(logger.clone()).await.unwrap();
 
     info!(logger, "Listening on http://{}/", server_addr);

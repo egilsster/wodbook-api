@@ -52,7 +52,7 @@ describe("/v1/movements/", () => {
     });
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await db.collection("movements").deleteMany({});
     await db.collection("movementscores").deleteMany({});
   });
@@ -537,6 +537,106 @@ describe("/v1/movements/", () => {
         expect(res3.body.scores[0]).toHaveProperty("score");
         expect(res3.body.scores[0]).toHaveProperty("created_at");
         expect(res3.body.scores[0]).toHaveProperty("updated_at");
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+
+    it("should update an existing score", async (done) => {
+      const movement = {
+        name: "Deadlift",
+        measurement: "weight",
+      };
+
+      try {
+        const res1: MovementResponse = await request.post("/movements/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: {
+            name: movement.name,
+            measurement: movement.measurement,
+          },
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        const movementId = res1.body.movement_id;
+        expect(res1.body).toHaveProperty("name", movement.name);
+        expect(res1.body).toHaveProperty("measurement", movement.measurement);
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
+
+        const res2: MovementResponse = await request.post(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "200kg",
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        expect(res2.body).toHaveProperty("movement_score_id");
+        expect(res2.body).toHaveProperty("movement_id", movementId);
+        expect(res2.body).toHaveProperty("score", "200kg");
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
+
+        const res3: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.OK);
+        expect(res3.body).toHaveProperty("scores");
+        expect(res3.body.scores[0]).toHaveProperty("movement_id");
+        expect(res3.body.scores[0]).toHaveProperty("movement_score_id");
+        expect(res3.body.scores[0]).toHaveProperty("score");
+        expect(res3.body.scores[0]).toHaveProperty("created_at");
+        expect(res3.body.scores[0]).toHaveProperty("updated_at");
+
+        const movementScore = res3.body.scores[0];
+
+        const res4: MovementScoreResponse = await request.patch(
+          `/movements/${movementId}/${movementScore.movement_score_id}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "205kg",
+              measurement: "weight",
+              notes: "Jättebra!",
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.OK);
+        expect(res4.body).toHaveProperty("movement_score_id");
+        expect(res4.body).toHaveProperty("movement_id", movementId);
+        expect(res4.body).toHaveProperty("score", "205kg");
+        expect(res4.body).toHaveProperty("notes", "Jättebra!");
+        expect(res4.body).toHaveProperty("created_at");
+        expect(res4.body).toHaveProperty("updated_at");
+        expect(res4.body.updated_at).not.toEqual(movementScore.updated_at);
+
         done();
       } catch (err) {
         done(err);

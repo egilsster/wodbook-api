@@ -1,3 +1,4 @@
+use bson::{doc, Document};
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
 
@@ -76,9 +77,18 @@ pub struct UpdateWorkout {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkoutScore {
     pub score: String,
+    #[serde(default = "default_as_false")]
     pub rx: bool,
     #[serde(default = "default_as_empty_string")]
     pub notes: String,
+    pub created_at: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateWorkoutScore {
+    pub score: Option<String>,
+    pub rx: Option<bool>,
+    pub notes: Option<String>,
     pub created_at: Option<String>,
 }
 
@@ -88,6 +98,22 @@ pub struct WorkoutScoreResponse {
     pub workout_id: String,
     pub score: String,
     pub rx: bool,
+    pub notes: String,
     pub created_at: String,
     pub updated_at: String,
+}
+
+impl WorkoutScoreResponse {
+    pub fn to_doc(&self, user_id: &str) -> Document {
+        doc! {
+            "workout_score_id": self.workout_score_id.to_owned(),
+            "workout_id": self.workout_id.to_owned(),
+            "user_id": user_id.to_owned(),
+            "score": self.score.to_owned(),
+            "rx": self.rx.to_owned(),
+            "notes": self.notes.to_owned(),
+            "created_at": self.created_at.to_owned(),
+            "updated_at": self.updated_at.to_owned(),
+        }
+    }
 }

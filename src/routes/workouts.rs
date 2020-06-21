@@ -1,9 +1,10 @@
 use crate::errors::AppError;
 use crate::models::user::Claims;
 use crate::models::workout::{
-    CreateWorkout, CreateWorkoutScore, ManyWorkoutsResponse, UpdateWorkout, WorkoutResponse,
+    CreateWorkout, CreateWorkoutScore, ManyWorkoutsResponse, UpdateWorkout, UpdateWorkoutScore,
+    WorkoutResponse,
 };
-use crate::repositories::{WorkoutRepository, WorkoutScoreRepository};
+use crate::repositories::WorkoutRepository;
 use crate::utils::AppState;
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 use slog::{info, o};
@@ -105,13 +106,10 @@ async fn get_workout_by_id(
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
-    let score_repo = WorkoutScoreRepository {
-        mongo_client: state.mongo_client.clone(),
-    };
 
     let user_id = claims.user_id.as_ref();
     let workout_result = workout_repo.get_workout_by_id(user_id, &workout_id).await;
-    let scores_result = score_repo.get_workout_scores(user_id, &workout_id).await;
+    let scores_result = workout_repo.get_workout_scores(user_id, &workout_id).await;
 
     workout_result.map(|workout| {
         scores_result
@@ -132,16 +130,47 @@ async fn create_workout_score(
         .new(o!("handler" => format!("POST /workouts/{}", workout_id)));
     info!(logger, "Creating workout score");
 
-    let score_repo = WorkoutScoreRepository {
+    let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_id = claims.user_id;
-    let scores_result = score_repo
-        .create_workout_score(&user_id, &workout_id, workout_score.into_inner())
+    let user_id = claims.user_id.as_ref();
+    let scores_result = workout_repo
+        .create_workout_score(user_id, &workout_id, workout_score.into_inner())
         .await;
 
     scores_result.map(|score| HttpResponse::Created().json(score))
+}
+
+#[patch("/{workout_id}/{score_id}")]
+async fn update_workout_score(
+    state: web::Data<AppState>,
+    info: web::Path<(String, String)>,
+    claims: Claims,
+    workout_score_update: web::Json<UpdateWorkoutScore>,
+) -> Result<impl Responder, AppError> {
+    let workout_id = info.0.to_owned();
+    let score_id = info.1.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("PATCH /workouts/{}/{}", workout_id, score_id)));
+    info!(logger, "Creating workout score");
+
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let user_id = claims.user_id.as_ref();
+    let scores_result = workout_repo
+        .update_workout_score_by_id(
+            user_id,
+            &workout_id,
+            &score_id,
+            workout_score_update.into_inner(),
+        )
+        .await;
+
+    scores_result.map(|score| HttpResponse::Ok().json(score))
 }
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
@@ -151,4 +180,5 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(delete_workout);
     cfg.service(get_workout_by_id);
     cfg.service(create_workout_score);
+    cfg.service(update_workout_score);
 }
