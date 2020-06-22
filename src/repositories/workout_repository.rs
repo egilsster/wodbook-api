@@ -389,4 +389,24 @@ impl WorkoutRepository {
 
         res
     }
+
+    pub async fn delete_workout_score_by_id(
+        &self,
+        user_id: &str,
+        workout_id: &str,
+        workout_score_id: &str,
+    ) -> Result<(), AppError> {
+        // Ensure the score exists for the user
+        self.get_workout_score_by_id(user_id, workout_id, workout_score_id)
+            .await?;
+
+        let query = query_utils::for_one(doc! { "workout_score_id": workout_score_id }, user_id);
+        let delete_result = self.get_score_collection().delete_one(query, None).await;
+
+        if let Err(delete_result) = delete_result {
+            return Err(AppError::Internal(delete_result.to_string()));
+        }
+
+        Ok(())
+    }
 }

@@ -173,6 +173,31 @@ async fn update_workout_score(
     scores_result.map(|score| HttpResponse::Ok().json(score))
 }
 
+#[delete("/{workout_id}/{score_id}")]
+async fn delete_workout_score(
+    state: web::Data<AppState>,
+    info: web::Path<(String, String)>,
+    claims: Claims,
+) -> Result<impl Responder, AppError> {
+    let workout_id = info.0.to_owned();
+    let score_id = info.1.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("DELETE /workouts/{}/{}", workout_id, score_id)));
+    info!(logger, "Deleting workout score");
+
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let user_id = claims.user_id.as_ref();
+    let result = workout_repo
+        .delete_workout_score_by_id(user_id, &workout_id, &score_id)
+        .await;
+
+    result.map(|_| HttpResponse::NoContent())
+}
+
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_workouts);
     cfg.service(create_workout);
@@ -181,4 +206,5 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_workout_by_id);
     cfg.service(create_workout_score);
     cfg.service(update_workout_score);
+    cfg.service(delete_workout_score);
 }

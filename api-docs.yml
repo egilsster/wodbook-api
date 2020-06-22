@@ -377,6 +377,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
+    delete:
+      summary: Deletes a specific workout score.
+      operationId: deleteWorkoutScoreById
+      tags:
+        - workouts
+      parameters:
+        - name: workoutId
+          in: path
+          required: true
+          description: Workout identifier
+          schema:
+            type: string
+        - name: workoutScoreId
+          in: path
+          required: true
+          description: Workout score identifier
+          schema:
+            type: string
+      responses:
+        204:
+          description: Score deleted successfully.
+        403:
+          description: Forbidden. User is not authorized to delete workout score.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        404:
+          description: Could not find the workout or workout score.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
   /movements/:
     get:
       summary: List all movements.
@@ -593,6 +632,45 @@ paths:
                 $ref: "#/components/schemas/movementScore"
         403:
           description: Forbidden. User is not authorized to update movement score.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        404:
+          description: Could not find the movement or movement score.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+    delete:
+      summary: Deletes a specific movement score.
+      operationId: deleteMovementScoreById
+      tags:
+        - movements
+      parameters:
+        - name: movementId
+          in: path
+          required: true
+          description: Movement identifier
+          schema:
+            type: string
+        - name: movementScoreId
+          in: path
+          required: true
+          description: Movement score identifier
+          schema:
+            type: string
+      responses:
+        204:
+          description: Score deleted successfully.
+        403:
+          description: Forbidden. User is not authorized to delete movement score.
           content:
             application/json:
               schema:

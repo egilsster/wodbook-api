@@ -378,6 +378,26 @@ impl MovementRepository {
             ));
         }
 
-        Ok(res.unwrap())
+        res
+    }
+
+    pub async fn delete_movement_score_by_id(
+        &self,
+        user_id: &str,
+        movement_id: &str,
+        movement_score_id: &str,
+    ) -> Result<(), AppError> {
+        // Ensure the score exists for the user
+        self.get_movement_score_by_id(user_id, movement_id, movement_score_id)
+            .await?;
+
+        let query = query_utils::for_one(doc! { "movement_score_id": movement_score_id }, user_id);
+        let delete_result = self.get_score_collection().delete_one(query, None).await;
+
+        if let Err(delete_result) = delete_result {
+            return Err(AppError::Internal(delete_result.to_string()));
+        }
+
+        Ok(())
     }
 }

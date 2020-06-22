@@ -642,6 +642,107 @@ describe("/v1/movements/", () => {
         done(err);
       }
     });
+
+    it("should delete an existing score", async (done) => {
+      const movement = {
+        name: "Deadlift",
+        measurement: "weight",
+      };
+
+      try {
+        const res1: MovementResponse = await request.post("/movements/", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: {
+            name: movement.name,
+            measurement: movement.measurement,
+          },
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("movement_id");
+        const movementId = res1.body.movement_id;
+        expect(res1.body).toHaveProperty("name", movement.name);
+        expect(res1.body).toHaveProperty("measurement", movement.measurement);
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
+
+        const res2: MovementResponse = await request.post(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "200kg",
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        expect(res2.body).toHaveProperty("movement_score_id");
+        expect(res2.body).toHaveProperty("movement_id", movementId);
+        expect(res2.body).toHaveProperty("score", "200kg");
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
+
+        const res3: MovementResponse = await request.get(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.OK);
+        expect(res3.body).toHaveProperty("scores");
+        expect(res3.body.scores[0]).toHaveProperty("movement_id");
+        expect(res3.body.scores[0]).toHaveProperty("movement_score_id");
+        expect(res3.body.scores[0]).toHaveProperty("score");
+        expect(res3.body.scores[0]).toHaveProperty("created_at");
+        expect(res3.body.scores[0]).toHaveProperty("updated_at");
+
+        const movementScore = res3.body.scores[0];
+
+        const res4: MovementScoreResponse = await request.delete(
+          `/movements/${movementId}/${movementScore.movement_score_id}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.NO_CONTENT);
+
+        const res5: MovementScoreResponse = await request.get(
+          `/movements/${movementId}/${movementScore.movement_score_id}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res5.statusCode).toBe(HttpStatus.NOT_FOUND);
+
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
   });
 
   describe("user separated movements", () => {
