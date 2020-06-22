@@ -56,6 +56,17 @@ describe("/users/mywod", () => {
     });
   });
 
+  beforeEach(async () => {
+    await db.collection("workouts").deleteMany({});
+    await db.collection("workoutscores").deleteMany({});
+    await db.collection("movements").deleteMany({});
+    await db.collection("movementscores").deleteMany({});
+  });
+
+  afterAll(async () => {
+    await mongoClient.close();
+  });
+
   describe("/mywod", () => {
     it("should migrate data from a mywod backup to the user", async (done) => {
       try {

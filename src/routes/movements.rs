@@ -177,6 +177,31 @@ async fn update_movement_score(
     scores_result.map(|score| HttpResponse::Ok().json(score))
 }
 
+#[delete("/{movement_id}/{score_id}")]
+async fn delete_movement_score(
+    state: web::Data<AppState>,
+    info: web::Path<(String, String)>,
+    claims: Claims,
+) -> Result<impl Responder, AppError> {
+    let movement_id = info.0.to_owned();
+    let score_id = info.1.to_owned();
+    let logger = state
+        .logger
+        .new(o!("handler" => format!("DELETE /movements/{}/{}", movement_id, score_id)));
+    info!(logger, "Deleting movement score");
+
+    let movement_repo = MovementRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+
+    let user_id = claims.user_id.as_ref();
+    let result = movement_repo
+        .delete_movement_score_by_id(user_id, &movement_id, &score_id)
+        .await;
+
+    result.map(|_| HttpResponse::NoContent())
+}
+
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_movements);
     cfg.service(create_movement);
@@ -185,4 +210,5 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_movement_by_id);
     cfg.service(create_movement_score);
     cfg.service(update_movement_score);
+    cfg.service(delete_movement_score);
 }
