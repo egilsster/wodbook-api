@@ -221,10 +221,10 @@ pub fn parse_workout_score(score: &MyWOD) -> CreateWorkoutScore {
 }
 
 pub fn get_scores_for_movement(
-    movement: Movement,
+    movement: &Movement,
     movement_scores: &[MovementSession],
 ) -> Vec<CreateMovementScore> {
-    let movement_client_id = movement.primary_client_id;
+    let movement_client_id = movement.primary_client_id.to_owned();
     let movement_id = movement.primary_record_id;
     let movement_type = map_movement_measurement(movement.score_type);
 
@@ -501,7 +501,7 @@ mod tests {
             },
         ];
 
-        let res = get_scores_for_movement(movement, &movement_scores);
+        let res = get_scores_for_movement(&movement, &movement_scores);
         assert_eq!(res.len(), 1);
         let my_score: &CreateMovementScore = res.get(0).unwrap();
         assert_eq!(&my_score.notes, "HSPU score");

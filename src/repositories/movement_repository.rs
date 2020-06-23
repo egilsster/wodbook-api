@@ -70,12 +70,13 @@ impl MovementRepository {
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
-        match cursor {
-            Some(doc) => match from_bson(Bson::Document(doc)) {
-                Ok(model) => Ok(model),
-                Err(e) => Err(AppError::Internal(e.to_string())),
-            },
-            None => Ok(None),
+        if cursor.is_none() {
+            return Ok(None);
+        }
+
+        match from_bson(Bson::Document(cursor.unwrap())) {
+            Ok(model) => Ok(model),
+            Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
 
@@ -91,15 +92,14 @@ impl MovementRepository {
         let mut vec: Vec<MovementModel> = Vec::new();
 
         while let Some(result) = cursor.next().await {
-            match result {
-                Ok(document) => {
-                    let movement = from_bson::<MovementModel>(Bson::Document(document));
-                    match movement {
-                        Ok(result) => vec.push(result),
-                        Err(e) => println!("Error parsing movement: {:?}", e),
-                    }
+            if let Ok(result) = result {
+                let movement = from_bson::<MovementModel>(Bson::Document(result));
+                match movement {
+                    Ok(result) => vec.push(result),
+                    Err(e) => println!("Error parsing movement: {:?}", e),
                 }
-                Err(e) => println!("Error reading movement: {:?}", e),
+            } else {
+                println!("Error reading movement: {:?}", result.unwrap_err())
             }
         }
 
@@ -111,14 +111,13 @@ impl MovementRepository {
         user_id: &str,
         movement_id: &str,
     ) -> Result<MovementModel, AppError> {
-        let movement = self
-            .find_movement_by_id(user_id, movement_id)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let movement = self.find_movement_by_id(user_id, movement_id).await?;
 
         match movement {
             Some(_) => Ok(movement.unwrap()),
-            None => Err(AppError::NotFound("Entity not found".to_string())),
+            None => Err(AppError::NotFound(
+                "Movement with this id does not exist".to_string(),
+            )),
         }
     }
 
@@ -136,41 +135,36 @@ impl MovementRepository {
         }
 
         let movement_name = movement.name.as_ref();
-        let _exist = self.find_movement_by_name(user_id, movement_name).await?;
-        match _exist {
-            Some(_) => Err(AppError::Conflict(
-                "Movement with this name already exists".to_string(),
+        let existing_movement = self.find_movement_by_name(user_id, movement_name).await?;
+
+        if existing_movement.is_some() {
+            return Err(AppError::Conflict(
+                "A movement with this name already exists".to_string(),
+            ));
+        }
+
+        let coll = self.get_movement_collection();
+        let id = uuid::Uuid::new_v4().to_string();
+        let now = Utc::now().to_rfc3339();
+        let movement_doc = doc! {
+            "movement_id": id,
+            "user_id": user_id.to_owned(),
+            "name": movement.name.to_owned(),
+            "measurement": movement.measurement,
+            "public": movement.public,
+            "created_at": now.to_owned(),
+            "updated_at": now.to_owned(),
+        };
+
+        coll.insert_one(movement_doc, None)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))?;
+
+        match self.find_movement_by_name(user_id, movement_name).await? {
+            Some(new_movement) => Ok(new_movement),
+            None => Err(AppError::Internal(
+                "New movement not found after inserting".to_string(),
             )),
-            None => {
-                let coll = self.get_movement_collection();
-                let id = uuid::Uuid::new_v4().to_string();
-                let now = Utc::now().to_rfc3339();
-                let movement_doc = doc! {
-                    "movement_id": id,
-                    "user_id": user_id.to_owned(),
-                    "name": movement.name.to_owned(),
-                    "measurement": movement.measurement,
-                    "public": movement.public,
-                    "created_at": now.to_owned(),
-                    "updated_at": now.to_owned(),
-                };
-
-                let _ = coll
-                    .insert_one(movement_doc, None)
-                    .await
-                    .map_err(|err| AppError::Internal(err.to_string()));
-
-                match self
-                    .find_movement_by_name(user_id, movement_name)
-                    .await
-                    .unwrap()
-                {
-                    Some(new_movement) => Ok(new_movement),
-                    None => Err(AppError::Internal(
-                        "New movement not found after inserting".to_string(),
-                    )),
-                }
-            }
         }
     }
 
@@ -217,8 +211,7 @@ impl MovementRepository {
 
         let model = self
             .find_movement_by_id(user_id, movement_id)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?
+            .await?
             .unwrap();
 
         Ok(model)
@@ -262,14 +255,12 @@ impl MovementRepository {
             "updated_at": now.to_owned(),
         };
 
-        let _ = coll
-            .insert_one(movement_score_doc, None)
+        coll.insert_one(movement_score_doc, None)
             .await
-            .map_err(|err| AppError::Internal(err.to_string()));
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         self.get_movement_score_by_id(user_id, movement_id, &id)
             .await
-            .map_err(|err| AppError::Internal(err.to_string()))
     }
 
     pub async fn get_movement_scores(
@@ -325,12 +316,13 @@ impl MovementRepository {
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
-        match cursor {
-            Some(doc) => match from_bson(Bson::Document(doc)) {
-                Ok(model) => Ok(model),
-                Err(err) => Err(AppError::Internal(err.to_string())),
-            },
-            None => Err(AppError::NotFound("Entity not found".to_string())),
+        if cursor.is_none() {
+            return Err(AppError::NotFound("Entity not found".to_string()));
+        }
+
+        match from_bson(Bson::Document(cursor.unwrap())) {
+            Ok(model) => Ok(model),
+            Err(err) => Err(AppError::Internal(err.to_string())),
         }
     }
 

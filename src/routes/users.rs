@@ -53,7 +53,8 @@ async fn get_user_information(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let result = user_repo.user_information(claims.sub.to_owned()).await;
+    let user_email = claims.sub.as_ref();
+    let result = user_repo.find_user_with_email(user_email).await;
 
     result.map(|user| HttpResponse::Ok().json(user))
 }
@@ -70,8 +71,9 @@ async fn update_user_information(
         mongo_client: state.mongo_client.clone(),
     };
 
+    let user_email = claims.sub.as_ref();
     let result = user_repo
-        .update_user_with_email(claims.sub.to_owned(), user.into_inner())
+        .update_user_with_email(user_email, user.into_inner())
         .await;
 
     result.map(|user| HttpResponse::Ok().json(user))
@@ -98,7 +100,13 @@ async fn sync_mywod(
     let written_filename = write_payload_to_file(payload).await?;
     info!(logger, "File written: {}", written_filename);
 
-    let mywod_data = read_contents(&written_filename).await?;
+    let mywod_data = read_contents(&written_filename).await;
+
+    let deleted = delete_payload_file(written_filename).await?;
+    info!(logger, "File deleted after handling: {}", deleted);
+
+    let mywod_data = mywod_data.unwrap();
+
     let user_updated = mywod::save_athlete(user_repo, user_email, mywod_data.athlete).await?;
     let added_workouts_and_scores = mywod::save_workouts_and_scores(
         workout_repo,
@@ -114,14 +122,11 @@ async fn sync_mywod(
 
     let added_movements_and_scores = mywod::save_movements_and_scores(
         movement_repo,
-        mywod_data.movements,
+        &mywod_data.movements,
         &mywod_data.movement_scores,
         user_id,
     )
     .await?;
-
-    let deleted = delete_payload_file(written_filename).await?;
-    info!(logger, "File deleted after handling: {}", deleted);
 
     Ok(HttpResponse::Ok().json(MyWodResponse {
         user_updated,
