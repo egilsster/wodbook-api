@@ -230,7 +230,6 @@ impl WorkoutRepository {
         Ok(model)
     }
 
-    /// TODO: Delete all scores belonging to the workout when the workout is deleted
     pub async fn delete_workout(&self, user_id: &str, workout_id: &str) -> Result<(), AppError> {
         let workout = self.find_workout_by_id(user_id, workout_id).await?;
 
@@ -242,6 +241,8 @@ impl WorkoutRepository {
         coll.delete_one(doc! { "workout_id": workout_id }, None)
             .await
             .map_err(|_| AppError::Internal("Workout could not be deleted".to_owned()))?;
+
+        self.delete_workout_scores(user_id, workout_id).await?;
 
         Ok(())
     }
@@ -396,6 +397,16 @@ impl WorkoutRepository {
         if let Err(delete_result) = delete_result {
             return Err(AppError::Internal(delete_result.to_string()));
         }
+
+        Ok(())
+    }
+
+    async fn delete_workout_scores(&self, user_id: &str, workout_id: &str) -> Result<(), AppError> {
+        let query = query_utils::for_many_with_filter(doc! { "workout_id": workout_id }, user_id);
+        self.get_score_collection()
+            .delete_many(query, None)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         Ok(())
     }
