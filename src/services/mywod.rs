@@ -13,16 +13,8 @@ pub async fn save_athlete(
     user_email: &str,
     athlete: Athlete,
 ) -> Result<bool, AppError> {
-    // TODO(egilsster): use &str
-    let existing_user = user_repo
-        .find_user_with_email(user_email.to_owned())
-        .await?;
-
-    if existing_user.is_none() {
-        return Err(AppError::NotFound(
-            "Could not detect a user logged in".to_owned(),
-        ));
-    }
+    // Ensure the logged in user exists
+    user_repo.find_user_with_email(user_email).await?;
 
     // TODO(egilsster): this.save_avatar(existing_user.user_id, athlete.avatar_url);
 
@@ -38,7 +30,7 @@ pub async fn save_athlete(
     };
 
     let user_updated = user_repo
-        .update_user_with_email(user_email.to_owned(), user_to_update)
+        .update_user_with_email(user_email, user_to_update)
         .await;
 
     if user_updated.is_ok() {
@@ -107,7 +99,7 @@ pub async fn save_workouts_and_scores(
 
 pub async fn save_movements_and_scores(
     movement_repo: MovementRepository,
-    movements: Vec<Movement>,
+    movements: &[Movement],
     movement_scores: &[MovementSession],
     user_id: &str,
 ) -> Result<(u32, u32), AppError> {

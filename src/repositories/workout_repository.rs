@@ -57,14 +57,15 @@ impl WorkoutRepository {
             .get_workout_collection()
             .find_one(query, None)
             .await
-            .unwrap();
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
-        match cursor {
-            Some(doc) => match from_bson(Bson::Document(doc)) {
-                Ok(model) => Ok(model),
-                Err(e) => Err(AppError::Internal(e.to_string())),
-            },
-            None => Ok(None),
+        if cursor.is_none() {
+            return Ok(None);
+        }
+
+        match from_bson(Bson::Document(cursor.unwrap())) {
+            Ok(model) => Ok(model),
+            Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
 
@@ -80,12 +81,13 @@ impl WorkoutRepository {
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
-        match cursor {
-            Some(doc) => match from_bson(Bson::Document(doc)) {
-                Ok(model) => Ok(model),
-                Err(e) => Err(AppError::Internal(e.to_string())),
-            },
-            None => Ok(None),
+        if cursor.is_none() {
+            return Ok(None);
+        }
+
+        match from_bson(Bson::Document(cursor.unwrap())) {
+            Ok(workout) => Ok(Some(workout)),
+            Err(err) => Err(AppError::Internal(err.to_string())),
         }
     }
 
@@ -96,20 +98,19 @@ impl WorkoutRepository {
             .get_workout_collection()
             .find(query, find_options)
             .await
-            .unwrap();
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
         let mut vec: Vec<WorkoutModel> = Vec::new();
 
         while let Some(result) = cursor.next().await {
-            match result {
-                Ok(document) => {
-                    let workout = from_bson::<WorkoutModel>(Bson::Document(document));
-                    match workout {
-                        Ok(result) => vec.push(result),
-                        Err(e) => println!("Error parsing workout: {:?}", e),
-                    }
+            if let Ok(result) = result {
+                let workout = from_bson::<WorkoutModel>(Bson::Document(result));
+                match workout {
+                    Ok(result) => vec.push(result),
+                    Err(e) => println!("Error parsing workout: {:?}", e),
                 }
-                Err(e) => println!("Error reading workout: {:?}", e),
+            } else {
+                println!("Error reading workout: {:?}", result.unwrap_err())
             }
         }
 
@@ -121,12 +122,12 @@ impl WorkoutRepository {
         user_id: &str,
         workout_id: &str,
     ) -> Result<WorkoutModel, AppError> {
-        let workout = self.find_workout_by_id(user_id, workout_id).await.unwrap();
+        let workout = self.find_workout_by_id(user_id, workout_id).await?;
 
         match workout {
             Some(_) => Ok(workout.unwrap()),
             None => Err(AppError::NotFound(
-                "Workout by this id does not exist".to_string(),
+                "Workout with this id does not exist".to_string(),
             )),
         }
     }
@@ -145,42 +146,37 @@ impl WorkoutRepository {
         }
 
         let workout_name = workout.name.as_ref();
-        let _exist = self.find_workout_by_name(user_id, workout_name).await?;
-        match _exist {
-            Some(_) => Err(AppError::Conflict(
+        let existing_workout = self.find_workout_by_name(user_id, workout_name).await?;
+
+        if existing_workout.is_some() {
+            return Err(AppError::Conflict(
                 "A workout with this name already exists".to_string(),
+            ));
+        }
+
+        let coll = self.get_workout_collection();
+        let id = uuid::Uuid::new_v4().to_string();
+        let now = Utc::now().to_rfc3339();
+        let workout_doc = doc! {
+            "workout_id": id,
+            "user_id": user_id.to_owned(),
+            "name": workout.name.to_owned(),
+            "description": workout.description,
+            "measurement": workout.measurement,
+            "public": workout.public,
+            "created_at": now.to_owned(),
+            "updated_at": now,
+        };
+
+        coll.insert_one(workout_doc, None)
+            .await
+            .map_err(|err| AppError::Internal(err.to_string()))?;
+
+        match self.find_workout_by_name(user_id, workout_name).await? {
+            Some(new_workout) => Ok(new_workout),
+            None => Err(AppError::Internal(
+                "New workout not found after inserting".to_string(),
             )),
-            None => {
-                let coll = self.get_workout_collection();
-                let id = uuid::Uuid::new_v4().to_string();
-                let now = Utc::now().to_rfc3339();
-                let workout_doc = doc! {
-                    "workout_id": id,
-                    "user_id": user_id.to_owned(),
-                    "name": workout.name.to_owned(),
-                    "description": workout.description,
-                    "measurement": workout.measurement,
-                    "public": workout.public,
-                    "created_at": now.to_owned(),
-                    "updated_at": now,
-                };
-
-                let _ = coll
-                    .insert_one(workout_doc, None)
-                    .await
-                    .map_err(|err| AppError::Internal(err.to_string()));
-
-                match self
-                    .find_workout_by_name(user_id, workout_name)
-                    .await
-                    .unwrap()
-                {
-                    Some(new_workout) => Ok(new_workout),
-                    None => Err(AppError::Internal(
-                        "New workout not found after inserting".to_string(),
-                    )),
-                }
-            }
         }
     }
 
@@ -229,11 +225,7 @@ impl WorkoutRepository {
             .await
             .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
 
-        let model = self
-            .find_workout_by_id(user_id, workout_id)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?
-            .unwrap();
+        let model = self.find_workout_by_id(user_id, workout_id).await?.unwrap();
 
         Ok(model)
     }
@@ -274,14 +266,11 @@ impl WorkoutRepository {
             "updated_at": now.to_owned(),
         };
 
-        let _ = coll
-            .insert_one(workout_score_doc, None)
+        coll.insert_one(workout_score_doc, None)
             .await
-            .map_err(|err| AppError::Internal(err.to_string()));
+            .map_err(|err| AppError::Internal(err.to_string()))?;
 
-        self.get_workout_score_by_id(user_id, workout_id, &id)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))
+        self.get_workout_score_by_id(user_id, workout_id, &id).await
     }
 
     pub async fn get_workout_scores(
@@ -336,12 +325,13 @@ impl WorkoutRepository {
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
-        match cursor {
-            Some(doc) => match from_bson(Bson::Document(doc)) {
-                Ok(model) => Ok(model),
-                Err(err) => Err(AppError::Internal(err.to_string())),
-            },
-            None => Err(AppError::NotFound("Entity not found".to_string())),
+        if cursor.is_none() {
+            return Err(AppError::NotFound("Entity not found".to_string()));
+        }
+
+        match from_bson(Bson::Document(cursor.unwrap())) {
+            Ok(model) => Ok(model),
+            Err(err) => Err(AppError::Internal(err.to_string())),
         }
     }
 
