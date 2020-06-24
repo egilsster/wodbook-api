@@ -62,10 +62,6 @@ paths:
                 $ref: "#/components/schemas/user"
         400:
           description: Registration unsuccessful.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/error" # TODO(egilsster): API actually returns empty response at the moment
   /users/me/:
     get:
       summary: Shows information about the logged in user.
