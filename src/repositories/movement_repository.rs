@@ -3,7 +3,7 @@ use crate::models::movement::{
     CreateMovement, CreateMovementScore, MovementModel, MovementScoreResponse, UpdateMovement,
     UpdateMovementScore,
 };
-use crate::utils::{query_utils, Config};
+use crate::utils::{query_utils, validator, Config};
 
 use bson::{doc, from_bson, Bson};
 use chrono::Utc;
@@ -14,9 +14,6 @@ use std::vec::Vec;
 
 static WORKOUT_COLLECTION_NAME: &str = "movements";
 static SCORE_COLLECTION_NAME: &str = "movementscores";
-
-// TODO(egilsster): Can this be done with enum (and match?)?
-static VALID_MEASUREMENTS: [&str; 4] = ["weight", "distance", "reps", "height"];
 
 pub struct MovementRepository {
     pub mongo_client: Client,
@@ -126,13 +123,7 @@ impl MovementRepository {
         user_id: &str,
         movement: CreateMovement,
     ) -> Result<MovementModel, AppError> {
-        let measurement = movement.measurement.to_owned();
-        if !VALID_MEASUREMENTS.contains(&measurement.as_str()) {
-            return Err(AppError::UnprocessableEntity(format!(
-                "Invalid measurement, should be one of: {}",
-                VALID_MEASUREMENTS.join(", ")
-            )));
-        }
+        validator::validate_movement_measurement(movement.measurement.as_ref())?;
 
         let movement_name = movement.name.as_ref();
         let existing_movement = self.find_movement_by_name(user_id, movement_name).await?;
