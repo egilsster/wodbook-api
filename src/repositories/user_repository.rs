@@ -42,40 +42,27 @@ impl UserRepository {
     pub async fn update_user_with_email(
         &self,
         email: &str,
-        user: UpdateUser,
+        user_update: UpdateUser,
     ) -> Result<User, AppError> {
-        // TODO(egilsster): Refactor this. There is probably a better way to perform updates.
-        let existing_user = self.find_user_with_email(email).await?;
+        let mut user = self.find_user_with_email(email).await?;
 
-        let new_password = if user.password.is_some() {
-            resources::create_hash(&user.password.unwrap())
+        user.password = if user_update.password.is_some() {
+            resources::create_hash(&user_update.password.unwrap())
         } else {
-            existing_user.password
+            user.password
         };
-        let new_first_name = user.first_name.unwrap_or(existing_user.first_name);
-        let new_last_name = user.last_name.unwrap_or(existing_user.last_name);
-        let new_date_of_birth = user.date_of_birth.unwrap_or(existing_user.date_of_birth);
-        let new_height = user.height.unwrap_or(existing_user.height);
-        let new_weight = user.weight.unwrap_or(existing_user.weight);
-        let new_box_name = user.box_name.unwrap_or(existing_user.box_name);
-        let new_avatar_url = user.avatar_url.unwrap_or(existing_user.avatar_url);
+        user.first_name = user_update.first_name.unwrap_or(user.first_name);
+        user.last_name = user_update.last_name.unwrap_or(user.last_name);
+        user.date_of_birth = user_update.date_of_birth.unwrap_or(user.date_of_birth);
+        user.height = user_update.height.unwrap_or(user.height);
+        user.weight = user_update.weight.unwrap_or(user.weight);
+        user.box_name = user_update.box_name.unwrap_or(user.box_name);
+        user.avatar_url = user_update.avatar_url.unwrap_or(user.avatar_url);
 
-        let user_doc = doc! {
-            "user_id": existing_user.user_id.to_owned(),
-            "email": existing_user.email,
-            "password": new_password,
-            "admin": existing_user.admin,
-            "first_name": new_first_name,
-            "last_name": new_last_name,
-            "date_of_birth": new_date_of_birth,
-            "height": new_height,
-            "weight": new_weight,
-            "box_name": new_box_name,
-            "avatar_url": new_avatar_url,
-        };
+        let user_doc = user.to_doc();
 
         let coll = self.get_collection();
-        coll.update_one(doc! { "user_id": existing_user.user_id }, user_doc, None)
+        coll.update_one(doc! { "user_id": user.user_id }, user_doc, None)
             .await
             .map_err(|_| AppError::Internal("Could not update user".to_owned()))?;
 
