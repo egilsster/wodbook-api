@@ -296,7 +296,7 @@ pub fn adjust_movement_score_to_measurement(
 /// ## Example
 ///
 /// ```
-/// parse_short_date("1991-12-06"); // "1991-12-06 00:00:00 ..." // TODO
+/// parse_short_date("1991-12-06"); // "1991-12-06T00:00:00+00:00"
 /// ```
 pub fn parse_short_date(short_date: &str) -> String {
     let date_parsed = NaiveDateTime::parse_from_str(
