@@ -1,10 +1,14 @@
 use crate::db::connection::Connection;
+use crate::utils::mywod::AVATAR_FILE_LOCATION;
 use crate::utils::{AppState, Config};
 
+use actix_files;
 use actix_web::http::ContentEncoding;
 use actix_web::{middleware, web, App, HttpServer};
 use dotenv::dotenv;
 use slog::info;
+use std::fs;
+use std::path::Path;
 
 mod db;
 mod errors;
@@ -15,8 +19,21 @@ mod routes;
 mod services;
 mod utils;
 
+/// Creates the directories needed for the mywod backups
+/// and the avatar images.
+fn create_folders() -> std::io::Result<bool> {
+    if !Path::new("./tmp").exists() {
+        fs::create_dir_all("./tmp")?;
+    }
+    if !Path::new(AVATAR_FILE_LOCATION).exists() {
+        fs::create_dir_all(AVATAR_FILE_LOCATION)?;
+    }
+    Ok(true)
+}
+
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    create_folders()?;
     dotenv().ok();
 
     let config = Config::from_env().unwrap();
@@ -39,6 +56,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Compress::new(ContentEncoding::Br))
             .wrap(middleware::Logger::default())
             // Setup endpoints (strictest matcher first)
+            .service(actix_files::Files::new("/avatars", AVATAR_FILE_LOCATION).show_files_listing())
             .service(web::scope("/v1/users").configure(routes::users::init_routes))
             .service(web::scope("/v1/movements").configure(routes::movements::init_routes))
             .service(web::scope("/v1/workouts").configure(routes::workouts::init_routes))

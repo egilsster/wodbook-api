@@ -5,20 +5,19 @@ use crate::models::user::UpdateUser;
 use crate::models::workout::CreateWorkout;
 use crate::repositories::{MovementRepository, UserRepository, WorkoutRepository};
 use crate::utils::mywod::{
-    get_scores_for_movement, map_movement_measurement, map_workout_measurement, parse_workout_score,
+    get_scores_for_movement, map_movement_measurement, map_workout_measurement,
+    parse_workout_score, save_avatar,
 };
 
 pub async fn save_athlete(
     user_repo: UserRepository,
+    user_id: &str,
     user_email: &str,
     athlete: Athlete,
 ) -> Result<bool, AppError> {
-    // Ensure the logged in user exists
-    user_repo.find_user_with_email(user_email).await?;
+    let avatar_url = save_avatar(user_id, athlete.avatar).unwrap();
 
-    // TODO(egilsster): this.save_avatar(existing_user.user_id, athlete.avatar_url);
-
-    let user_to_update = UpdateUser {
+    let user_update = UpdateUser {
         password: None,
         first_name: Some(athlete.first_name.trim().to_owned()),
         last_name: Some(athlete.last_name.trim().to_owned()),
@@ -26,18 +25,14 @@ pub async fn save_athlete(
         height: Some(athlete.height),
         weight: Some(athlete.weight),
         box_name: Some(athlete.box_name.trim().to_owned()),
-        avatar_url: None, // TODO(egilsster)
+        avatar_url: Some(avatar_url),
     };
 
-    let user_updated = user_repo
-        .update_user_with_email(user_email, user_to_update)
+    let updated_user = user_repo
+        .update_user_with_email(user_email, user_update)
         .await;
 
-    if user_updated.is_ok() {
-        Ok(true)
-    } else {
-        Ok(false)
-    }
+    Ok(updated_user.is_ok())
 }
 
 pub async fn save_workouts_and_scores(
