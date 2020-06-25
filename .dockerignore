@@ -4,6 +4,7 @@
 /node_modules
 /target
 /tmp
+/static
 
 data.mywod
 mongo.seed

@@ -107,7 +107,8 @@ async fn sync_mywod(
 
     let mywod_data = mywod_data.unwrap();
 
-    let user_updated = mywod::save_athlete(user_repo, user_email, mywod_data.athlete).await?;
+    let user_updated =
+        mywod::save_athlete(user_repo, user_id, user_email, mywod_data.athlete).await?;
     let added_workouts_and_scores = mywod::save_workouts_and_scores(
         workout_repo,
         mywod_data.workouts,

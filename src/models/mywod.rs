@@ -1,4 +1,3 @@
-// use rusqlite::blob::ZeroBlob;
 use serde::Serialize;
 
 #[derive(Debug)]
@@ -10,7 +9,7 @@ pub struct Athlete {
     pub weight: i32,
     pub date_of_birth: String,
     pub box_name: String,
-    // pub avatar: ZeroBlob,
+    pub avatar: Vec<u8>,
 }
 
 #[derive(Debug)]

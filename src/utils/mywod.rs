@@ -11,16 +11,28 @@ use std::fs;
 use std::io::Write;
 use std::path::Path;
 
+pub const AVATAR_FILE_LOCATION: &str = "./static/avatars";
+
+/// Writes the avatar blob to an image in a static directory and returns
+/// an API path to that image.
+pub fn save_avatar(user_id: &str, avatar: Vec<u8>) -> Result<String, AppError> {
+    let filename = format!("{}.png", user_id);
+    let filepath = format!("{}/{}", AVATAR_FILE_LOCATION, filename);
+
+    let mut file = fs::File::create(&filepath)
+        .map_err(|_| AppError::Internal(format!("Error creating file: {}", &filepath)))?;
+    file.write_all(&avatar)
+        .map(|_| file)
+        .map_err(|_| AppError::Internal("Saving file failed".to_owned()))?;
+
+    Ok(format!("/avatars/{}", filename))
+}
+
 /// Function to write the multiform upload from the user, this file gets
 /// handled and all data is attempted to be added for the user.
 pub async fn write_payload_to_file(mut payload: Multipart) -> Result<String, AppError> {
     let id = uuid::Uuid::new_v4().to_string();
     let filepath = format!("./tmp/{}", id);
-
-    if !Path::new("./tmp").exists() {
-        fs::create_dir("./tmp")
-            .map_err(|_| AppError::Internal("Could not create tmp dir".to_owned()))?;
-    }
 
     while let Ok(Some(mut field)) = payload.try_next().await {
         // File::create is blocking operation, use thread-pool
@@ -69,8 +81,7 @@ pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
                 weight: row.get(8)?,
                 date_of_birth: row.get(10)?,
                 box_name: row.get(11)?,
-                // TODO(egilsster): read blob, save to static-files/ and give path to img here
-                // avatar: row.get(13)?,
+                avatar: row.get(13)?,
             })
         })
         .map_err(|_| AppError::Internal("Error reading athlete data".to_owned()))?;
@@ -175,14 +186,6 @@ pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
         workout_scores,
     })
 }
-
-// pub fn save_avatar(userId: &str, avatar: Blob) {
-//     let filename = format!("{}.png", user_id.to_owned());
-//     let filepath = format!("{}/{}", AVATAR_FILE_LOCATION, filename);
-//     // ensure directory: MyWodService.AVATAR_LOCATION
-//     // write the file 'filepath' with 'avatar' contents
-//     return format!("/public/avatars/{}", filename);
-// }
 
 // Maps the string value from the myWOD database to a one_word string value.
 pub fn map_workout_measurement(score_type: &str) -> String {
@@ -311,6 +314,14 @@ pub fn parse_short_date(short_date: &str) -> String {
 mod tests {
     use super::*;
     use futures_await_test::async_test;
+
+    // TODO(egilsster): Re-enable when I can mock the FS call
+    // #[test]
+    // fn test_save_avatar() {
+    //     let res = save_avatar("user_id", vec![0, 1, 2, 3]);
+    //     assert!(res.is_ok());
+    //     assert_eq!(res.unwrap(), "/avatars/user_id.png");
+    // }
 
     #[async_test]
     async fn test_read_contents() -> Result<(), AppError> {
