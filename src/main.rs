@@ -8,7 +8,6 @@ use actix_web::{middleware, web, App, HttpServer};
 use dotenv::dotenv;
 use slog::info;
 use std::fs;
-use std::path::Path;
 
 mod db;
 mod errors;
@@ -19,21 +18,11 @@ mod routes;
 mod services;
 mod utils;
 
-/// Creates the directories needed for the mywod backups
-/// and the avatar images.
-fn create_folders() -> std::io::Result<bool> {
-    if !Path::new("./tmp").exists() {
-        fs::create_dir_all("./tmp")?;
-    }
-    if !Path::new(AVATAR_FILE_LOCATION).exists() {
-        fs::create_dir_all(AVATAR_FILE_LOCATION)?;
-    }
-    Ok(true)
-}
-
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    create_folders()?;
+    fs::create_dir_all("./tmp")?;
+    fs::create_dir_all(AVATAR_FILE_LOCATION)?;
+
     dotenv().ok();
 
     let config = Config::from_env().unwrap();
