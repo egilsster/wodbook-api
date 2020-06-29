@@ -6,7 +6,7 @@ info:
     ## About
 
     The Wodbook API is a back-end for a mobile application that helps
-    you keep track of all your CrossFit related things like workouts
+    you keep track of all your training related things like workouts
     and movements.
 tags:
   - name: users
@@ -28,13 +28,13 @@ paths:
       tags:
         - users
       responses:
-        200:
+        "200":
           description: Login successful.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/token"
-        400:
+        "400":
           description: Login unsuccessful.
           content:
             application/json:
@@ -54,13 +54,13 @@ paths:
             schema:
               $ref: "#/components/schemas/user"
       responses:
-        201:
+        "201":
           description: Registration successful.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/user"
-        400:
+        "400":
           description: Registration unsuccessful.
   /users/me/:
     get:
@@ -69,13 +69,13 @@ paths:
       tags:
         - users
       responses:
-        201:
+        "201":
           description: Returns user information.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/user"
-        400:
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -93,13 +93,13 @@ paths:
             schema:
               $ref: "#/components/schemas/updateUser"
       responses:
-        200:
+        "200":
           description: User has been updated and returns user information.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/user"
-        400:
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -123,7 +123,7 @@ paths:
                   description: myWOD backup file (sqlite database file).
                   format: binary
       responses:
-        200:
+        "200":
           description: User has been updated and returns user information.
           content:
             application/json:
@@ -142,7 +142,7 @@ paths:
       tags:
         - workouts
       responses:
-        200:
+        "200":
           description: Lists all workouts.
           content:
             application/json:
@@ -160,19 +160,19 @@ paths:
             schema:
               $ref: "#/components/schemas/workout"
       responses:
-        201:
+        "201":
           description: Creates a new workout and returns it.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/workout"
-        409:
+        "409":
           description: Resource with same unique identity already exists.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        422:
+        "422":
           description: Unprocessable entity. Validation error.
           content:
             application/json:
@@ -198,19 +198,19 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        "200":
           description: Returns the workout.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/workout"
-        403:
+        "403":
           description: Forbidden. User is not authorized to read the workout.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the workout.
           content:
             application/json:
@@ -235,25 +235,25 @@ paths:
             schema:
               $ref: "#/components/schemas/updateWorkout"
       responses:
-        200:
+        "200":
           description: Updates the workout and returns it.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/workout"
-        404:
+        "404":
           description: Workout not found.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        409:
+        "409":
           description: Resource with same unique identity already exists.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        422:
+        "422":
           description: Unprocessable entity. Validation error.
           content:
             application/json:
@@ -278,9 +278,9 @@ paths:
           schema:
             type: string
       responses:
-        204:
+        "204":
           description: Workout deleted.
-        404:
+        "404":
           description: Workout not found.
           content:
             application/json:
@@ -311,19 +311,19 @@ paths:
             schema:
               $ref: "#/components/schemas/workoutScore"
       responses:
-        200:
+        "200":
           description: Returns workout score.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/workoutScore"
-        403:
+        "403":
           description: Forbidden. User is not authorized to create score for the workout.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the workout.
           content:
             application/json:
@@ -349,19 +349,19 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        "200":
           description: Score updated successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/workoutScore"
-        403:
+        "403":
           description: Forbidden. User is not authorized to update workout score.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the workout or workout score.
           content:
             application/json:
@@ -392,15 +392,15 @@ paths:
           schema:
             type: string
       responses:
-        204:
+        "204":
           description: Score deleted successfully.
-        403:
+        "403":
           description: Forbidden. User is not authorized to delete workout score.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the workout or workout score.
           content:
             application/json:
@@ -419,7 +419,7 @@ paths:
       tags:
         - movements
       responses:
-        200:
+        "200":
           description: Lists all movements.
           content:
             application/json:
@@ -437,19 +437,19 @@ paths:
             schema:
               $ref: "#/components/schemas/movement"
       responses:
-        201:
+        "201":
           description: Creates a new movement and returns it.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/movement"
-        409:
+        "409":
           description: Resource with same unique identity already exists.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        422:
+        "422":
           description: Unprocessable entity. Validation error.
           content:
             application/json:
@@ -475,19 +475,19 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        "200":
           description: Returns movement.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/movement"
-        403:
+        "403":
           description: Forbidden. User is not authorized to read the movement.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the movement.
           content:
             application/json:
@@ -512,19 +512,19 @@ paths:
             schema:
               $ref: "#/components/schemas/updateMovement"
       responses:
-        200:
+        "200":
           description: Updates the movement and returns it.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/movement"
-        409:
+        "409":
           description: Resource with same unique identity already exists.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        422:
+        "422":
           description: Unprocessable entity. Validation error.
           content:
             application/json:
@@ -549,9 +549,9 @@ paths:
           schema:
             type: string
       responses:
-        204:
+        "204":
           description: Movement deleted.
-        404:
+        "404":
           description: Movement not found.
           content:
             application/json:
@@ -582,19 +582,19 @@ paths:
             schema:
               $ref: "#/components/schemas/movementScore"
       responses:
-        200:
+        "200":
           description: Returns movement score.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/movementScore"
-        403:
+        "403":
           description: Forbidden. User is not authorized to create score for the movement.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the movement.
           content:
             application/json:
@@ -620,19 +620,19 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        "200":
           description: Score updated successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/movementScore"
-        403:
+        "403":
           description: Forbidden. User is not authorized to update movement score.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the movement or movement score.
           content:
             application/json:
@@ -663,15 +663,15 @@ paths:
           schema:
             type: string
       responses:
-        204:
+        "204":
           description: Score deleted successfully.
-        403:
+        "403":
           description: Forbidden. User is not authorized to delete movement score.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/error"
-        404:
+        "404":
           description: Could not find the movement or movement score.
           content:
             application/json:
