@@ -14,10 +14,7 @@ pub struct UserRepository {
 }
 
 /// Generates a JWT based on user data and if the user wants to stay logged in (makes it expire in a year).
-fn gen_token(user: User, email: &str, remember_me: bool) -> Result<String, AppError> {
-    let config = Config::from_env().unwrap();
-    let key = config.auth.secret.as_bytes();
-
+fn gen_token(key: &[u8], user: User, email: &str, remember_me: bool) -> Result<String, AppError> {
     let date = if !remember_me {
         Utc::now() + Duration::hours(1)
     } else {
@@ -95,6 +92,8 @@ impl UserRepository {
     }
 
     pub async fn login(&self, user_login: Login) -> Result<String, AppError> {
+        let config = Config::from_env().unwrap();
+        let key = config.auth.secret.as_bytes();
         let user_email: &str = user_login.email.as_ref();
 
         let user = self.find_user_with_email(user_email).await;
@@ -111,12 +110,14 @@ impl UserRepository {
             ));
         }
 
-        let token = gen_token(user, user_email, user_login.remember_me).unwrap();
+        let token = gen_token(key, user, user_email, user_login.remember_me).unwrap();
 
         Ok(token)
     }
 
     pub async fn register(&self, create_user: CreateUser) -> Result<String, AppError> {
+        let config = Config::from_env().unwrap();
+        let key = config.auth.secret.as_bytes();
         let user_email: &str = create_user.email.as_ref();
 
         let existing_user = self.find_user_with_email(user_email).await;
@@ -147,7 +148,7 @@ impl UserRepository {
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
         let user = self.find_user_with_email(user_email).await?;
-        let token = gen_token(user, user_email, false).unwrap();
+        let token = gen_token(key, user, user_email, false).unwrap();
 
         Ok(token)
     }
@@ -163,6 +164,7 @@ mod tests {
         dotenv().ok();
 
         let res1 = gen_token(
+            "my_key".as_bytes(),
             User {
                 user_id: "user_id".to_owned(),
                 email: "email".to_owned(),
@@ -183,6 +185,7 @@ mod tests {
         assert!(res1.starts_with("ey"));
 
         let res2 = gen_token(
+            "some_key".as_bytes(),
             User {
                 user_id: "user_id".to_owned(),
                 email: "email".to_owned(),
