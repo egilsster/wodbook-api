@@ -1,19 +1,17 @@
 use crate::errors::AppError;
 use crate::utils::Config;
 use mongodb::Client;
-use slog::{crit, o, Logger};
 
 pub struct Connection;
 
 impl Connection {
-    pub async fn get_client(&self, logger: Logger) -> Result<Client, AppError> {
+    pub async fn get_client(&self) -> Result<Client, AppError> {
         let config = Config::from_env().unwrap();
 
         Client::with_uri_str(&config.mongo.uri)
             .await
             .map_err(|err| {
-                let sub_logger = logger.new(o!("cause" => err.to_string()));
-                crit!(sub_logger, "Error connecting to mongo");
+                error!("Error connecting to mongo");
                 AppError::Internal(err.to_string())
             })
     }

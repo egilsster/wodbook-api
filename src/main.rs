@@ -1,12 +1,14 @@
+#[macro_use]
+extern crate log;
+
 use crate::db::connection::Connection;
 use crate::utils::mywod::AVATAR_FILE_LOCATION;
 use crate::utils::{AppState, Config};
 
-use actix_web::http::ContentEncoding;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::middleware::{Compress, Logger};
+use actix_web::{http, web, App, HttpServer};
 use dotenv::dotenv;
-use slog::info;
-use std::fs;
+use std::{fs, io};
 
 mod db;
 mod errors;
@@ -18,37 +20,35 @@ mod services;
 mod utils;
 
 #[actix_rt::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> io::Result<()> {
     fs::create_dir_all("./tmp")?;
     fs::create_dir_all(AVATAR_FILE_LOCATION)?;
 
     dotenv().ok();
 
+    env_logger::init();
+
     let config = Config::from_env().unwrap();
-    let logger = Config::configure_log();
     let server_addr = format!("{}:{}", config.host, config.port);
 
     // TODO(egilsster): Handle when mongo isn't up, with a warning or something
-    let mongo_client = Connection.get_client(logger.clone()).await.unwrap();
+    let mongo_client = Connection.get_client().await.unwrap();
 
-    info!(logger, "Listening on http://{}/", server_addr);
-
-    HttpServer::new(move || {
+    let app = move || {
         App::new()
             .data(AppState {
                 mongo_client: mongo_client.clone(),
-                logger: logger.clone(),
             })
-            .wrap(middleware::Compress::new(ContentEncoding::Br))
-            .wrap(middleware::Logger::default())
+            .wrap(Compress::new(http::ContentEncoding::Br))
+            .wrap(Logger::default())
             // Setup endpoints (strictest matcher first)
             .service(actix_files::Files::new("/avatars", AVATAR_FILE_LOCATION).show_files_listing())
             .service(web::scope("/v1/users").configure(routes::users::init_routes))
             .service(web::scope("/v1/movements").configure(routes::movements::init_routes))
             .service(web::scope("/v1/workouts").configure(routes::workouts::init_routes))
             .service(web::scope("/").configure(routes::index::init_routes))
-    })
-    .bind(server_addr)?
-    .run()
-    .await
+    };
+
+    debug!("Listening on {}", server_addr);
+    HttpServer::new(app).bind(server_addr)?.run().await
 }
