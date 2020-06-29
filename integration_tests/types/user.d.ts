@@ -2,7 +2,7 @@ type LoginData = {
   token: string;
 };
 
-declare type LoginResponse = {
+declare type TokenResponse = {
   statusCode: number;
   body: LoginData;
 };

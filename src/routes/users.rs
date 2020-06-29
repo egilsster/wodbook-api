@@ -1,5 +1,6 @@
 use crate::errors::AppError;
 use crate::models::mywod::MyWodResponse;
+use crate::models::response::TokenResponse;
 use crate::models::user::Claims;
 use crate::models::user::{CreateUser, Login, UpdateUser};
 use crate::repositories::{MovementRepository, UserRepository, WorkoutRepository};
@@ -21,9 +22,10 @@ async fn login(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let result = user_repo.login(user.into_inner()).await;
-
-    result.map(|user| HttpResponse::Ok().json(user))
+    user_repo
+        .login(user.into_inner())
+        .await
+        .map(|token| HttpResponse::Ok().json(TokenResponse { token }))
 }
 
 #[post("/register")]
@@ -37,9 +39,10 @@ async fn register(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let result = user_repo.register(user.into_inner()).await;
-
-    result.map(|user| HttpResponse::Created().json(user))
+    user_repo
+        .register(user.into_inner())
+        .await
+        .map(|token| HttpResponse::Created().json(TokenResponse { token }))
 }
 
 #[get("/me")]
@@ -53,10 +56,10 @@ async fn get_user_information(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_email = claims.sub.as_ref();
-    let result = user_repo.find_user_with_email(user_email).await;
-
-    result.map(|user| HttpResponse::Ok().json(user))
+    user_repo
+        .find_user_with_email(claims.sub.as_ref())
+        .await
+        .map(|user| HttpResponse::Ok().json(user))
 }
 
 #[patch("/me")]
@@ -71,12 +74,10 @@ async fn update_user_information(
         mongo_client: state.mongo_client.clone(),
     };
 
-    let user_email = claims.sub.as_ref();
-    let result = user_repo
-        .update_user_with_email(user_email, user.into_inner())
-        .await;
-
-    result.map(|user| HttpResponse::Ok().json(user))
+    user_repo
+        .update_user_with_email(claims.sub.as_ref(), user.into_inner())
+        .await
+        .map(|user| HttpResponse::Ok().json(user))
 }
 
 #[post("/mywod")]

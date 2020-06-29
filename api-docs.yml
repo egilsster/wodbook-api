@@ -27,6 +27,12 @@ paths:
       operationId: loginUser
       tags:
         - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/login"
       responses:
         "200":
           description: Login successful.
@@ -59,7 +65,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/user"
+                $ref: "#/components/schemas/token"
         "400":
           description: Registration unsuccessful.
   /users/me/:
@@ -695,6 +701,14 @@ components:
       properties:
         token:
           type: string
+    login:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          description: Hash of the password.
     user:
       type: object
       properties:

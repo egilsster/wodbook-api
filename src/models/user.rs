@@ -6,6 +6,14 @@ fn default_as_false() -> bool {
     false
 }
 
+fn default_as_empty_string() -> String {
+    "".to_string()
+}
+
+fn default_as_zero() -> i32 {
+    0
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User {
     pub user_id: String,
@@ -59,14 +67,22 @@ pub struct Claims {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateUser {
     pub email: String,
+    #[serde(default = "default_as_empty_string")]
     pub password: String,
+    #[serde(default = "default_as_empty_string")]
     pub first_name: String,
+    #[serde(default = "default_as_empty_string")]
     pub last_name: String,
+    #[serde(default = "default_as_empty_string")]
     pub date_of_birth: String,
+    #[serde(default = "default_as_zero")]
     pub height: i32,
+    #[serde(default = "default_as_zero")]
     pub weight: i32,
+    #[serde(default = "default_as_empty_string")]
     pub box_name: String,
-    pub avatar_url: Option<String>,
+    #[serde(default = "default_as_empty_string")]
+    pub avatar_url: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -6,7 +6,7 @@ pub struct HealthResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct LoginResponse {
+pub struct TokenResponse {
     pub token: String,
 }
 
