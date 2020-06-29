@@ -9,15 +9,12 @@ use crate::utils::mywod::{delete_payload_file, read_contents, write_payload_to_f
 use crate::utils::AppState;
 use actix_multipart::Multipart;
 use actix_web::{get, patch, post, web, HttpResponse, Responder};
-use slog::{info, o};
 
 #[post("/login")]
 async fn login(
     state: web::Data<AppState>,
     user: web::Json<Login>,
 ) -> Result<impl Responder, AppError> {
-    let logger = state.logger.new(o!("handler" => "POST /login"));
-    info!(logger, "Logging in a user");
     let user_repo = UserRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -33,8 +30,6 @@ async fn register(
     state: web::Data<AppState>,
     user: web::Json<CreateUser>,
 ) -> Result<impl Responder, AppError> {
-    let logger = state.logger.new(o!("handler" => "POST /register"));
-    info!(logger, "Registering new user");
     let user_repo = UserRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -50,8 +45,6 @@ async fn get_user_information(
     state: web::Data<AppState>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let logger = state.logger.new(o!("handler" => "GET /me"));
-    info!(logger, "Getting information about logged in user");
     let user_repo = UserRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -68,8 +61,6 @@ async fn update_user_information(
     claims: Claims,
     user: web::Json<UpdateUser>,
 ) -> Result<impl Responder, AppError> {
-    let logger = state.logger.new(o!("handler" => "PATCH /me"));
-    info!(logger, "Updating information about logged in user");
     let user_repo = UserRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -88,9 +79,6 @@ async fn sync_mywod(
 ) -> Result<impl Responder, AppError> {
     let user_id = claims.user_id.as_ref();
     let user_email = claims.sub.as_ref();
-    let logger = state.logger.new(o!("handler" => "POST /mywod"));
-    info!(logger, "Syncing myWOD workouts for user");
-
     let user_repo = UserRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -99,12 +87,12 @@ async fn sync_mywod(
     };
 
     let written_filename = write_payload_to_file(payload).await?;
-    info!(logger, "File written: {}", written_filename);
+    info!("File written: {}", written_filename);
 
     let mywod_data = read_contents(&written_filename).await;
 
     let deleted = delete_payload_file(written_filename).await?;
-    info!(logger, "File deleted after handling: {}", deleted);
+    info!("File deleted after handling: {}", deleted);
 
     let mywod_data = mywod_data.unwrap();
 

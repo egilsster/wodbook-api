@@ -7,15 +7,12 @@ use crate::models::workout::{
 use crate::repositories::WorkoutRepository;
 use crate::utils::AppState;
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
-use slog::{info, o};
 
 #[get("/")]
 async fn get_workouts(
     state: web::Data<AppState>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let logger = state.logger.new(o!("handler" => "GET /workouts"));
-    info!(logger, "Getting all workouts");
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -32,8 +29,6 @@ async fn create_workout(
     claims: Claims,
     workout: web::Json<CreateWorkout>,
 ) -> Result<impl Responder, AppError> {
-    let logger = state.logger.new(o!("handler" => "POST /workouts"));
-    info!(logger, "Creating a new workout");
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -54,10 +49,6 @@ async fn update_workout(
     workout: web::Json<UpdateWorkout>,
 ) -> Result<impl Responder, AppError> {
     let workout_id = info;
-    let logger = state
-        .logger
-        .new(o!("handler" => format!("PATCH /workouts/{}", workout_id)));
-    info!(logger, "Creating a new workout");
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -77,10 +68,6 @@ async fn delete_workout(
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
     let workout_id = info;
-    let logger = state
-        .logger
-        .new(o!("handler" => format!("DELETE /workouts/{}", workout_id)));
-    info!(logger, "Creating a new workout");
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -98,11 +85,6 @@ async fn get_workout_by_id(
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
     let workout_id = info;
-    let logger = state
-        .logger
-        .new(o!("handler" => format!("GET /workouts/{}", workout_id)));
-    info!(logger, "Getting workout by id");
-
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -125,11 +107,6 @@ async fn create_workout_score(
     workout_score: web::Json<CreateWorkoutScore>,
 ) -> Result<impl Responder, AppError> {
     let workout_id = info;
-    let logger = state
-        .logger
-        .new(o!("handler" => format!("POST /workouts/{}", workout_id)));
-    info!(logger, "Creating workout score");
-
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -151,11 +128,6 @@ async fn update_workout_score(
 ) -> Result<impl Responder, AppError> {
     let workout_id = info.0.to_owned();
     let score_id = info.1.to_owned();
-    let logger = state
-        .logger
-        .new(o!("handler" => format!("PATCH /workouts/{}/{}", workout_id, score_id)));
-    info!(logger, "Creating workout score");
-
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -181,11 +153,6 @@ async fn delete_workout_score(
 ) -> Result<impl Responder, AppError> {
     let workout_id = info.0.to_owned();
     let score_id = info.1.to_owned();
-    let logger = state
-        .logger
-        .new(o!("handler" => format!("DELETE /workouts/{}/{}", workout_id, score_id)));
-    info!(logger, "Deleting workout score");
-
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
