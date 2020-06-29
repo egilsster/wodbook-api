@@ -26,9 +26,7 @@ async fn main() -> std::io::Result<()> {
 
     let config = Config::from_env().unwrap();
     let logger = Config::configure_log();
-    let host = config.server.host;
-    let port = config.server.port;
-    let server_addr = format!("{}:{}", host, port);
+    let server_addr = format!("{}:{}", config.host, config.port);
 
     // TODO(egilsster): Handle when mongo isn't up, with a warning or something
     let mongo_client = Connection.get_client(logger.clone()).await.unwrap();

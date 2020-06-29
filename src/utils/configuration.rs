@@ -21,14 +21,10 @@ pub struct AuthConfig {
 }
 
 #[derive(Deserialize)]
-pub struct ServerConfig {
+pub struct Config {
     pub host: String,
     pub port: i32,
-}
 
-#[derive(Deserialize)]
-pub struct Config {
-    pub server: ServerConfig,
     pub auth: AuthConfig,
     pub mongo: MongoConfig,
 }
