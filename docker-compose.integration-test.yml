@@ -8,8 +8,8 @@ services:
       mongo:
         condition: service_healthy
     environment:
-      - SERVER__HOST=0.0.0.0
-      - SERVER__PORT=43210
+      - HOST=0.0.0.0
+      - PORT=43210
       - AUTH__SECRET=cHVibGljS2V5
       - MONGO__URI=mongodb://mongo:27017
       - MONGO__DB_NAME=wodbook-test
