@@ -13,28 +13,26 @@ impl FromRequest for Claims {
     type Future = Ready<Result<Claims, Error>>;
     type Config = ();
 
-    fn from_request(_req: &HttpRequest, _payload: &mut dev::Payload) -> Self::Future {
-        let _auth = _req.headers().get("Authorization");
-        match _auth {
-            Some(_) => {
-                let _split: Vec<&str> = _auth.unwrap().to_str().unwrap().split("Bearer").collect();
-                let token = _split[1].trim();
-                let config = Config::from_env().unwrap();
-                let _var = config.auth.secret;
-                let key = _var.as_bytes();
-                match decode::<Claims>(
-                    token,
-                    &DecodingKey::from_secret(key),
-                    &Validation::new(Algorithm::HS256),
-                ) {
-                    Ok(token_data) => ok(token_data.claims),
-                    Err(_e) => err(ErrorUnauthorized(AppError::Unauthorized(
-                        "Invalid token".to_string(),
-                    ))),
-                }
-            }
-            None => err(ErrorUnauthorized(AppError::Unauthorized(
+    fn from_request(req: &HttpRequest, _payload: &mut dev::Payload) -> Self::Future {
+        let auth = req.headers().get("Authorization");
+
+        if auth.is_none() {
+            return err(ErrorUnauthorized(AppError::Unauthorized(
                 "No token present".to_string(),
+            )));
+        }
+
+        let token = auth.unwrap().to_str().unwrap().replace("Bearer ", "");
+        let config = Config::from_env().unwrap();
+
+        match decode::<Claims>(
+            token.trim(),
+            &DecodingKey::from_secret(config.auth.secret.as_bytes()),
+            &Validation::new(Algorithm::HS256),
+        ) {
+            Ok(token_data) => ok(token_data.claims),
+            Err(_e) => err(ErrorUnauthorized(AppError::Unauthorized(
+                "Invalid token".to_string(),
             ))),
         }
     }
