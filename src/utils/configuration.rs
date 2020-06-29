@@ -11,11 +11,8 @@ pub struct AppState {
 
 #[derive(Deserialize)]
 pub struct MongoConfig {
-    pub username: String,
-    pub password: String,
-    pub host: String,
-    pub port: i32,
     pub db_name: String,
+    pub uri: String,
 }
 
 #[derive(Deserialize)]
