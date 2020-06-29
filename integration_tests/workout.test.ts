@@ -18,7 +18,7 @@ describe("/v1/workouts", () => {
   let adminToken: string;
 
   const login = async ({ email, password }: LoginPayload) => {
-    const res1: LoginResponse = await request.post("users/login", {
+    const res1: TokenResponse = await request.post("users/login", {
       ...reqOpts,
       headers: {
         "Content-Type": "application/json",
