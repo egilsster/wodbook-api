@@ -11,10 +11,7 @@ services:
       - SERVER__HOST=0.0.0.0
       - SERVER__PORT=43210
       - AUTH__SECRET=cHVibGljS2V5
-      - MONGO__USERNAME=admin
-      - MONGO__PASSWORD=admin
-      - MONGO__HOST=mongo
-      - MONGO__PORT=27017
+      - MONGO__URI=mongodb://mongo:27017
       - MONGO__DB_NAME=wodbook-test
       - RUST_LOG=info,actix_web=debug
     ports:

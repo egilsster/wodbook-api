@@ -11,10 +11,7 @@ services:
       - SERVER__HOST=0.0.0.0
       - SERVER__PORT=43210
       - AUTH__SECRET=cHVibGljS2V5
-      - MONGO__USERNAME=admin
-      - MONGO__PASSWORD=admin
-      - MONGO__HOST=mongo
-      - MONGO__PORT=27017
+      - MONGO__URI=mongodb://mongo:27017
       - MONGO__DB_NAME=wodbook-test
       - RUST_LOG=info,actix_web=debug
     ports:
@@ -27,7 +24,7 @@ services:
     container_name: mongo
     restart: always
     healthcheck:
-      test: echo 'db.stats().ok' | mongo localhost:27017/wodbook --quiet | grep -q "1"
+      test: echo 'db.stats().ok' | mongo localhost:27017/wodbook-api --quiet | grep -q "1"
       interval: 5s
       timeout: 5s
       retries: 12
