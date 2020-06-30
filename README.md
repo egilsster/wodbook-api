@@ -27,7 +27,8 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 # Run the server (Add --release for an optimized build)
 λ cargo run
 ...
-[2020-06-29T22:30:49Z DEBUG wodbook_api] Listening on 127.0.0.1:43210
+[2020-06-30T21:54:36Z INFO  wodbook_api::db::connection] Connected to mongodb
+[2020-06-30T21:54:36Z INFO  wodbook_api] Listening on 0.0.0.0:43210
 ```
 
 ## APIs

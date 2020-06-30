@@ -1,4 +1,4 @@
-use bson::{doc, Document};
+use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
 
