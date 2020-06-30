@@ -31,3 +31,9 @@ data-encoding = "2.2.1"
 
 [dev-dependencies]
 futures-await-test = "0.3.0"
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = 'abort'
