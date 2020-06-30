@@ -1,4 +1,4 @@
-use bson::{doc, Document};
+use bson::Document;
 use serde::{Deserialize, Serialize};
 
 // https://github.com/serde-rs/serde/issues/1030#issuecomment-522278006

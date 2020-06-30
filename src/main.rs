@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate bson;
 
 use crate::db::connection::Connection;
 use crate::utils::mywod::AVATAR_FILE_LOCATION;
@@ -30,8 +32,6 @@ async fn main() -> io::Result<()> {
 
     let config = Config::from_env().unwrap();
     let server_addr = format!("{}:{}", config.host, config.port);
-
-    // TODO(egilsster): Handle when mongo isn't up, with a warning or something
     let mongo_client = Connection.get_client().await.unwrap();
 
     let app = move || {
@@ -49,6 +49,6 @@ async fn main() -> io::Result<()> {
             .service(web::scope("/").configure(routes::index::init_routes))
     };
 
-    debug!("Listening on {}", server_addr);
+    info!("Listening on {}", server_addr);
     HttpServer::new(app).bind(server_addr)?.run().await
 }

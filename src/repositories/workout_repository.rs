@@ -5,7 +5,7 @@ use crate::models::workout::{
 };
 use crate::utils::{query_utils, validator, Config};
 
-use bson::{doc, from_bson, Bson};
+use bson::{from_bson, Bson};
 use chrono::Utc;
 use futures::stream::StreamExt;
 use mongodb::options::FindOptions;

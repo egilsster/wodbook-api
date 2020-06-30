@@ -1,4 +1,4 @@
-use bson::{doc, Document};
+use bson::Document;
 
 /// Creates a query that gets all documents that have
 /// the given `user_id` as well as public resources.

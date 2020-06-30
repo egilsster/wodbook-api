@@ -2,7 +2,7 @@ use crate::errors::AppError;
 use crate::models::user::{Claims, CreateUser, Login, UpdateUser, User};
 use crate::utils::{resources, Config};
 
-use bson::{doc, from_bson, Bson};
+use bson::{from_bson, Bson};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use mongodb::{Client, Collection};
