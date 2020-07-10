@@ -3,7 +3,7 @@ import * as request from "request-promise-native";
 import * as HttpStatus from "http-status-codes";
 import { createUsers, getMongoClient } from "./common";
 
-describe("/v1/movements/", () => {
+describe("/v1/movements", () => {
   const reqOpts: request.RequestPromiseOptions = {
     json: true,
     resolveWithFullResponse: true, // Get the full response instead of just the body
@@ -64,7 +64,7 @@ describe("/v1/movements/", () => {
   describe("listing movements", () => {
     it("should return 200 OK with a list", async (done) => {
       try {
-        const res1: ManyMovementsResponse = await request.get("/movements/", {
+        const res1: ManyMovementsResponse = await request.get("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -96,7 +96,7 @@ describe("/v1/movements/", () => {
           measurement: "weight",
           public: true,
         };
-        const res0: MovementResponse = await request.post("/movements/", {
+        const res0: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -107,7 +107,7 @@ describe("/v1/movements/", () => {
 
         expect(res0.statusCode).toBe(HttpStatus.CREATED);
 
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -145,7 +145,7 @@ describe("/v1/movements/", () => {
         expect(res2.body).toHaveProperty("measurement", movement.measurement);
         expect(res2.body).toHaveProperty("name", movement.name);
 
-        const res3: ManyMovementsResponse = await request.get("/movements/", {
+        const res3: ManyMovementsResponse = await request.get("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -189,7 +189,7 @@ describe("/v1/movements/", () => {
         };
 
         const res1: MovementResponse = await request.post(
-          "/movements/",
+          "/movements",
           payload
         );
 
@@ -201,7 +201,7 @@ describe("/v1/movements/", () => {
         expect(res1.body).toHaveProperty("name", movement.name);
 
         const res2: MovementResponse = await request.post(
-          "/movements/",
+          "/movements",
           payload
         );
 
@@ -214,7 +214,7 @@ describe("/v1/movements/", () => {
 
     it("should get 422 Unprocessable Entity if an invalid measurement", async (done) => {
       try {
-        const res: MovementResponse = await request.post("/movements/", {
+        const res: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -242,7 +242,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -336,7 +336,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -353,7 +353,7 @@ describe("/v1/movements/", () => {
         const movementId = res1.body.movement_id;
         expect(res1.body).toHaveProperty("name", "Sholder Press");
 
-        const res2: MovementResponse = await request.post("/movements/", {
+        const res2: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -410,7 +410,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -477,7 +477,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -550,7 +550,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -650,7 +650,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -753,7 +753,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -817,7 +817,7 @@ describe("/v1/movements/", () => {
       };
 
       try {
-        const res1: MovementResponse = await request.post("/movements/", {
+        const res1: MovementResponse = await request.post("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",

@@ -107,7 +107,7 @@ describe("/users/mywod", () => {
 
         // TODO: Check for workout scores
 
-        const res4: ManyMovementsResponse = await request.get("/movements/", {
+        const res4: ManyMovementsResponse = await request.get("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -174,7 +174,7 @@ describe("/users/mywod", () => {
 
         // TODO: Check workout scores
 
-        const res10: ManyMovementsResponse = await request.get("/movements/", {
+        const res10: ManyMovementsResponse = await request.get("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
