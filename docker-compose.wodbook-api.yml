@@ -13,7 +13,7 @@ services:
       - AUTH__SECRET=cHVibGljS2V5
       - MONGO__URI=mongodb://mongo:27017
       - MONGO__DB_NAME=wodbook-test
-      - RUST_LOG=info,actix_web=debug
+      - RUST_LOG=wodbook_api=debug,actix_web=debug
     ports:
       - "43210:43210"
     cpu_shares: 100
