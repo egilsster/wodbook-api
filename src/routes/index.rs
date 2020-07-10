@@ -30,3 +30,41 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(health);
     cfg.service(api_docs);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::connection::Connection;
+    use actix_web::{http::StatusCode, test, web, App};
+    use dotenv::dotenv;
+
+    #[actix_rt::test]
+    #[ignore]
+    async fn test_health_get() {
+        dotenv().ok();
+
+        let mongo_client = Connection.get_client().await.unwrap();
+
+        let mut app = test::init_service(
+            App::new()
+                .data(AppState { mongo_client })
+                .service(web::scope("/").configure(init_routes)),
+        )
+        .await;
+        let req = test::TestRequest::get().uri("/health").to_request();
+        let resp = test::call_service(&mut app, req).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[actix_rt::test]
+    #[ignore]
+    async fn test_openapi_get() {
+        let mut app =
+            test::init_service(App::new().service(web::scope("/").configure(init_routes))).await;
+        let req = test::TestRequest::get().uri("/openapi").to_request();
+        let resp = test::call_service(&mut app, req).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+}
