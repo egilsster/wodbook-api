@@ -8,7 +8,7 @@ use crate::repositories::WorkoutRepository;
 use crate::utils::AppState;
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 
-#[get("/")]
+#[get("")]
 async fn get_workouts(
     state: web::Data<AppState>,
     claims: Claims,
@@ -23,7 +23,7 @@ async fn get_workouts(
     result.map(|workouts| HttpResponse::Ok().json(ManyWorkoutsResponse { data: workouts }))
 }
 
-#[post("/")]
+#[post("")]
 async fn create_workout(
     state: web::Data<AppState>,
     claims: Claims,

@@ -64,7 +64,7 @@ describe("/v1/workouts", () => {
   describe("listing workouts", () => {
     it("should return 200 OK with a list", async (done) => {
       try {
-        const res1: ManyWorkoutsResponse = await request.get("/workouts/", {
+        const res1: ManyWorkoutsResponse = await request.get("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -98,7 +98,7 @@ describe("/v1/workouts", () => {
           description: "Do some work",
           public: true,
         };
-        const res0: WorkoutResponse = await request.post("/workouts/", {
+        const res0: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -109,7 +109,7 @@ describe("/v1/workouts", () => {
 
         expect(res0.statusCode).toBe(HttpStatus.CREATED);
 
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -148,7 +148,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 
-        const res3: ManyWorkoutsResponse = await request.get("/workouts/", {
+        const res3: ManyWorkoutsResponse = await request.get("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -193,7 +193,7 @@ describe("/v1/workouts", () => {
           body: workout,
         };
 
-        const res1: WorkoutResponse = await request.post("/workouts/", payload);
+        const res1: WorkoutResponse = await request.post("/workouts", payload);
 
         expect(res1.statusCode).toBe(HttpStatus.CREATED);
         expect(res1.body).toHaveProperty("workout_id");
@@ -204,7 +204,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
-        const res2: WorkoutResponse = await request.post("/workouts/", payload);
+        const res2: WorkoutResponse = await request.post("/workouts", payload);
 
         expect(res2.statusCode).toBe(HttpStatus.CONFLICT);
         done();
@@ -215,7 +215,7 @@ describe("/v1/workouts", () => {
 
     it("should get 422 Unprocessable Entity if using an invalid measurement", async (done) => {
       try {
-        const res: WorkoutResponse = await request.post("/workouts/", {
+        const res: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -247,7 +247,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -347,7 +347,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -363,7 +363,7 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("description", wod.description);
         expect(res1.body).toHaveProperty("measurement", wod.measurement);
 
-        const res2: WorkoutResponse = await request.post("/workouts/", {
+        const res2: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -424,7 +424,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -492,7 +492,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -570,7 +570,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -675,7 +675,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -784,7 +784,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -857,7 +857,7 @@ describe("/v1/workouts", () => {
       };
 
       try {
-        const res1: WorkoutResponse = await request.post("/workouts/", {
+        const res1: WorkoutResponse = await request.post("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",

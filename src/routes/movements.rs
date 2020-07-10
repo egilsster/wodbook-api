@@ -8,7 +8,7 @@ use crate::repositories::MovementRepository;
 use crate::utils::AppState;
 use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
 
-#[get("/")]
+#[get("")]
 async fn get_movements(
     state: web::Data<AppState>,
     claims: Claims,
@@ -24,7 +24,7 @@ async fn get_movements(
     result.map(|movements| HttpResponse::Ok().json(ManyMovementsResponse { data: movements }))
 }
 
-#[post("/")]
+#[post("")]
 async fn create_movement(
     state: web::Data<AppState>,
     claims: Claims,

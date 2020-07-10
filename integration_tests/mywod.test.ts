@@ -92,7 +92,7 @@ describe("/users/mywod", () => {
         expect(userBefore.weight).toEqual(user.weight);
         expect(userBefore.avatar_url).toEqual(user.avatar_url);
 
-        const res2: ManyWorkoutsResponse = await request.get("/workouts/", {
+        const res2: ManyWorkoutsResponse = await request.get("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -107,7 +107,7 @@ describe("/users/mywod", () => {
 
         // TODO: Check for workout scores
 
-        const res4: ManyMovementsResponse = await request.get("/movements/", {
+        const res4: ManyMovementsResponse = await request.get("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -159,7 +159,7 @@ describe("/users/mywod", () => {
         expect(userAfter.weight).not.toEqual(user.weight);
         // expect(userAfter.avatar_url).not.toEqual(user.avatar_url);
 
-        const res8: ManyWorkoutsResponse = await request.get("/workouts/", {
+        const res8: ManyWorkoutsResponse = await request.get("/workouts", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
@@ -174,7 +174,7 @@ describe("/users/mywod", () => {
 
         // TODO: Check workout scores
 
-        const res10: ManyMovementsResponse = await request.get("/movements/", {
+        const res10: ManyMovementsResponse = await request.get("/movements", {
           ...reqOpts,
           headers: {
             "Content-Type": "application/json",
