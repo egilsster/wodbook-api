@@ -78,29 +78,6 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 
-  rust-integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - name: Start dependencies
-        run: docker-compose -f docker-compose.test.yml up -d
-      - name: Run integration tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: -- --ignored
-        env:
-          AUTH__SECRET: cHVibGljS2V5
-          MONGO__URI: mongodb://0.0.0.0:27017
-          MONGO__DB_NAME: wodbook-test
-          RUST_LOG: wodbook_api=debug,actix_web=debug
-
   docker-integration-test:
     runs-on: ubuntu-latest
     steps:
