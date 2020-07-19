@@ -416,7 +416,7 @@ describe("/v1/workouts", () => {
   });
 
   describe("deleting workouts", () => {
-    it("should delete a workout", async (done) => {
+    it("should delete a workout and its scores", async (done) => {
       const wod = {
         name: "Fran",
         measurement: "time",
@@ -437,7 +437,25 @@ describe("/v1/workouts", () => {
         expect(res1.body).toHaveProperty("workout_id");
         const workoutId = res1.body.workout_id;
 
-        const res2: WorkoutResponse = await request.get(
+        const res2: WorkoutScoreResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "4:20",
+              rx: true,
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        const workoutScoreId = res2.body.workout_score_id;
+
+        const res3: WorkoutResponse = await request.get(
           `/workouts/${workoutId}`,
           {
             ...reqOpts,
@@ -448,9 +466,9 @@ describe("/v1/workouts", () => {
           }
         );
 
-        expect(res2.statusCode).toBe(HttpStatus.OK);
+        expect(res3.statusCode).toBe(HttpStatus.OK);
 
-        const res3: DeleteResponse = await request.delete(
+        const res4: DeleteResponse = await request.delete(
           `/workouts/${workoutId}`,
           {
             ...reqOpts,
@@ -461,9 +479,9 @@ describe("/v1/workouts", () => {
           }
         );
 
-        expect(res3.statusCode).toBe(HttpStatus.NO_CONTENT);
+        expect(res4.statusCode).toBe(HttpStatus.NO_CONTENT);
 
-        const res4: WorkoutResponse = await request.get(
+        const res5: WorkoutResponse = await request.get(
           `/workouts/${workoutId}`,
           {
             ...reqOpts,
@@ -474,7 +492,20 @@ describe("/v1/workouts", () => {
           }
         );
 
-        expect(res4.statusCode).toBe(HttpStatus.NOT_FOUND);
+        expect(res5.statusCode).toBe(HttpStatus.NOT_FOUND);
+
+        const res6: WorkoutScoreResponse = await request.get(
+          `/workouts/${workoutId}/${workoutScoreId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res6.statusCode).toBe(HttpStatus.NOT_FOUND);
 
         done();
       } catch (err) {
