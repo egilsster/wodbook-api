@@ -78,7 +78,7 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 
-  docker-integration-test:
+  integration-test:
     services:
       mongo:
         image: mongo
