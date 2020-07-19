@@ -403,7 +403,7 @@ describe("/v1/movements", () => {
   });
 
   describe("deleting movements", () => {
-    it("should delete a movement", async (done) => {
+    it("should delete a movement and its scores", async (done) => {
       const movement = {
         name: "Snatch",
         measurement: "weight",
@@ -423,7 +423,24 @@ describe("/v1/movements", () => {
         expect(res1.body).toHaveProperty("movement_id");
         const movementId = res1.body.movement_id;
 
-        const res2: MovementResponse = await request.get(
+        const res2: MovementScoreResponse = await request.post(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: "100kg",
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        const movementScoreId = res2.body.movement_score_id;
+
+        const res3: MovementResponse = await request.get(
           `/movements/${movementId}`,
           {
             ...reqOpts,
@@ -434,9 +451,9 @@ describe("/v1/movements", () => {
           }
         );
 
-        expect(res2.statusCode).toBe(HttpStatus.OK);
+        expect(res3.statusCode).toBe(HttpStatus.OK);
 
-        const res3: DeleteResponse = await request.delete(
+        const res4: DeleteResponse = await request.delete(
           `/movements/${movementId}`,
           {
             ...reqOpts,
@@ -447,9 +464,9 @@ describe("/v1/movements", () => {
           }
         );
 
-        expect(res3.statusCode).toBe(HttpStatus.NO_CONTENT);
+        expect(res4.statusCode).toBe(HttpStatus.NO_CONTENT);
 
-        const res4: MovementResponse = await request.get(
+        const res5: MovementResponse = await request.get(
           `/movements/${movementId}`,
           {
             ...reqOpts,
@@ -460,7 +477,20 @@ describe("/v1/movements", () => {
           }
         );
 
-        expect(res4.statusCode).toBe(HttpStatus.NOT_FOUND);
+        expect(res5.statusCode).toBe(HttpStatus.NOT_FOUND);
+
+        const res6: MovementScoreResponse = await request.get(
+          `/movements/${movementId}/${movementScoreId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res6.statusCode).toBe(HttpStatus.NOT_FOUND);
 
         done();
       } catch (err) {
