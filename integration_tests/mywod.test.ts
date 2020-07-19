@@ -68,6 +68,8 @@ describe("/users/mywod", () => {
   });
 
   describe("/mywod", () => {
+    jest.setTimeout(10000);
+
     it("should migrate data from a mywod backup to the user", async (done) => {
       try {
         // GET DATA ABOUT USER OWNED STUFF FOR REFERENCE

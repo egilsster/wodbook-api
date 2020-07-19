@@ -78,17 +78,48 @@ jobs:
           name: code-coverage-report
           path: cobertura.xml
 
-  docker-integration-test:
+  integration-test:
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
+      - name: Cache cargo index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('Cargo.lock') }}
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-coverage-cargo-build-target-${{ hashFiles('Cargo.lock') }}
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      - name: Build docker image
-        run: make build-image
+      - name: build app
+        run: cargo build
+      - name: yarn Install
+        run: yarn --frozen-lockfile
       - name: Run integration tests
-        run: ./run-integration-tests.sh
+        run: |
+          cargo run &
+          sleep 1 # let it start
+          yarn integration-test
+        env:
+          AUTH__SECRET: cHVibGljS2V5
+          MONGO__URI: mongodb://localhost:27017
+          MONGO__DB_NAME: wodbook-test
+          RUST_LOG: wodbook_api=debug,actix_web=debug
