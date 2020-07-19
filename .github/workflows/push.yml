@@ -100,9 +100,12 @@ jobs:
         run: |
           cargo build
           cargo run &
+
+          sleep 2 # give it time to start up
+
           yarn integration-test
         env:
           AUTH__SECRET: cHVibGljS2V5
-          MONGO__URI: mongodb://mongo:27017
+          MONGO__URI: mongodb://localhost:27017
           MONGO__DB_NAME: wodbook-test
           RUST_LOG: wodbook_api=debug,actix_web=debug
