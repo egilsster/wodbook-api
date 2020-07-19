@@ -101,7 +101,7 @@ jobs:
           cargo build
           cargo run &
 
-          sleep 2 # give it time to start up
+          sleep 1 # allow it to start up
 
           yarn integration-test
         env:
