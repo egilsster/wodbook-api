@@ -96,14 +96,14 @@ jobs:
           override: true
       - name: yarn Install
         run: yarn --frozen-lockfile
-      - name: Run integration tests
+      - name: build app
+        run: cargo build
+      - name: build app
         run: |
-          cargo build
           cargo run &
-
-          sleep 1 # allow it to start up
-
-          yarn integration-test
+          sleep 1 # let it start
+      - name: Run integration tests
+        run: yarn integration-test
         env:
           AUTH__SECRET: cHVibGljS2V5
           MONGO__URI: mongodb://localhost:27017
