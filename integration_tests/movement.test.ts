@@ -226,7 +226,7 @@ describe("/v1/movements", () => {
           },
         });
 
-        expect(res.statusCode).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
+        expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST);
         done();
       } catch (err) {
         done(err);
