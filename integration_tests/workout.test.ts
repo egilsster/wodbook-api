@@ -228,7 +228,7 @@ describe("/v1/workouts", () => {
           },
         });
 
-        expect(res.statusCode).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
+        expect(res.statusCode).toBe(HttpStatus.BAD_REQUEST);
         done();
       } catch (err) {
         done(err);

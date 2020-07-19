@@ -3,7 +3,7 @@ use crate::models::workout::{
     CreateWorkout, CreateWorkoutScore, UpdateWorkout, UpdateWorkoutScore, WorkoutModel,
     WorkoutScoreResponse,
 };
-use crate::utils::{query_utils, validator, Config};
+use crate::utils::{query_utils, Config};
 
 use bson::{from_bson, Bson};
 use chrono::Utc;
@@ -124,8 +124,6 @@ impl WorkoutRepository {
         user_id: &str,
         workout: CreateWorkout,
     ) -> Result<WorkoutModel, AppError> {
-        validator::validate_workout_measurement(workout.measurement.as_ref())?;
-
         let workout_name = workout.name.as_ref();
         let existing_workout = self.find_workout_by_name(user_id, workout_name).await?;
 
@@ -138,18 +136,18 @@ impl WorkoutRepository {
         let coll = self.get_workout_collection();
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
-        let workout_doc = doc! {
-            "workout_id": id,
-            "user_id": user_id.to_owned(),
-            "name": workout.name.to_owned(),
-            "description": workout.description,
-            "measurement": workout.measurement,
-            "public": workout.public,
-            "created_at": now.to_owned(),
-            "updated_at": now,
+        let workout = WorkoutModel {
+            workout_id: id,
+            user_id: user_id.to_owned(),
+            name: workout.name.to_owned(),
+            description: workout.description,
+            measurement: workout.measurement,
+            public: workout.public,
+            created_at: now.to_owned(),
+            updated_at: now,
         };
 
-        coll.insert_one(workout_doc, None)
+        coll.insert_one(workout.to_doc()?, None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -190,19 +188,19 @@ impl WorkoutRepository {
         }
 
         let now = Utc::now().to_rfc3339();
-        let workout_doc = doc! {
-            "workout_id": existing_workout.workout_id,
-            "user_id": user_id,
-            "name": new_name,
-            "description": new_desc,
-            "measurement": existing_workout.measurement,
-            "public": existing_workout.public,
-            "created_at": existing_workout.created_at,
-            "updated_at": now,
+        let workout = WorkoutModel {
+            workout_id: existing_workout.workout_id,
+            user_id: user_id.to_owned(),
+            name: new_name,
+            description: new_desc,
+            measurement: existing_workout.measurement,
+            public: existing_workout.public,
+            created_at: existing_workout.created_at,
+            updated_at: now,
         };
 
         let coll = self.get_workout_collection();
-        coll.update_one(doc! { "workout_id": workout_id }, workout_doc, None)
+        coll.update_one(doc! { "workout_id": workout_id }, workout.to_doc()?, None)
             .await
             .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
 

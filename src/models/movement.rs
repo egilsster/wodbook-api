@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
@@ -15,21 +16,39 @@ fn default_as_one() -> u32 {
     1
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum MovementMeasurement {
+    Weight,
+    Distance,
+    Reps,
+    Height,
+    None,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MovementModel {
     pub movement_id: String,
+    pub user_id: String,
     pub name: String,
-    pub measurement: String,
+    pub measurement: MovementMeasurement,
     pub public: bool,
     pub created_at: String,
     pub updated_at: String,
+}
+
+impl MovementModel {
+    pub fn to_doc(&self) -> Result<Document, AppError> {
+        let as_bson = &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
+        Ok(bson::Bson::as_document(as_bson).unwrap().to_owned())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MovementResponse {
     pub movement_id: String,
     pub name: String,
-    pub measurement: String,
+    pub measurement: MovementMeasurement,
     pub scores: Vec<MovementScoreResponse>,
     pub public: bool,
     pub created_at: String,
@@ -63,7 +82,7 @@ pub struct ManyMovementScoresResponse {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMovement {
     pub name: String,
-    pub measurement: String,
+    pub measurement: MovementMeasurement,
     #[serde(default = "default_as_false")]
     pub public: bool,
 }

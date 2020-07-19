@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
@@ -11,22 +12,45 @@ fn default_as_empty_string() -> String {
     "".to_string()
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkoutMeasurement {
+    Time,
+    Distance,
+    Load,
+    Repetitions,
+    Rounds,
+    TimedRounds,
+    Tabata,
+    Total,
+    Unknown,
+    None,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkoutModel {
     pub workout_id: String,
+    pub user_id: String,
     pub name: String,
-    pub measurement: String,
+    pub measurement: WorkoutMeasurement,
     pub description: String,
     pub public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
 
+impl WorkoutModel {
+    pub fn to_doc(&self) -> Result<Document, AppError> {
+        let as_bson = &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
+        Ok(bson::Bson::as_document(as_bson).unwrap().to_owned())
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkoutResponse {
     pub workout_id: String,
     pub name: String,
-    pub measurement: String,
+    pub measurement: WorkoutMeasurement,
     pub description: String,
     pub scores: Vec<WorkoutScoreResponse>,
     pub public: bool,
@@ -63,7 +87,7 @@ pub struct ManyWorkoutScoresResponse {
 pub struct CreateWorkout {
     pub name: String,
     pub description: String,
-    pub measurement: String,
+    pub measurement: WorkoutMeasurement,
     #[serde(default = "default_as_false")]
     pub public: bool,
 }

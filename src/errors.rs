@@ -13,8 +13,6 @@ pub enum AppError {
     #[display(fmt = "{}", _0)]
     Conflict(String),
     #[display(fmt = "{}", _0)]
-    UnprocessableEntity(String),
-    #[display(fmt = "{}", _0)]
     Internal(String),
 }
 
@@ -30,7 +28,6 @@ impl ResponseError for AppError {
             AppError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             AppError::NotFound(_) => StatusCode::NOT_FOUND,
             AppError::Conflict(_) => StatusCode::CONFLICT,
-            AppError::UnprocessableEntity(_) => StatusCode::UNPROCESSABLE_ENTITY,
             AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

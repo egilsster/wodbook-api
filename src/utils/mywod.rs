@@ -1,7 +1,7 @@
 use crate::errors::AppError;
-use crate::models::movement::CreateMovementScore;
+use crate::models::movement::{CreateMovementScore, MovementMeasurement};
 use crate::models::mywod::{Athlete, CustomWOD, Movement, MovementSession, MyWOD, MyWodData};
-use crate::models::workout::CreateWorkoutScore;
+use crate::models::workout::{CreateWorkoutScore, WorkoutMeasurement};
 use actix_multipart::Multipart;
 use actix_web::web;
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -188,29 +188,29 @@ pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
 }
 
 // Maps the string value from the myWOD database to a one_word string value.
-pub fn map_workout_measurement(score_type: &str) -> String {
+pub fn map_workout_measurement(score_type: &str) -> WorkoutMeasurement {
     match score_type {
-        "For Time:" => "time".to_string(),
-        "For Distance:" => "distance".to_string(),
-        "For Load:" => "load".to_string(),
-        "For Repetitions:" => "repetitions".to_string(),
-        "For Rounds:" => "rounds".to_string(),
-        "For Timed Rounds:" => "timed_rounds".to_string(),
-        "Tabata Scoring:" => "tabata".to_string(),
-        "Total Score:" => "total".to_string(),
-        "No Score:" => "none".to_string(),
-        _ => "none".to_string(),
+        "For Time:" => WorkoutMeasurement::Time,
+        "For Distance:" => WorkoutMeasurement::Distance,
+        "For Load:" => WorkoutMeasurement::Load,
+        "For Repetitions:" => WorkoutMeasurement::Repetitions,
+        "For Rounds:" => WorkoutMeasurement::Rounds,
+        "For Timed Rounds:" => WorkoutMeasurement::TimedRounds,
+        "Tabata Scoring:" => WorkoutMeasurement::Tabata,
+        "Total Score:" => WorkoutMeasurement::Total,
+        "No Score:" => WorkoutMeasurement::None,
+        _ => WorkoutMeasurement::None,
     }
 }
 
 /// Maps the score_type from the myWOD database to a string value
-pub fn map_movement_measurement(score_type: i32) -> String {
+pub fn map_movement_measurement(score_type: i32) -> MovementMeasurement {
     match score_type {
-        0 => "weight".to_string(),
-        1 => "distance".to_string(),
-        2 => "reps".to_string(),
-        3 => "height".to_string(),
-        _ => "none".to_string(),
+        0 => MovementMeasurement::Weight,
+        1 => MovementMeasurement::Distance,
+        2 => MovementMeasurement::Reps,
+        3 => MovementMeasurement::Height,
+        _ => MovementMeasurement::None,
     }
 }
 
@@ -248,14 +248,14 @@ pub fn get_scores_for_movement(
 }
 
 pub fn adjust_movement_score_to_measurement(
-    score_type: &str,
+    score_type: &MovementMeasurement,
     score: &MovementSession,
 ) -> Option<CreateMovementScore> {
     let created_at = Some(parse_short_date(score.date.as_ref()));
 
     match score_type {
         // Lifting
-        "weight" => Some(CreateMovementScore {
+        MovementMeasurement::Weight => Some(CreateMovementScore {
             score: score.measurement_a_value.to_string(),
             sets: score.sets.parse::<u32>().unwrap(),
             reps: score.measurement_b.parse::<u32>().unwrap(),
@@ -264,7 +264,7 @@ pub fn adjust_movement_score_to_measurement(
             created_at,
         }),
         // Box jumps
-        "height" => Some(CreateMovementScore {
+        MovementMeasurement::Height => Some(CreateMovementScore {
             score: score.measurement_a_value.to_string(),
             sets: score.measurement_b.parse::<u32>().unwrap(),
             reps: 1,
@@ -273,7 +273,7 @@ pub fn adjust_movement_score_to_measurement(
             created_at,
         }),
         // Rowing, running, etc
-        "distance" => Some(CreateMovementScore {
+        MovementMeasurement::Distance => Some(CreateMovementScore {
             score: score.measurement_b.to_string(),
             sets: score.sets.parse::<u32>().unwrap(),
             reps: 1,
@@ -282,7 +282,7 @@ pub fn adjust_movement_score_to_measurement(
             created_at,
         }),
         // Double unders
-        "reps" => Some(CreateMovementScore {
+        MovementMeasurement::Reps => Some(CreateMovementScore {
             score: "".to_owned(),
             sets: score.sets.parse::<u32>().unwrap(),
             reps: score.measurement_a_value as u32,
@@ -315,13 +315,13 @@ mod tests {
     use super::*;
     use futures_await_test::async_test;
 
-    // TODO(egilsster): Re-enable when I can mock the FS call
-    // #[test]
-    // fn test_save_avatar() {
-    //     let res = save_avatar("user_id", vec![0, 1, 2, 3]);
-    //     assert!(res.is_ok());
-    //     assert_eq!(res.unwrap(), "/avatars/user_id.png");
-    // }
+    #[test]
+    #[ignore = "fs calls are not working properly in ci"]
+    fn test_save_avatar() {
+        let res = save_avatar("user_id", vec![0, 1, 2, 3]);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), "/avatars/user_id.png");
+    }
 
     #[async_test]
     async fn test_read_contents() -> Result<(), AppError> {
@@ -332,25 +332,55 @@ mod tests {
 
     #[test]
     fn test_map_workout_measurement() {
-        assert_eq!(map_workout_measurement("For Time:"), "time");
-        assert_eq!(map_workout_measurement("For Distance:"), "distance");
-        assert_eq!(map_workout_measurement("For Load:"), "load");
-        assert_eq!(map_workout_measurement("For Repetitions:"), "repetitions");
-        assert_eq!(map_workout_measurement("For Rounds:"), "rounds");
-        assert_eq!(map_workout_measurement("For Timed Rounds:"), "timed_rounds");
-        assert_eq!(map_workout_measurement("Tabata Scoring:"), "tabata");
-        assert_eq!(map_workout_measurement("Total Score:"), "total");
-        assert_eq!(map_workout_measurement("No Score:"), "none");
-        assert_eq!(map_workout_measurement("Invalid:"), "none");
+        assert_eq!(
+            map_workout_measurement("For Time:"),
+            WorkoutMeasurement::Time
+        );
+        assert_eq!(
+            map_workout_measurement("For Distance:"),
+            WorkoutMeasurement::Distance
+        );
+        assert_eq!(
+            map_workout_measurement("For Load:"),
+            WorkoutMeasurement::Load
+        );
+        assert_eq!(
+            map_workout_measurement("For Repetitions:"),
+            WorkoutMeasurement::Repetitions
+        );
+        assert_eq!(
+            map_workout_measurement("For Rounds:"),
+            WorkoutMeasurement::Rounds
+        );
+        assert_eq!(
+            map_workout_measurement("For Timed Rounds:"),
+            WorkoutMeasurement::TimedRounds
+        );
+        assert_eq!(
+            map_workout_measurement("Tabata Scoring:"),
+            WorkoutMeasurement::Tabata
+        );
+        assert_eq!(
+            map_workout_measurement("Total Score:"),
+            WorkoutMeasurement::Total
+        );
+        assert_eq!(
+            map_workout_measurement("No Score:"),
+            WorkoutMeasurement::None
+        );
+        assert_eq!(
+            map_workout_measurement("Invalid:"),
+            WorkoutMeasurement::None
+        );
     }
 
     #[test]
     fn test_map_movement_measurement() {
-        assert_eq!(map_movement_measurement(0), "weight");
-        assert_eq!(map_movement_measurement(1), "distance");
-        assert_eq!(map_movement_measurement(2), "reps");
-        assert_eq!(map_movement_measurement(3), "height");
-        assert_eq!(map_movement_measurement(4), "none");
+        assert_eq!(map_movement_measurement(0), MovementMeasurement::Weight);
+        assert_eq!(map_movement_measurement(1), MovementMeasurement::Distance);
+        assert_eq!(map_movement_measurement(2), MovementMeasurement::Reps);
+        assert_eq!(map_movement_measurement(3), MovementMeasurement::Height);
+        assert_eq!(map_movement_measurement(4), MovementMeasurement::None);
     }
 
     #[test]
@@ -371,7 +401,8 @@ mod tests {
             notes: "back squat".to_string(),
             date: "2012-10-10".to_owned(),
         };
-        let res = adjust_movement_score_to_measurement("weight", &score).unwrap();
+        let res =
+            adjust_movement_score_to_measurement(&MovementMeasurement::Weight, &score).unwrap();
         assert_eq!(res.score, "70");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
@@ -392,7 +423,8 @@ mod tests {
             notes: "box jumps".to_string(),
             date: "2012-10-11".to_owned(),
         };
-        let res = adjust_movement_score_to_measurement("height", &score).unwrap();
+        let res =
+            adjust_movement_score_to_measurement(&MovementMeasurement::Height, &score).unwrap();
         assert_eq!(res.score, "126");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
@@ -413,7 +445,8 @@ mod tests {
             notes: "rowing".to_string(),
             date: "2012-10-12".to_owned(),
         };
-        let res = adjust_movement_score_to_measurement("distance", &score).unwrap();
+        let res =
+            adjust_movement_score_to_measurement(&MovementMeasurement::Distance, &score).unwrap();
         assert_eq!(res.score, "2:50");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
@@ -434,7 +467,7 @@ mod tests {
             notes: "hspu".to_string(),
             date: "2012-10-13".to_owned(),
         };
-        let res = adjust_movement_score_to_measurement("reps", &score).unwrap();
+        let res = adjust_movement_score_to_measurement(&MovementMeasurement::Reps, &score).unwrap();
         assert_eq!(res.score, "");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 7);
@@ -455,7 +488,7 @@ mod tests {
             notes: "hspu".to_string(),
             date: "2012-10-13".to_owned(),
         };
-        let res = adjust_movement_score_to_measurement("invalid", &score);
+        let res = adjust_movement_score_to_measurement(&MovementMeasurement::None, &score);
         assert!(res.is_none());
     }
 

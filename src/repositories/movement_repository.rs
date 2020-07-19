@@ -3,7 +3,7 @@ use crate::models::movement::{
     CreateMovement, CreateMovementScore, MovementModel, MovementScoreResponse, UpdateMovement,
     UpdateMovementScore,
 };
-use crate::utils::{query_utils, validator, Config};
+use crate::utils::{query_utils, Config};
 
 use bson::{from_bson, Bson};
 use chrono::Utc;
@@ -123,8 +123,6 @@ impl MovementRepository {
         user_id: &str,
         movement: CreateMovement,
     ) -> Result<MovementModel, AppError> {
-        validator::validate_movement_measurement(movement.measurement.as_ref())?;
-
         let movement_name = movement.name.as_ref();
         let existing_movement = self.find_movement_by_name(user_id, movement_name).await?;
 
@@ -137,17 +135,17 @@ impl MovementRepository {
         let coll = self.get_movement_collection();
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
-        let movement_doc = doc! {
-            "movement_id": id,
-            "user_id": user_id.to_owned(),
-            "name": movement.name.to_owned(),
-            "measurement": movement.measurement,
-            "public": movement.public,
-            "created_at": now.to_owned(),
-            "updated_at": now.to_owned(),
+        let movement = MovementModel {
+            movement_id: id,
+            user_id: user_id.to_owned(),
+            name: movement.name.to_owned(),
+            measurement: movement.measurement,
+            public: movement.public,
+            created_at: now.to_owned(),
+            updated_at: now.to_owned(),
         };
 
-        coll.insert_one(movement_doc, None)
+        coll.insert_one(movement.to_doc()?, None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -185,20 +183,24 @@ impl MovementRepository {
         }
 
         let now = Utc::now().to_rfc3339();
-        let movement_doc = doc! {
-            "movement_id": existing_movement.movement_id,
-            "user_id": user_id.to_owned(),
-            "name": new_name,
-            "measurement": existing_movement.measurement,
-            "public": existing_movement.public,
-            "created_at": existing_movement.created_at,
-            "updated_at": now.to_owned(),
+        let movement = MovementModel {
+            movement_id: existing_movement.movement_id,
+            user_id: user_id.to_owned(),
+            name: new_name,
+            measurement: existing_movement.measurement,
+            public: existing_movement.public,
+            created_at: existing_movement.created_at,
+            updated_at: now.to_owned(),
         };
 
         let coll = self.get_movement_collection();
-        coll.update_one(doc! { "movement_id": movement_id }, movement_doc, None)
-            .await
-            .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
+        coll.update_one(
+            doc! { "movement_id": movement_id },
+            movement.to_doc()?,
+            None,
+        )
+        .await
+        .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
 
         let model = self
             .find_movement_by_id(user_id, movement_id)
