@@ -79,6 +79,12 @@ jobs:
           path: cobertura.xml
 
   docker-integration-test:
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -88,7 +94,15 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - name: Build docker image
-        run: make build-image
+      - name: yarn Install
+        run: yarn --frozen-lockfile
       - name: Run integration tests
-        run: ./run-integration-tests.sh
+        run: |
+          cargo build
+          cargo run &
+          yarn integration-test
+        env:
+          AUTH__SECRET: cHVibGljS2V5
+          MONGO__URI: mongodb://mongo:27017
+          MONGO__DB_NAME: wodbook-test
+          RUST_LOG: wodbook_api=debug,actix_web=debug
