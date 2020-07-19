@@ -147,7 +147,6 @@ impl WorkoutRepository {
             updated_at: now,
         };
 
-
         coll.insert_one(workout.to_doc()?, None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;

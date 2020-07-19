@@ -39,8 +39,7 @@ pub struct MovementModel {
 
 impl MovementModel {
     pub fn to_doc(&self) -> Result<Document, AppError> {
-        let as_bson =
-            &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
+        let as_bson = &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
         Ok(bson::Bson::as_document(as_bson).unwrap().to_owned())
     }
 }
