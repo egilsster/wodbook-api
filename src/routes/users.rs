@@ -94,7 +94,7 @@ async fn sync_mywod(
     let deleted = delete_payload_file(written_filename).await?;
     info!("File deleted after handling: {}", deleted);
 
-    let mywod_data = mywod_data.unwrap();
+    let mywod_data = mywod_data?;
 
     let user_updated =
         mywod::save_athlete(user_repo, user_id, user_email, mywod_data.athlete).await?;

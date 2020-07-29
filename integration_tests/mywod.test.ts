@@ -6,6 +6,7 @@ import { createUsers, getMongoClient } from "./common";
 import users from "./data/users";
 
 const mywodFilePath = `${process.cwd()}/data.mywod`;
+const packageJsonFilePath = `${process.cwd()}/package.json`;
 
 describe("/users/mywod", () => {
   const reqOpts: request.RequestPromiseOptions = {
@@ -190,6 +191,27 @@ describe("/users/mywod", () => {
         expect(movementsAfter.length).toBeGreaterThan(movementsBefore.length);
 
         // TODO: Check movement scores
+
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+
+    it("should get a 500 error if file is not valid", async (done) => {
+      try {
+        // Submit the mywod file for migration
+        const res1: MyWodResponse = await request.post("/users/mywod", {
+          ...reqOpts,
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+          formData: {
+            file: createReadStream(packageJsonFilePath),
+          },
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
 
         done();
       } catch (err) {
