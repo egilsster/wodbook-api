@@ -119,6 +119,7 @@ pub struct UpdateMovementScore {
 pub struct MovementScoreResponse {
     pub movement_score_id: String,
     pub movement_id: String,
+    pub user_id: String,
     pub score: String,
     pub sets: u32,
     pub reps: u32,
@@ -129,11 +130,11 @@ pub struct MovementScoreResponse {
 }
 
 impl MovementScoreResponse {
-    pub fn to_doc(&self, user_id: &str) -> Document {
+    pub fn to_doc(&self) -> Document {
         doc! {
             "movement_score_id": self.movement_score_id.to_owned(),
             "movement_id": self.movement_id.to_owned(),
-            "user_id": user_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
             "sets": self.sets.to_owned(),
             "reps": self.reps.to_owned(),

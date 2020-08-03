@@ -219,7 +219,7 @@ pub fn parse_workout_score(score: &MyWOD) -> CreateWorkoutScore {
         score: score.score.to_owned(),
         rx: score.as_prescribed != 0,
         notes: score.notes.to_owned(),
-        created_at: Some(parse_short_date(&score.date)),
+        created_at: parse_short_date(&score.date),
     }
 }
 
@@ -251,7 +251,7 @@ pub fn adjust_movement_score_to_measurement(
     score_type: &MovementMeasurement,
     score: &MovementSession,
 ) -> Option<CreateMovementScore> {
-    let created_at = Some(parse_short_date(score.date.as_ref()));
+    let created_at = parse_short_date(score.date.as_ref());
 
     match score_type {
         // Lifting
@@ -301,13 +301,22 @@ pub fn adjust_movement_score_to_measurement(
 /// ```
 /// parse_short_date("1991-12-06"); // "1991-12-06T00:00:00+00:00"
 /// ```
-pub fn parse_short_date(short_date: &str) -> String {
+pub fn parse_short_date(short_date: &str) -> Option<String> {
     let date_parsed = NaiveDateTime::parse_from_str(
         format!("{} 00:00:00", short_date).as_ref(),
         "%Y-%m-%d %H:%M:%S",
-    )
-    .unwrap();
-    DateTime::<Utc>::from_utc(date_parsed, Utc).to_rfc3339()
+    );
+    match date_parsed {
+        Ok(dt) => Some(DateTime::<Utc>::from_utc(dt, Utc).to_rfc3339()),
+        Err(e) => {
+            warn!(
+                "Could not parse date from mywod entry: {}. Error: {}",
+                short_date,
+                e.to_string()
+            );
+            None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -386,7 +395,7 @@ mod tests {
     #[test]
     fn test_parse_short_date() {
         let res = parse_short_date("1991-12-06");
-        assert_eq!(res, "1991-12-06T00:00:00+00:00");
+        assert_eq!(res.unwrap().to_string(), "1991-12-06T00:00:00+00:00");
     }
 
     #[test]

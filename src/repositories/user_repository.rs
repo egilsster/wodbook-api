@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::{AppError, WebResult};
 use crate::models::user::{Claims, CreateUser, Login, UpdateUser, User};
 use crate::utils::{resources, Config};
 
@@ -14,7 +14,7 @@ pub struct UserRepository {
 }
 
 /// Generates a JWT based on user data and if the user wants to stay logged in (makes it expire in a year).
-fn gen_token(key: &[u8], user: User, email: &str, remember_me: bool) -> Result<String, AppError> {
+fn gen_token(key: &[u8], user: User, email: &str, remember_me: bool) -> WebResult<String> {
     let date = if !remember_me {
         Utc::now() + Duration::hours(1)
     } else {
@@ -32,7 +32,8 @@ fn gen_token(key: &[u8], user: User, email: &str, remember_me: bool) -> Result<S
         &my_claims,
         &EncodingKey::from_secret(key),
     )
-    .unwrap();
+    .map_err(|e| AppError::Unauthorized(e.to_string()))?;
+
     Ok(token)
 }
 
@@ -48,7 +49,7 @@ impl UserRepository {
         &self,
         email: &str,
         user_update: UpdateUser,
-    ) -> Result<User, AppError> {
+    ) -> WebResult<User> {
         let mut user = self.find_user_with_email(email).await?;
 
         user.password = if user_update.password.is_some() {
@@ -74,7 +75,7 @@ impl UserRepository {
         self.find_user_with_email(email).await
     }
 
-    pub async fn find_user_with_email(&self, email: &str) -> Result<User, AppError> {
+    pub async fn find_user_with_email(&self, email: &str) -> WebResult<User> {
         let coll = self.get_collection();
         let cursor = coll
             .find_one(doc! {"email": email}, None)
@@ -91,31 +92,25 @@ impl UserRepository {
         }
     }
 
-    pub async fn login(&self, user_login: Login) -> Result<String, AppError> {
+    pub async fn login(&self, user_login: Login) -> WebResult<String> {
         let config = Config::from_env().unwrap();
         let key = config.auth.secret.as_bytes();
         let user_email: &str = user_login.email.as_ref();
 
-        let user = self.find_user_with_email(user_email).await;
-        if user.is_err() {
-            return Err(AppError::BadRequest(
-                "Check your user information (user not found)".to_string(),
-            ));
-        }
+        let user = self.find_user_with_email(user_email).await.map_err(|_| {
+            AppError::BadRequest("Check your user information (user not found)".to_string())
+        })?;
 
-        let user = user.unwrap();
         if user.password != resources::create_hash(&user_login.password) {
             return Err(AppError::BadRequest(
                 "Check your user information".to_string(),
             ));
         }
 
-        let token = gen_token(key, user, user_email, user_login.remember_me).unwrap();
-
-        Ok(token)
+        gen_token(key, user, user_email, user_login.remember_me)
     }
 
-    pub async fn register(&self, create_user: CreateUser) -> Result<String, AppError> {
+    pub async fn register(&self, create_user: CreateUser) -> WebResult<String> {
         let config = Config::from_env().unwrap();
         let key = config.auth.secret.as_bytes();
         let user_email: &str = create_user.email.as_ref();
@@ -148,9 +143,8 @@ impl UserRepository {
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
         let user = self.find_user_with_email(user_email).await?;
-        let token = gen_token(key, user, user_email, false).unwrap();
 
-        Ok(token)
+        gen_token(key, user, user_email, false)
     }
 }
 

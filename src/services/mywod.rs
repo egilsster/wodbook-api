@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::WebResult;
 use crate::models::movement::CreateMovement;
 use crate::models::mywod::{Athlete, CustomWOD, Movement, MovementSession, MyWOD};
 use crate::models::user::UpdateUser;
@@ -14,7 +14,7 @@ pub async fn save_athlete(
     user_id: &str,
     user_email: &str,
     athlete: Athlete,
-) -> Result<bool, AppError> {
+) -> WebResult<bool> {
     let avatar_url = save_avatar(user_id, athlete.avatar).unwrap();
 
     let user_update = UpdateUser {
@@ -28,11 +28,11 @@ pub async fn save_athlete(
         avatar_url: Some(avatar_url),
     };
 
-    let updated_user = user_repo
+    let _ = user_repo
         .update_user_with_email(user_email, user_update)
-        .await;
+        .await?;
 
-    Ok(updated_user.is_ok())
+    Ok(true)
 }
 
 pub async fn save_workouts_and_scores(
@@ -40,20 +40,26 @@ pub async fn save_workouts_and_scores(
     workouts: Vec<CustomWOD>,
     workout_scores: &[MyWOD],
     user_id: &str,
-) -> Result<(u32, u32), AppError> {
+) -> WebResult<(u32, u32)> {
     let mut added_workouts = 0u32;
     let mut added_scores = 0u32;
 
     for workout in workouts {
         let new_workout = CreateWorkout {
-            name: workout.title,
+            name: workout.title.to_owned(),
             description: workout.description,
             measurement: map_workout_measurement(workout.score_type.as_ref()),
             public: false,
         };
         let created_workout = workout_repo.create_workout(user_id, new_workout).await;
-        if created_workout.is_ok() {
-            added_workouts += 1;
+
+        match created_workout {
+            Ok(_) => added_workouts += 1,
+            Err(e) => warn!(
+                "Could not create new workout from backup \"{}\". Error: {}",
+                workout.title,
+                e.to_string()
+            ),
         }
     }
 
@@ -77,8 +83,7 @@ pub async fn save_workouts_and_scores(
             added_workouts += 1;
         }
 
-        if workout.is_some() {
-            let workout = workout.unwrap();
+        if let Some(workout) = workout {
             let score_data = parse_workout_score(score);
             let added_score = workout_repo
                 .create_workout_score(user_id, &workout.workout_id, score_data)
@@ -97,7 +102,7 @@ pub async fn save_movements_and_scores(
     movements: &[Movement],
     movement_scores: &[MovementSession],
     user_id: &str,
-) -> Result<(u32, u32), AppError> {
+) -> WebResult<(u32, u32)> {
     let mut added_movements = 0u32;
     let mut added_movement_scores = 0u32;
 
@@ -108,15 +113,22 @@ pub async fn save_movements_and_scores(
             public: false,
         };
         let created_movement = movement_repo.create_movement(user_id, new_movement).await;
-        if let Ok(created_movement) = created_movement {
-            added_movements += 1;
-            let all_scores = get_scores_for_movement(m, &movement_scores);
-            for score in all_scores {
-                movement_repo
-                    .create_movement_score(user_id, &created_movement.movement_id, score)
-                    .await?;
-                added_movement_scores += 1;
+        match created_movement {
+            Ok(created_movement) => {
+                added_movements += 1;
+                let all_scores = get_scores_for_movement(m, &movement_scores);
+                for score in all_scores {
+                    movement_repo
+                        .create_movement_score(user_id, &created_movement.movement_id, score)
+                        .await?;
+                    added_movement_scores += 1;
+                }
             }
+            Err(e) => warn!(
+                "Could not add movement {}. Error: {}",
+                m.name,
+                e.to_string()
+            ),
         }
     }
 
