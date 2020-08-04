@@ -148,7 +148,7 @@ impl MovementRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(movement.to_doc()?, None)
+        coll.insert_one(movement.to_doc(), None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -198,13 +198,9 @@ impl MovementRepository {
         };
 
         let coll = self.get_movement_collection();
-        coll.update_one(
-            doc! { "movement_id": movement_id },
-            movement.to_doc()?,
-            None,
-        )
-        .await
-        .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
+        coll.update_one(doc! { "movement_id": movement_id }, movement.to_doc(), None)
+            .await
+            .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
 
         let model = self
             .find_movement_by_id(user_id, movement_id)

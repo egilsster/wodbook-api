@@ -1,4 +1,3 @@
-use crate::errors::AppError;
 use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
@@ -26,6 +25,14 @@ pub enum MovementMeasurement {
     None,
 }
 
+// TODO: Find a nicer way of serializing into strings without the quotes
+impl MovementMeasurement {
+    pub fn to_string(&self) -> String {
+        let string_val = serde_json::to_string(self).unwrap_or("none".to_owned());
+        string_val.trim_matches('"').to_owned()
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MovementModel {
     pub movement_id: String,
@@ -38,9 +45,16 @@ pub struct MovementModel {
 }
 
 impl MovementModel {
-    pub fn to_doc(&self) -> Result<Document, AppError> {
-        let as_bson = &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
-        Ok(bson::Bson::as_document(as_bson).unwrap().to_owned())
+    pub fn to_doc(&self) -> Document {
+        doc! {
+            "movement_id": self.movement_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
+            "name": self.name.to_owned(),
+            "measurement": self.measurement.to_string().to_lowercase(),
+            "public": self.public,
+            "created_at": self.created_at.to_owned(),
+            "updated_at": self.updated_at.to_owned(),
+        }
     }
 }
 

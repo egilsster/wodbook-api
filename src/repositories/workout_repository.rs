@@ -147,7 +147,7 @@ impl WorkoutRepository {
             updated_at: now,
         };
 
-        coll.insert_one(workout.to_doc()?, None)
+        coll.insert_one(workout.to_doc(), None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -200,7 +200,7 @@ impl WorkoutRepository {
         };
 
         let coll = self.get_workout_collection();
-        coll.update_one(doc! { "workout_id": workout_id }, workout.to_doc()?, None)
+        coll.update_one(doc! { "workout_id": workout_id }, workout.to_doc(), None)
             .await
             .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
 
@@ -238,6 +238,7 @@ impl WorkoutRepository {
         let workout_score = WorkoutScoreResponse {
             workout_score_id: id.to_owned(),
             workout_id: workout_id.to_owned(),
+            user_id: user_id.to_owned(),
             score: workout_score.score,
             rx: workout_score.rx,
             notes: workout_score.notes,
@@ -246,9 +247,14 @@ impl WorkoutRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(workout_score.to_doc(user_id), None)
+        coll.insert_one(workout_score.to_doc(), None)
             .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+            .map_err(|err| {
+                AppError::Internal(format!(
+                    "Error inserting workout score: {}",
+                    err.to_string()
+                ))
+            })?;
 
         self.get_workout_score_by_id(user_id, workout_id, &id).await
     }
@@ -334,7 +340,7 @@ impl WorkoutRepository {
         let query = query_utils::for_one(doc! { "workout_score_id": workout_score_id }, user_id);
         let _ = self
             .get_score_collection()
-            .update_one(query, score.to_doc(user_id), None)
+            .update_one(query, score.to_doc(), None)
             .await
             .map_err(|_| {
                 AppError::Internal("Something went wrong when updating the score.".to_owned())

@@ -65,12 +65,14 @@ impl UserRepository {
         user.box_name = user_update.box_name.unwrap_or(user.box_name);
         user.avatar_url = user_update.avatar_url.unwrap_or(user.avatar_url);
 
-        let user_doc = user.to_doc();
-
         let coll = self.get_collection();
-        coll.update_one(doc! { "user_id": user.user_id }, user_doc, None)
-            .await
-            .map_err(|_| AppError::Internal("Could not update user".to_owned()))?;
+        coll.update_one(
+            doc! { "user_id": user.user_id.to_owned() },
+            user.to_doc(),
+            None,
+        )
+        .await
+        .map_err(|_| AppError::Internal("Could not update user".to_owned()))?;
 
         self.find_user_with_email(email).await
     }

@@ -1,4 +1,3 @@
-use crate::errors::AppError;
 use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
@@ -27,6 +26,14 @@ pub enum WorkoutMeasurement {
     None,
 }
 
+// TODO: Find a nicer way of serializing into strings without the quotes
+impl WorkoutMeasurement {
+    pub fn to_string(&self) -> String {
+        let string_val = serde_json::to_string(self).unwrap_or("none".to_owned());
+        string_val.trim_matches('"').to_owned()
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkoutModel {
     pub workout_id: String,
@@ -40,9 +47,17 @@ pub struct WorkoutModel {
 }
 
 impl WorkoutModel {
-    pub fn to_doc(&self) -> Result<Document, AppError> {
-        let as_bson = &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
-        Ok(bson::Bson::as_document(as_bson).unwrap().to_owned())
+    pub fn to_doc(&self) -> Document {
+        doc! {
+            "workout_id": self.workout_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
+            "name": self.name.to_owned(),
+            "measurement": self.measurement.to_string(),
+            "description": self.description.to_owned(),
+            "public": self.public,
+            "created_at": self.created_at.to_owned(),
+            "updated_at": self.updated_at.to_owned(),
+        }
     }
 }
 
@@ -120,6 +135,7 @@ pub struct UpdateWorkoutScore {
 pub struct WorkoutScoreResponse {
     pub workout_score_id: String,
     pub workout_id: String,
+    pub user_id: String,
     pub score: String,
     pub rx: bool,
     pub notes: String,
@@ -128,11 +144,11 @@ pub struct WorkoutScoreResponse {
 }
 
 impl WorkoutScoreResponse {
-    pub fn to_doc(&self, user_id: &str) -> Document {
+    pub fn to_doc(&self) -> Document {
         doc! {
             "workout_score_id": self.workout_score_id.to_owned(),
             "workout_id": self.workout_id.to_owned(),
-            "user_id": user_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
             "rx": self.rx.to_owned(),
             "notes": self.notes.to_owned(),
