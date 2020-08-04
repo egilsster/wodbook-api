@@ -1,7 +1,7 @@
 use bson::Document;
 use serde::{Deserialize, Serialize};
-use std::vec::Vec;
 use std::fmt;
+use std::vec::Vec;
 
 // https://github.com/serde-rs/serde/issues/1030#issuecomment-522278006
 fn default_as_false() -> bool {
