@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::{AppError, WebResult};
 use crate::models::movement::{CreateMovementScore, MovementMeasurement};
 use crate::models::mywod::{Athlete, CustomWOD, Movement, MovementSession, MyWOD, MyWodData};
 use crate::models::workout::{CreateWorkoutScore, WorkoutMeasurement};
@@ -15,7 +15,7 @@ pub const AVATAR_FILE_LOCATION: &str = "./static/avatars";
 
 /// Writes the avatar blob to an image in a static directory and returns
 /// an API path to that image.
-pub fn save_avatar(user_id: &str, avatar: Vec<u8>) -> Result<String, AppError> {
+pub fn save_avatar(user_id: &str, avatar: Vec<u8>) -> WebResult<String> {
     let filename = format!("{}.png", user_id);
     let filepath = format!("{}/{}", AVATAR_FILE_LOCATION, filename);
 
@@ -30,7 +30,7 @@ pub fn save_avatar(user_id: &str, avatar: Vec<u8>) -> Result<String, AppError> {
 
 /// Function to write the multiform upload from the user, this file gets
 /// handled and all data is attempted to be added for the user.
-pub async fn write_payload_to_file(mut payload: Multipart) -> Result<String, AppError> {
+pub async fn write_payload_to_file(mut payload: Multipart) -> WebResult<String> {
     let id = uuid::Uuid::new_v4().to_string();
     let filepath = format!("./tmp/{}", id);
 
@@ -53,7 +53,7 @@ pub async fn write_payload_to_file(mut payload: Multipart) -> Result<String, App
 
 /// Function that cleans up the myWOD file from the file system after it has been
 /// handled and all data has been added for the user.
-pub async fn delete_payload_file(filename: String) -> Result<bool, AppError> {
+pub async fn delete_payload_file(filename: String) -> WebResult<bool> {
     if Path::new(&filename).exists() {
         fs::remove_file(filename)
             .map_err(|_| AppError::Internal("Could not delete file".to_owned()))?;
@@ -64,7 +64,7 @@ pub async fn delete_payload_file(filename: String) -> Result<bool, AppError> {
 
 /// Function that reads the mywod database file and returns the contents in
 /// a parsed way which is then added to the user profile.
-pub async fn read_contents(filename: &str) -> Result<MyWodData, AppError> {
+pub async fn read_contents(filename: &str) -> WebResult<MyWodData> {
     let db = Connection::open(filename)
         .map_err(|_| AppError::Internal("Error opening connection".to_owned()))?;
 
@@ -333,7 +333,7 @@ mod tests {
     }
 
     #[async_test]
-    async fn test_read_contents() -> Result<(), AppError> {
+    async fn test_read_contents() -> WebResult<()> {
         let res = read_contents("data.mywod").await;
         assert!(res.is_ok());
         Ok(())
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn test_parse_short_date() {
         let res = parse_short_date("1991-12-06");
-        assert_eq!(res.unwrap().to_string(), "1991-12-06T00:00:00+00:00");
+        assert_eq!(res.unwrap(), "1991-12-06T00:00:00+00:00");
     }
 
     #[test]

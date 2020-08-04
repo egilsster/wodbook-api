@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::WebResult;
 use crate::models::response::HealthResponse;
 use crate::utils::api_docs::parse_spec;
 use crate::utils::AppState;
@@ -22,7 +22,7 @@ pub async fn health(state: web::Data<AppState>) -> HttpResponse {
 }
 
 #[get("/openapi")]
-pub async fn api_docs() -> Result<impl Responder, AppError> {
+pub async fn api_docs() -> WebResult<impl Responder> {
     parse_spec().map(|result| HttpResponse::Ok().json(result))
 }
 

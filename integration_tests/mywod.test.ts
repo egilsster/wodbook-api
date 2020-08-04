@@ -160,7 +160,7 @@ describe("/users/mywod", () => {
         expect(userAfter.email).toEqual(user.email);
         expect(userAfter.height).not.toEqual(user.height);
         expect(userAfter.weight).not.toEqual(user.weight);
-        // expect(userAfter.avatar_url).not.toEqual(user.avatar_url);
+        expect(userAfter.avatar_url).not.toEqual(user.avatar_url);
 
         const res8: ManyWorkoutsResponse = await request.get("/workouts", {
           ...reqOpts,
