@@ -1,6 +1,7 @@
 use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;
+use std::fmt;
 
 // https://github.com/serde-rs/serde/issues/1030#issuecomment-522278006
 fn default_as_false() -> bool {
@@ -26,10 +27,10 @@ pub enum MovementMeasurement {
 }
 
 // TODO: Find a nicer way of serializing into strings without the quotes
-impl MovementMeasurement {
-    pub fn to_string(&self) -> String {
-        let string_val = serde_json::to_string(self).unwrap_or("none".to_owned());
-        string_val.trim_matches('"').to_owned()
+impl fmt::Display for MovementMeasurement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let string_val = serde_json::to_string(self).unwrap_or_else(|_| "none".to_owned());
+        write!(f, "{}", string_val.trim_matches('"'))
     }
 }
 
@@ -157,5 +158,19 @@ impl MovementScoreResponse {
             "created_at": self.created_at.to_owned(),
             "updated_at": self.updated_at.to_owned(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_measurement_to_string() {
+        assert_eq!(MovementMeasurement::Weight.to_string(), "weight");
+        assert_eq!(MovementMeasurement::Distance.to_string(), "distance");
+        assert_eq!(MovementMeasurement::Reps.to_string(), "reps");
+        assert_eq!(MovementMeasurement::Height.to_string(), "height");
+        assert_eq!(MovementMeasurement::None.to_string(), "none");
     }
 }

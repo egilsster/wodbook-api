@@ -1,5 +1,6 @@
 use bson::Document;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::vec::Vec;
 
 // https://github.com/serde-rs/serde/issues/1030#issuecomment-522278006
@@ -27,10 +28,10 @@ pub enum WorkoutMeasurement {
 }
 
 // TODO: Find a nicer way of serializing into strings without the quotes
-impl WorkoutMeasurement {
-    pub fn to_string(&self) -> String {
-        let string_val = serde_json::to_string(self).unwrap_or("none".to_owned());
-        string_val.trim_matches('"').to_owned()
+impl fmt::Display for WorkoutMeasurement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let string_val = serde_json::to_string(self).unwrap_or_else(|_| "none".to_owned());
+        write!(f, "{}", string_val.trim_matches('"'))
     }
 }
 
@@ -155,5 +156,24 @@ impl WorkoutScoreResponse {
             "created_at": self.created_at.to_owned(),
             "updated_at": self.updated_at.to_owned(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_measurement_to_string() {
+        assert_eq!(WorkoutMeasurement::Time.to_string(), "time");
+        assert_eq!(WorkoutMeasurement::Distance.to_string(), "distance");
+        assert_eq!(WorkoutMeasurement::Load.to_string(), "load");
+        assert_eq!(WorkoutMeasurement::Repetitions.to_string(), "repetitions");
+        assert_eq!(WorkoutMeasurement::Rounds.to_string(), "rounds");
+        assert_eq!(WorkoutMeasurement::TimedRounds.to_string(), "timed_rounds");
+        assert_eq!(WorkoutMeasurement::Tabata.to_string(), "tabata");
+        assert_eq!(WorkoutMeasurement::Total.to_string(), "total");
+        assert_eq!(WorkoutMeasurement::Unknown.to_string(), "unknown");
+        assert_eq!(WorkoutMeasurement::None.to_string(), "none");
     }
 }
