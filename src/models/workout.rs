@@ -1,6 +1,6 @@
-use crate::errors::AppError;
 use bson::Document;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::vec::Vec;
 
 // https://github.com/serde-rs/serde/issues/1030#issuecomment-522278006
@@ -27,6 +27,14 @@ pub enum WorkoutMeasurement {
     None,
 }
 
+// TODO: Find a nicer way of serializing into strings without the quotes
+impl fmt::Display for WorkoutMeasurement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let string_val = serde_json::to_string(self).unwrap_or_else(|_| "none".to_owned());
+        write!(f, "{}", string_val.trim_matches('"'))
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WorkoutModel {
     pub workout_id: String,
@@ -40,9 +48,17 @@ pub struct WorkoutModel {
 }
 
 impl WorkoutModel {
-    pub fn to_doc(&self) -> Result<Document, AppError> {
-        let as_bson = &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
-        Ok(bson::Bson::as_document(as_bson).unwrap().to_owned())
+    pub fn to_doc(&self) -> Document {
+        doc! {
+            "workout_id": self.workout_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
+            "name": self.name.to_owned(),
+            "measurement": self.measurement.to_string(),
+            "description": self.description.to_owned(),
+            "public": self.public,
+            "created_at": self.created_at.to_owned(),
+            "updated_at": self.updated_at.to_owned(),
+        }
     }
 }
 
@@ -120,6 +136,7 @@ pub struct UpdateWorkoutScore {
 pub struct WorkoutScoreResponse {
     pub workout_score_id: String,
     pub workout_id: String,
+    pub user_id: String,
     pub score: String,
     pub rx: bool,
     pub notes: String,
@@ -128,16 +145,35 @@ pub struct WorkoutScoreResponse {
 }
 
 impl WorkoutScoreResponse {
-    pub fn to_doc(&self, user_id: &str) -> Document {
+    pub fn to_doc(&self) -> Document {
         doc! {
             "workout_score_id": self.workout_score_id.to_owned(),
             "workout_id": self.workout_id.to_owned(),
-            "user_id": user_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
             "rx": self.rx.to_owned(),
             "notes": self.notes.to_owned(),
             "created_at": self.created_at.to_owned(),
             "updated_at": self.updated_at.to_owned(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_measurement_to_string() {
+        assert_eq!(WorkoutMeasurement::Time.to_string(), "time");
+        assert_eq!(WorkoutMeasurement::Distance.to_string(), "distance");
+        assert_eq!(WorkoutMeasurement::Load.to_string(), "load");
+        assert_eq!(WorkoutMeasurement::Repetitions.to_string(), "repetitions");
+        assert_eq!(WorkoutMeasurement::Rounds.to_string(), "rounds");
+        assert_eq!(WorkoutMeasurement::TimedRounds.to_string(), "timed_rounds");
+        assert_eq!(WorkoutMeasurement::Tabata.to_string(), "tabata");
+        assert_eq!(WorkoutMeasurement::Total.to_string(), "total");
+        assert_eq!(WorkoutMeasurement::Unknown.to_string(), "unknown");
+        assert_eq!(WorkoutMeasurement::None.to_string(), "none");
     }
 }

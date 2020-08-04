@@ -37,3 +37,5 @@ impl ResponseError for AppError {
         })
     }
 }
+
+pub type WebResult<T> = Result<T, AppError>;

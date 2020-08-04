@@ -1,6 +1,6 @@
-use crate::errors::AppError;
 use bson::Document;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::vec::Vec;
 
 // https://github.com/serde-rs/serde/issues/1030#issuecomment-522278006
@@ -26,6 +26,14 @@ pub enum MovementMeasurement {
     None,
 }
 
+// TODO: Find a nicer way of serializing into strings without the quotes
+impl fmt::Display for MovementMeasurement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let string_val = serde_json::to_string(self).unwrap_or_else(|_| "none".to_owned());
+        write!(f, "{}", string_val.trim_matches('"'))
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MovementModel {
     pub movement_id: String,
@@ -38,9 +46,16 @@ pub struct MovementModel {
 }
 
 impl MovementModel {
-    pub fn to_doc(&self) -> Result<Document, AppError> {
-        let as_bson = &bson::to_bson(&self).map_err(|e| AppError::BadRequest(e.to_string()))?;
-        Ok(bson::Bson::as_document(as_bson).unwrap().to_owned())
+    pub fn to_doc(&self) -> Document {
+        doc! {
+            "movement_id": self.movement_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
+            "name": self.name.to_owned(),
+            "measurement": self.measurement.to_string().to_lowercase(),
+            "public": self.public,
+            "created_at": self.created_at.to_owned(),
+            "updated_at": self.updated_at.to_owned(),
+        }
     }
 }
 
@@ -119,6 +134,7 @@ pub struct UpdateMovementScore {
 pub struct MovementScoreResponse {
     pub movement_score_id: String,
     pub movement_id: String,
+    pub user_id: String,
     pub score: String,
     pub sets: u32,
     pub reps: u32,
@@ -129,11 +145,11 @@ pub struct MovementScoreResponse {
 }
 
 impl MovementScoreResponse {
-    pub fn to_doc(&self, user_id: &str) -> Document {
+    pub fn to_doc(&self) -> Document {
         doc! {
             "movement_score_id": self.movement_score_id.to_owned(),
             "movement_id": self.movement_id.to_owned(),
-            "user_id": user_id.to_owned(),
+            "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
             "sets": self.sets.to_owned(),
             "reps": self.reps.to_owned(),
@@ -142,5 +158,19 @@ impl MovementScoreResponse {
             "created_at": self.created_at.to_owned(),
             "updated_at": self.updated_at.to_owned(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_measurement_to_string() {
+        assert_eq!(MovementMeasurement::Weight.to_string(), "weight");
+        assert_eq!(MovementMeasurement::Distance.to_string(), "distance");
+        assert_eq!(MovementMeasurement::Reps.to_string(), "reps");
+        assert_eq!(MovementMeasurement::Height.to_string(), "height");
+        assert_eq!(MovementMeasurement::None.to_string(), "none");
     }
 }

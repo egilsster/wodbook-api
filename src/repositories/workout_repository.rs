@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::{AppError, WebResult};
 use crate::models::workout::{
     CreateWorkout, CreateWorkoutScore, UpdateWorkout, UpdateWorkoutScore, WorkoutModel,
     WorkoutScoreResponse,
@@ -38,7 +38,7 @@ impl WorkoutRepository {
         &self,
         user_id: &str,
         name: &str,
-    ) -> Result<Option<WorkoutModel>, AppError> {
+    ) -> WebResult<Option<WorkoutModel>> {
         let query = query_utils::for_one(doc! {"name": name }, user_id);
         let cursor = self
             .get_workout_collection()
@@ -60,7 +60,7 @@ impl WorkoutRepository {
         &self,
         user_id: &str,
         workout_id: &str,
-    ) -> Result<Option<WorkoutModel>, AppError> {
+    ) -> WebResult<Option<WorkoutModel>> {
         let query = query_utils::for_one(doc! {"workout_id": workout_id }, user_id);
         let cursor = self
             .get_workout_collection()
@@ -78,7 +78,7 @@ impl WorkoutRepository {
         }
     }
 
-    pub async fn get_workouts(&self, user_id: &str) -> Result<Vec<WorkoutModel>, AppError> {
+    pub async fn get_workouts(&self, user_id: &str) -> WebResult<Vec<WorkoutModel>> {
         let query = query_utils::for_many(user_id);
         let find_options = FindOptions::builder().sort(doc! { "name": 1 }).build();
         let mut cursor = self
@@ -94,10 +94,10 @@ impl WorkoutRepository {
                 let workout = from_bson::<WorkoutModel>(Bson::Document(result));
                 match workout {
                     Ok(result) => vec.push(result),
-                    Err(e) => println!("Error parsing workout: {:?}", e),
+                    Err(e) => warn!("Error parsing workout: {:?}", e),
                 }
             } else {
-                println!("Error reading workout: {:?}", result.unwrap_err())
+                warn!("Error reading workout: {:?}", result.unwrap_err())
             }
         }
 
@@ -108,7 +108,7 @@ impl WorkoutRepository {
         &self,
         user_id: &str,
         workout_id: &str,
-    ) -> Result<WorkoutModel, AppError> {
+    ) -> WebResult<WorkoutModel> {
         let workout = self.find_workout_by_id(user_id, workout_id).await?;
 
         match workout {
@@ -123,7 +123,7 @@ impl WorkoutRepository {
         &self,
         user_id: &str,
         workout: CreateWorkout,
-    ) -> Result<WorkoutModel, AppError> {
+    ) -> WebResult<WorkoutModel> {
         let workout_name = workout.name.as_ref();
         let existing_workout = self.find_workout_by_name(user_id, workout_name).await?;
 
@@ -147,7 +147,7 @@ impl WorkoutRepository {
             updated_at: now,
         };
 
-        coll.insert_one(workout.to_doc()?, None)
+        coll.insert_one(workout.to_doc(), None)
             .await
             .map_err(|err| AppError::Internal(err.to_string()))?;
 
@@ -164,7 +164,7 @@ impl WorkoutRepository {
         user_id: &str,
         workout_id: &str,
         workout_update: UpdateWorkout,
-    ) -> Result<WorkoutModel, AppError> {
+    ) -> WebResult<WorkoutModel> {
         let existing_workout = self.find_workout_by_id(user_id, workout_id).await?;
 
         if existing_workout.is_none() {
@@ -200,7 +200,7 @@ impl WorkoutRepository {
         };
 
         let coll = self.get_workout_collection();
-        coll.update_one(doc! { "workout_id": workout_id }, workout.to_doc()?, None)
+        coll.update_one(doc! { "workout_id": workout_id }, workout.to_doc(), None)
             .await
             .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
 
@@ -209,7 +209,7 @@ impl WorkoutRepository {
         Ok(model)
     }
 
-    pub async fn delete_workout(&self, user_id: &str, workout_id: &str) -> Result<(), AppError> {
+    pub async fn delete_workout(&self, user_id: &str, workout_id: &str) -> WebResult<()> {
         let workout = self.find_workout_by_id(user_id, workout_id).await?;
 
         if workout.is_none() {
@@ -231,24 +231,30 @@ impl WorkoutRepository {
         user_id: &str,
         workout_id: &str,
         workout_score: CreateWorkoutScore,
-    ) -> Result<WorkoutScoreResponse, AppError> {
+    ) -> WebResult<WorkoutScoreResponse> {
         let coll = self.get_score_collection();
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
-        let workout_score_doc = doc! {
-            "workout_score_id": id.to_owned(),
-            "user_id": user_id.to_owned(),
-            "workout_id": workout_id.to_owned(),
-            "score": workout_score.score,
-            "rx": workout_score.rx,
-            "notes": workout_score.notes,
-            "created_at": workout_score.created_at.unwrap_or_else(|| now.to_owned()),
-            "updated_at": now.to_owned(),
+        let workout_score = WorkoutScoreResponse {
+            workout_score_id: id.to_owned(),
+            workout_id: workout_id.to_owned(),
+            user_id: user_id.to_owned(),
+            score: workout_score.score,
+            rx: workout_score.rx,
+            notes: workout_score.notes,
+            // This is for mywod items, as they have their own created at date which prefer to keep
+            created_at: workout_score.created_at.unwrap_or_else(|| now.to_owned()),
+            updated_at: now.to_owned(),
         };
 
-        coll.insert_one(workout_score_doc, None)
+        coll.insert_one(workout_score.to_doc(), None)
             .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+            .map_err(|err| {
+                AppError::Internal(format!(
+                    "Error inserting workout score: {}",
+                    err.to_string()
+                ))
+            })?;
 
         self.get_workout_score_by_id(user_id, workout_id, &id).await
     }
@@ -257,7 +263,7 @@ impl WorkoutRepository {
         &self,
         user_id: &str,
         workout_id: &str,
-    ) -> Result<Vec<WorkoutScoreResponse>, AppError> {
+    ) -> WebResult<Vec<WorkoutScoreResponse>> {
         let query = query_utils::for_many_with_filter(
             doc! { "user_id": user_id, "workout_id": workout_id },
             user_id,
@@ -279,10 +285,10 @@ impl WorkoutRepository {
                     let workout_score = from_bson::<WorkoutScoreResponse>(Bson::Document(document));
                     match workout_score {
                         Ok(result) => vec.push(result),
-                        Err(e) => println!("Error parsing workout: {:?}", e),
+                        Err(e) => warn!("Error parsing workout: {:?}", e),
                     }
                 }
-                Err(e) => println!("Error reading workout: {:?}", e),
+                Err(e) => warn!("Error reading workout: {:?}", e),
             }
         }
 
@@ -294,7 +300,7 @@ impl WorkoutRepository {
         user_id: &str,
         workout_id: &str,
         workout_score_id: &str,
-    ) -> Result<WorkoutScoreResponse, AppError> {
+    ) -> WebResult<WorkoutScoreResponse> {
         let query = query_utils::for_one(
             doc! { "workout_id":  workout_id, "workout_score_id": workout_score_id },
             user_id,
@@ -321,43 +327,31 @@ impl WorkoutRepository {
         workout_id: &str,
         workout_score_id: &str,
         new_score: UpdateWorkoutScore,
-    ) -> Result<WorkoutScoreResponse, AppError> {
+    ) -> WebResult<WorkoutScoreResponse> {
         let mut score = self
             .get_workout_score_by_id(user_id, workout_id, workout_score_id)
             .await?;
 
-        let now = Utc::now().to_rfc2822();
-
         score.score = new_score.score.unwrap_or(score.score);
         score.rx = new_score.rx.unwrap_or(score.rx);
         score.notes = new_score.notes.unwrap_or(score.notes);
-        score.updated_at = now;
-
-        let workout_doc = score.to_doc(user_id);
+        score.updated_at = Utc::now().to_rfc3339();
 
         let query = query_utils::for_one(doc! { "workout_score_id": workout_score_id }, user_id);
-        let update_result = self
+        let _ = self
             .get_score_collection()
-            .update_one(query, workout_doc, None)
-            .await;
-
-        if update_result.is_err() {
-            return Err(AppError::Internal(
-                "Something went wrong when updating the score.".to_owned(),
-            ));
-        }
+            .update_one(query, score.to_doc(), None)
+            .await
+            .map_err(|_| {
+                AppError::Internal("Something went wrong when updating the score.".to_owned())
+            })?;
 
         let res = self
             .get_workout_score_by_id(user_id, workout_id, workout_score_id)
-            .await;
+            .await
+            .map_err(|_| AppError::Internal("New score not found after inserting".to_owned()))?;
 
-        if res.is_err() {
-            return Err(AppError::Internal(
-                "New score not found after inserting".to_owned(),
-            ));
-        }
-
-        res
+        Ok(res)
     }
 
     pub async fn delete_workout_score_by_id(
@@ -365,22 +359,22 @@ impl WorkoutRepository {
         user_id: &str,
         workout_id: &str,
         workout_score_id: &str,
-    ) -> Result<(), AppError> {
+    ) -> WebResult<()> {
         // Ensure the score exists for the user
         self.get_workout_score_by_id(user_id, workout_id, workout_score_id)
             .await?;
 
         let query = query_utils::for_one(doc! { "workout_score_id": workout_score_id }, user_id);
-        let delete_result = self.get_score_collection().delete_one(query, None).await;
-
-        if let Err(delete_result) = delete_result {
-            return Err(AppError::Internal(delete_result.to_string()));
-        }
+        let _ = self
+            .get_score_collection()
+            .delete_one(query, None)
+            .await
+            .map_err(|e| AppError::Internal(e.to_string()))?;
 
         Ok(())
     }
 
-    async fn delete_workout_scores(&self, user_id: &str, workout_id: &str) -> Result<(), AppError> {
+    async fn delete_workout_scores(&self, user_id: &str, workout_id: &str) -> WebResult<()> {
         let query = query_utils::for_many_with_filter(doc! { "workout_id": workout_id }, user_id);
         self.get_score_collection()
             .delete_many(query, None)
