@@ -40,7 +40,7 @@ pub struct MovementModel {
     pub user_id: String,
     pub name: String,
     pub measurement: MovementMeasurement,
-    pub public: bool,
+    pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -52,7 +52,7 @@ impl MovementModel {
             "user_id": self.user_id.to_owned(),
             "name": self.name.to_owned(),
             "measurement": self.measurement.to_string().to_lowercase(),
-            "public": self.public,
+            "is_public": self.is_public,
             "created_at": self.created_at.to_owned(),
             "updated_at": self.updated_at.to_owned(),
         }
@@ -65,7 +65,7 @@ pub struct MovementResponse {
     pub name: String,
     pub measurement: MovementMeasurement,
     pub scores: Vec<MovementScoreResponse>,
-    pub public: bool,
+    pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -77,7 +77,7 @@ impl MovementResponse {
             name: model.name,
             measurement: model.measurement,
             scores,
-            public: model.public,
+            is_public: model.is_public,
             created_at: model.created_at,
             updated_at: model.updated_at,
         }
@@ -99,7 +99,7 @@ pub struct CreateMovement {
     pub name: String,
     pub measurement: MovementMeasurement,
     #[serde(default = "default_as_false")]
-    pub public: bool,
+    pub is_public: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

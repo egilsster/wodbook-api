@@ -12,7 +12,7 @@ pub fn for_many(user_id: &str) -> Document {
     doc! {
         "$or": [
             { "user_id": user_id },
-            { "public": true }
+            { "is_public": true }
         ]
     }
 }
@@ -33,7 +33,7 @@ pub fn for_many_with_filter(filter: Document, user_id: &str) -> Document {
             {
                 "$or": [
                     { "user_id": user_id },
-                    { "public": true }
+                    { "is_public": true }
                 ]
             }
         ]
@@ -56,7 +56,7 @@ pub fn for_one(filter: Document, user_id: &str) -> Document {
             {
                 "$or": [
                     { "user_id": user_id },
-                    { "public": true }
+                    { "is_public": true }
                 ]
             }
         ]
@@ -73,7 +73,7 @@ mod tests {
         let expected = doc! {
             "$or": [
                 { "user_id": "user_id" },
-                { "public": true }
+                { "is_public": true }
             ]
         };
         assert_eq!(res, expected);
@@ -89,7 +89,7 @@ mod tests {
                 {
                     "$or": [
                         { "user_id": "user_id" },
-                        { "public": true }
+                        { "is_public": true }
                     ]
                 }
             ]
@@ -107,7 +107,7 @@ mod tests {
             {
                 "$or": [
                     { "user_id": "user_id" },
-                    { "public": true }
+                    { "is_public": true }
                 ]
             }
         ]

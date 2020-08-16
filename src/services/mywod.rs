@@ -49,7 +49,7 @@ pub async fn save_workouts_and_scores(
             name: workout.title.to_owned(),
             description: workout.description,
             measurement: map_workout_measurement(workout.score_type.as_ref()),
-            public: false,
+            is_public: false,
         };
         let created_workout = workout_repo.create_workout(user_id, new_workout).await;
 
@@ -77,7 +77,7 @@ pub async fn save_workouts_and_scores(
                 name: workout_title,
                 description: workout_description,
                 measurement: map_workout_measurement(&score.score_type),
-                public: false,
+                is_public: false,
             };
             workout = Some(workout_repo.create_workout(user_id, new_workout).await?);
             added_workouts += 1;
@@ -110,7 +110,7 @@ pub async fn save_movements_and_scores(
         let new_movement = CreateMovement {
             name: m.name.to_owned(),
             measurement: map_movement_measurement(m.score_type),
-            public: false,
+            is_public: false,
         };
         let created_movement = movement_repo.create_movement(user_id, new_movement).await;
         match created_movement {

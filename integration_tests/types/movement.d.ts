@@ -3,7 +3,7 @@ type MovementData = {
   user_id: string;
   name: string;
   measurement: string;
-  public: boolean;
+  is_public: boolean;
   scores: MovementScoreData[];
   created_at: string;
   updated_at: string;

@@ -42,7 +42,7 @@ pub struct WorkoutModel {
     pub name: String,
     pub measurement: WorkoutMeasurement,
     pub description: String,
-    pub public: bool,
+    pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -55,7 +55,7 @@ impl WorkoutModel {
             "name": self.name.to_owned(),
             "measurement": self.measurement.to_string(),
             "description": self.description.to_owned(),
-            "public": self.public,
+            "is_public": self.is_public,
             "created_at": self.created_at.to_owned(),
             "updated_at": self.updated_at.to_owned(),
         }
@@ -69,7 +69,7 @@ pub struct WorkoutResponse {
     pub measurement: WorkoutMeasurement,
     pub description: String,
     pub scores: Vec<WorkoutScoreResponse>,
-    pub public: bool,
+    pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -82,7 +82,7 @@ impl WorkoutResponse {
             measurement: model.measurement,
             description: model.description,
             scores,
-            public: model.public,
+            is_public: model.is_public,
             created_at: model.created_at,
             updated_at: model.updated_at,
         }
@@ -105,7 +105,7 @@ pub struct CreateWorkout {
     pub description: String,
     pub measurement: WorkoutMeasurement,
     #[serde(default = "default_as_false")]
-    pub public: bool,
+    pub is_public: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

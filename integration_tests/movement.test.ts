@@ -94,7 +94,7 @@ describe("/v1/movements", () => {
         const placeholder_movement = {
           name: "A placeholder",
           measurement: "weight",
-          public: true,
+          is_public: true,
         };
         const res0: MovementResponse = await request.post("/movements", {
           ...reqOpts,
@@ -162,7 +162,7 @@ describe("/v1/movements", () => {
         expect(movement2).toHaveProperty("movement_id");
         expect(movement2).toHaveProperty("name", movement.name);
         expect(movement2).toHaveProperty("measurement", movement.measurement);
-        expect(movement2).toHaveProperty("public", false);
+        expect(movement2).toHaveProperty("is_public", false);
         expect(movement2).toHaveProperty("created_at");
         expect(movement2).toHaveProperty("updated_at");
 
@@ -256,7 +256,7 @@ describe("/v1/movements", () => {
         const movementId = res1.body.movement_id;
         expect(res1.body).toHaveProperty("name", movement.name);
         expect(res1.body).toHaveProperty("measurement", movement.measurement);
-        expect(res1.body).toHaveProperty("public", false);
+        expect(res1.body).toHaveProperty("is_public", false);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
@@ -275,7 +275,7 @@ describe("/v1/movements", () => {
         expect(res2.body).toHaveProperty("movement_id");
         expect(res2.body).toHaveProperty("name", movement.name);
         expect(res2.body).toHaveProperty("measurement", movement.measurement);
-        expect(res2.body).toHaveProperty("public", false);
+        expect(res2.body).toHaveProperty("is_public", false);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
         expect(res2.body.created_at).toEqual(res2.body.updated_at);
@@ -298,7 +298,7 @@ describe("/v1/movements", () => {
         expect(res3.body).toHaveProperty("movement_id");
         expect(res3.body).toHaveProperty("name", "Shoulder Press");
         expect(res3.body).toHaveProperty("measurement", movement.measurement);
-        expect(res3.body).toHaveProperty("public", false);
+        expect(res3.body).toHaveProperty("is_public", false);
         expect(res3.body).toHaveProperty("created_at");
         expect(res3.body).toHaveProperty("updated_at");
         expect(res3.body.created_at).not.toEqual(res3.body.updated_at);
@@ -318,7 +318,7 @@ describe("/v1/movements", () => {
         expect(res4.body).toHaveProperty("movement_id");
         expect(res4.body).toHaveProperty("name", "Shoulder Press");
         expect(res4.body).toHaveProperty("measurement", movement.measurement);
-        expect(res4.body).toHaveProperty("public", false);
+        expect(res4.body).toHaveProperty("is_public", false);
         expect(res4.body).toHaveProperty("created_at");
         expect(res4.body).toHaveProperty("updated_at");
         expect(res4.body.created_at).not.toEqual(res4.body.updated_at);
@@ -839,11 +839,11 @@ describe("/v1/movements", () => {
   });
 
   describe("public movements", () => {
-    it("should return movements created by other users if they are marked as public", async (done) => {
+    it("should return movements created by other users if they are marked as is_public", async (done) => {
       const movement = {
         name: "Snatch",
         measurement: "weight",
-        public: true,
+        is_public: true,
       };
 
       try {
@@ -861,7 +861,7 @@ describe("/v1/movements", () => {
         const movementId = res1.body.movement_id;
         expect(res1.body).toHaveProperty("name", movement.name);
         expect(res1.body).toHaveProperty("measurement", movement.measurement);
-        expect(res1.body).toHaveProperty("public", true);
+        expect(res1.body).toHaveProperty("is_public", true);
         expect(res1.body).toHaveProperty("created_at");
         expect(res1.body).toHaveProperty("updated_at");
 
@@ -880,7 +880,7 @@ describe("/v1/movements", () => {
         expect(res2.body).toHaveProperty("movement_id");
         expect(res2.body).toHaveProperty("name", movement.name);
         expect(res2.body).toHaveProperty("measurement", movement.measurement);
-        expect(res2.body).toHaveProperty("public", true);
+        expect(res2.body).toHaveProperty("is_public", true);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 
@@ -899,7 +899,7 @@ describe("/v1/movements", () => {
         expect(res2.body).toHaveProperty("movement_id");
         expect(res2.body).toHaveProperty("name", movement.name);
         expect(res2.body).toHaveProperty("measurement", movement.measurement);
-        expect(res2.body).toHaveProperty("public", true);
+        expect(res2.body).toHaveProperty("is_public", true);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 
