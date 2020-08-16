@@ -4,7 +4,7 @@ type WorkoutData = {
   name: string;
   description: string;
   measurement: string;
-  public: boolean;
+  is_public: boolean;
   scores: WorkoutScoreData[];
   created_at: string;
   updated_at: string;

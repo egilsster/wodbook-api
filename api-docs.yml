@@ -807,7 +807,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/workoutScore"
-        public:
+        is_public:
           type: boolean
           description: Whether this is for all users of bound to the creator. Known benchmarks should only be public.
         created_at:
@@ -878,7 +878,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/movementScore"
-        public:
+        is_public:
           type: boolean
           description: Whether this is for all users or bound to the creator.
         created_at:
