@@ -21,7 +21,7 @@ db.users.insertMany([
     date_of_birth: "1991-12-06",
     admin: true,
     height: NumberInt(189),
-    weight: NumberInt(920000),
+    weight: NumberInt(92000),
     box_name: "none",
     avatar_url: "",
   },

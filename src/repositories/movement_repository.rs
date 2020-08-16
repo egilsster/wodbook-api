@@ -243,7 +243,6 @@ impl MovementRepository {
             score: movement_score.score,
             sets: movement_score.sets,
             reps: movement_score.reps,
-            distance: movement_score.distance,
             notes: movement_score.notes,
             // This is for mywod items, as they have their own created at date which prefer to keep
             created_at: movement_score.created_at.unwrap_or_else(|| now.to_owned()),
@@ -345,7 +344,6 @@ impl MovementRepository {
         score.reps = new_score.reps.unwrap_or(score.reps);
         score.sets = new_score.sets.unwrap_or(score.sets);
         score.notes = new_score.notes.unwrap_or(score.notes);
-        score.distance = new_score.distance.unwrap_or(score.distance);
         score.updated_at = Utc::now().to_rfc3339();
 
         let query = query_utils::for_one(doc! { "movement_score_id": movement_score_id }, user_id);

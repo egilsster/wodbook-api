@@ -114,13 +114,35 @@ pub async fn read_contents(filename: &str) -> WebResult<MyWodData> {
     let mut movements: Vec<Movement> = Vec::new();
 
     // READING MOVEMENTS
-    db.prepare("SELECT * FROM Movement;")
+    db.prepare("SELECT * FROM Movement JOIN MovementSessions ON Movement.primaryclientid = MovementSessions.foreignmovementclientid AND Movement.primaryrecordid = MovementSessions.foreignmovementrecordid;")
         .map_err(|_| AppError::Internal("Error reading movement information".to_owned()))?
         .query_map(params![], |row| {
+            let mut primary_client_id: String = row.get(0)?;
+            let mut name: String = row.get(4)?;
+
+            let score_type: i32 = row.get(5)?;
+            if map_movement_measurement(score_type) == MovementMeasurement::Time {
+                // measurementAUnitsCode is 6 for km and 5 for m, probably other values
+                let measurement_a_units_code: i32 = row.get(16)?; // m or km indicator
+                let measurement_code = match measurement_a_units_code {
+                    6 => "km".to_string(),
+                    _ => "m".to_string(),
+                };
+
+                // Add distance to the ID so I can connect them later
+                // Add distance to the name.
+                let measurement_a_value: f64 = row.get(15)?; // distance value
+
+                primary_client_id = row.get(0)?;
+                primary_client_id = format!("{}+{}", measurement_a_value, primary_client_id);
+                name = row.get(4)?;
+                name = format!("{}{} {}", measurement_a_value, measurement_code, name); // example: 1000m Rowing or 21.1km Rowing
+            }
+
             Ok(Movement {
-                primary_client_id: row.get(0)?,
+                primary_client_id,
                 primary_record_id: row.get(1)?,
-                name: row.get(4)?,
+                name,
                 score_type: row.get(5)?,
             })
         })
@@ -134,11 +156,21 @@ pub async fn read_contents(filename: &str) -> WebResult<MyWodData> {
     // READING MOVEMENT SCORES
     let mut movement_scores: Vec<MovementSession> = Vec::new();
 
-    db.prepare("SELECT * FROM MovementSessions;")
+    db.prepare("SELECT * FROM MovementSessions JOIN Movement ON Movement.primaryclientid = MovementSessions.foreignmovementclientid AND Movement.primaryrecordid = MovementSessions.foreignmovementrecordid;")
         .map_err(|_| AppError::Internal("Error reading movement session information".to_owned()))?
         .query_map(params![], |row| {
+            let mut foreign_movement_client_id: String = row.get(2)?;
+            let score_type: i32 = row.get(18)?;
+
+            if map_movement_measurement(score_type) == MovementMeasurement::Time {
+                // add distance to id value
+                let measurement_a_value: f64 = row.get(7)?; // distance value
+                foreign_movement_client_id = row.get(2)?;
+                foreign_movement_client_id = format!("{}+{}", measurement_a_value, foreign_movement_client_id);
+            }
+
             Ok(MovementSession {
-                foreign_movement_client_id: row.get(2)?,
+                foreign_movement_client_id,
                 foreign_movement_record_id: row.get(3)?,
                 date: row.get(6)?,
                 measurement_a_value: row.get(7)?,
@@ -207,7 +239,7 @@ pub fn map_workout_measurement(score_type: &str) -> WorkoutMeasurement {
 pub fn map_movement_measurement(score_type: i32) -> MovementMeasurement {
     match score_type {
         0 => MovementMeasurement::Weight,
-        1 => MovementMeasurement::Distance,
+        1 => MovementMeasurement::Time, // fka Distance
         2 => MovementMeasurement::Reps,
         3 => MovementMeasurement::Height,
         _ => MovementMeasurement::None,
@@ -259,8 +291,7 @@ pub fn adjust_movement_score_to_measurement(
             score: score.measurement_a_value.to_string(),
             sets: score.sets.parse::<u32>().unwrap(),
             reps: score.measurement_b.parse::<u32>().unwrap(),
-            distance: "".to_owned(),
-            notes: score.notes.to_owned(),
+            notes: score.notes.trim().to_owned(),
             created_at,
         }),
         // Box jumps
@@ -268,26 +299,23 @@ pub fn adjust_movement_score_to_measurement(
             score: score.measurement_a_value.to_string(),
             sets: score.measurement_b.parse::<u32>().unwrap(),
             reps: 1,
-            distance: "".to_owned(),
-            notes: score.notes.to_owned(),
+            notes: score.notes.trim().to_owned(),
             created_at,
         }),
-        // Rowing, running, etc
-        MovementMeasurement::Distance => Some(CreateMovementScore {
+        // Rowing, running, something for a set distance
+        MovementMeasurement::Time => Some(CreateMovementScore {
             score: score.measurement_b.to_string(),
             sets: score.sets.parse::<u32>().unwrap(),
             reps: 1,
-            distance: score.measurement_a_value.to_string(),
-            notes: score.notes.to_owned(),
+            notes: score.notes.trim().to_owned(),
             created_at,
         }),
         // Double unders
         MovementMeasurement::Reps => Some(CreateMovementScore {
-            score: "".to_owned(),
+            score: score.measurement_a_value.to_string(),
             sets: score.sets.parse::<u32>().unwrap(),
             reps: score.measurement_a_value as u32,
-            distance: "".to_owned(),
-            notes: score.notes.to_owned(),
+            notes: score.notes.trim().to_owned(),
             created_at,
         }),
         _ => None,
@@ -385,8 +413,8 @@ mod tests {
 
     #[test]
     fn test_map_movement_measurement() {
+        assert_eq!(map_movement_measurement(1), MovementMeasurement::Time);
         assert_eq!(map_movement_measurement(0), MovementMeasurement::Weight);
-        assert_eq!(map_movement_measurement(1), MovementMeasurement::Distance);
         assert_eq!(map_movement_measurement(2), MovementMeasurement::Reps);
         assert_eq!(map_movement_measurement(3), MovementMeasurement::Height);
         assert_eq!(map_movement_measurement(4), MovementMeasurement::None);
@@ -415,7 +443,6 @@ mod tests {
         assert_eq!(res.score, "70");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
-        assert_eq!(res.distance, "");
         assert_eq!(res.notes, "back squat");
         assert_eq!(res.created_at.unwrap(), "2012-10-10T00:00:00+00:00");
     }
@@ -437,7 +464,6 @@ mod tests {
         assert_eq!(res.score, "126");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
-        assert_eq!(res.distance, "");
         assert_eq!(res.notes, "box jumps");
         assert_eq!(res.created_at.unwrap(), "2012-10-11T00:00:00+00:00");
     }
@@ -451,16 +477,14 @@ mod tests {
             measurement_a_units_code: 1,
             measurement_b: "2:50".to_string(),
             sets: 1.to_string(),
-            notes: "rowing".to_string(),
+            notes: "1000m rowing".to_string(),
             date: "2012-10-12".to_owned(),
         };
-        let res =
-            adjust_movement_score_to_measurement(&MovementMeasurement::Distance, &score).unwrap();
+        let res = adjust_movement_score_to_measurement(&MovementMeasurement::Time, &score).unwrap();
         assert_eq!(res.score, "2:50");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
-        assert_eq!(res.distance, "1000");
-        assert_eq!(res.notes, "rowing");
+        assert_eq!(res.notes, "1000m rowing");
         assert_eq!(res.created_at.unwrap(), "2012-10-12T00:00:00+00:00");
     }
 
@@ -477,10 +501,9 @@ mod tests {
             date: "2012-10-13".to_owned(),
         };
         let res = adjust_movement_score_to_measurement(&MovementMeasurement::Reps, &score).unwrap();
-        assert_eq!(res.score, "");
+        assert_eq!(res.score, "7");
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 7);
-        assert_eq!(res.distance, "");
         assert_eq!(res.notes, "hspu");
         assert_eq!(res.created_at.unwrap(), "2012-10-13T00:00:00+00:00");
     }
@@ -558,5 +581,59 @@ mod tests {
         assert_eq!(res.len(), 1);
         let my_score: &CreateMovementScore = res.get(0).unwrap();
         assert_eq!(&my_score.notes, "HSPU score");
+    }
+
+    #[test]
+    fn test_get_scores_for_movement_distance() {
+        let movement1 = Movement {
+            primary_client_id: "1000+i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000"
+                .to_string(),
+            primary_record_id: 6,
+            name: "1000m Rowing".to_string(),
+            score_type: 1,
+        };
+
+        let movement2 = Movement {
+            primary_client_id: "21.1+i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000"
+                .to_string(),
+            primary_record_id: 6,
+            name: "21.1km Rowing".to_string(),
+            score_type: 1,
+        };
+
+        let movement_scores: Vec<MovementSession> = vec![
+            MovementSession {
+                foreign_movement_client_id:
+                    "1000+i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000".to_string(),
+                foreign_movement_record_id: 6,
+                date: "2018-05-04".to_string(),
+                measurement_a_value: 1000.0,
+                measurement_a_units_code: 5,
+                measurement_b: "3:14.1".to_string(),
+                sets: "1".to_string(),
+                notes: "".to_string(),
+            },
+            MovementSession {
+                foreign_movement_client_id:
+                    "21.1+i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000".to_string(),
+                foreign_movement_record_id: 6,
+                date: "2018-12-01".to_string(),
+                measurement_a_value: 21.1,
+                measurement_a_units_code: 6,
+                measurement_b: "1:34:40".to_string(),
+                sets: "1".to_string(),
+                notes: "2:10.2 / 500m average".to_string(),
+            },
+        ];
+
+        let res1 = get_scores_for_movement(&movement1, &movement_scores);
+        assert_eq!(res1.len(), 1);
+        let my_score: &CreateMovementScore = res1.get(0).unwrap();
+        assert_eq!(&my_score.score, "3:14.1");
+
+        let res2 = get_scores_for_movement(&movement2, &movement_scores);
+        assert_eq!(res2.len(), 1);
+        let my_score: &CreateMovementScore = res2.get(0).unwrap();
+        assert_eq!(&my_score.score, "1:34:40");
     }
 }
