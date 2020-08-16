@@ -29,7 +29,6 @@ type MovementScoreData = {
   score: string;
   reps: number;
   sets: number;
-  distance: string;
   notes: string;
   created_at: string;
   updated_at: string;

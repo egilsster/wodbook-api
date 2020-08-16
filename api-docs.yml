@@ -916,8 +916,6 @@ components:
           type: number
         reps:
           type: number
-        distance:
-          type: string
         notes:
           type: string
           description: Any notes to mention for this score (after a wod, etc.).

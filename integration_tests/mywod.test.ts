@@ -190,6 +190,15 @@ describe("/users/mywod", () => {
         const movementsAfter = res10.body.data;
         expect(movementsAfter.length).toBeGreaterThan(movementsBefore.length);
 
+        // Find 1000m rowing and 21.1km rowing
+        const defaultRow: any = movementsAfter.find((movement) => movement.name === 'Rowing');
+        const shortRow: any = movementsAfter.find((movement) => movement.name === '1000m Rowing');
+        const longRow: any = movementsAfter.find((movement) => movement.name === '21.1km Rowing');
+
+        expect(defaultRow).toBeUndefined();
+        expect(shortRow.measurement).toEqual('time');
+        expect(longRow.measurement).toEqual('time');
+
         // TODO: Check movement scores
 
         done();

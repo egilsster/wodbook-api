@@ -19,8 +19,8 @@ fn default_as_one() -> u32 {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum MovementMeasurement {
+    Time, // fka Distance
     Weight,
-    Distance,
     Reps,
     Height,
     None,
@@ -115,8 +115,6 @@ pub struct CreateMovementScore {
     #[serde(default = "default_as_one")]
     pub reps: u32,
     #[serde(default = "default_as_empty_string")]
-    pub distance: String,
-    #[serde(default = "default_as_empty_string")]
     pub notes: String,
     pub created_at: Option<String>,
 }
@@ -126,7 +124,6 @@ pub struct UpdateMovementScore {
     pub score: Option<String>,
     pub sets: Option<u32>,
     pub reps: Option<u32>,
-    pub distance: Option<String>,
     pub notes: Option<String>,
 }
 
@@ -138,7 +135,6 @@ pub struct MovementScoreResponse {
     pub score: String,
     pub sets: u32,
     pub reps: u32,
-    pub distance: String,
     pub notes: String,
     pub created_at: String,
     pub updated_at: String,
@@ -153,7 +149,6 @@ impl MovementScoreResponse {
             "score": self.score.to_owned(),
             "sets": self.sets.to_owned(),
             "reps": self.reps.to_owned(),
-            "distance": self.distance.to_owned(),
             "notes": self.notes.to_owned(),
             "created_at": self.created_at.to_owned(),
             "updated_at": self.updated_at.to_owned(),
@@ -167,8 +162,8 @@ mod tests {
 
     #[test]
     fn test_measurement_to_string() {
+        assert_eq!(MovementMeasurement::Time.to_string(), "time");
         assert_eq!(MovementMeasurement::Weight.to_string(), "weight");
-        assert_eq!(MovementMeasurement::Distance.to_string(), "distance");
         assert_eq!(MovementMeasurement::Reps.to_string(), "reps");
         assert_eq!(MovementMeasurement::Height.to_string(), "height");
         assert_eq!(MovementMeasurement::None.to_string(), "none");
