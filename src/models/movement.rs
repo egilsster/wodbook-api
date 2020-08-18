@@ -161,6 +161,62 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_movement_model() {
+        let movement = MovementModel {
+            movement_id: "1".to_string(),
+            user_id: "2".to_string(),
+            name: "Snatch".to_string(),
+            measurement: MovementMeasurement::Weight,
+            is_public: false,
+            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+        };
+
+        let doc = movement.to_doc();
+        let expected_doc = doc! {
+            "movement_id": "1",
+            "user_id": "2",
+            "name": "Snatch",
+            "measurement": "weight",
+            "is_public": false,
+            "created_at": "2020-08-17T13:25:54.544746+00:00",
+            "updated_at": "2020-08-17T13:25:54.544746+00:00"
+        };
+
+        assert_eq!(doc, expected_doc);
+    }
+
+    #[test]
+    fn test_movement_score_response() {
+        let movement_score = MovementScoreResponse {
+            movement_score_id: "1".to_string(),
+            movement_id: "2".to_string(),
+            user_id: "3".to_string(),
+            score: "100".to_string(),
+            sets: 1,
+            reps: 1,
+            notes: "".to_string(),
+            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+        };
+
+        let doc = movement_score.to_doc();
+        let expected_doc = doc! {
+            "movement_score_id": "1",
+            "movement_id": "2",
+            "user_id": "3",
+            "score": "100",
+            "sets": 1,
+            "reps": 1,
+            "notes": "",
+            "created_at": "2020-08-17T13:25:54.544746+00:00",
+            "updated_at": "2020-08-17T13:25:54.544746+00:00",
+        };
+
+        assert_eq!(doc, expected_doc);
+    }
+
+    #[test]
     fn test_measurement_to_string() {
         assert_eq!(MovementMeasurement::Time.to_string(), "time");
         assert_eq!(MovementMeasurement::Weight.to_string(), "weight");
