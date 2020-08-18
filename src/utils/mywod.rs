@@ -421,12 +421,6 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_short_date() {
-        let res = parse_short_date("1991-12-06");
-        assert_eq!(res.unwrap(), "1991-12-06T00:00:00+00:00");
-    }
-
-    #[test]
     fn test_adjust_movement_score_to_measurement_weight() {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
@@ -635,5 +629,11 @@ mod tests {
         assert_eq!(res2.len(), 1);
         let my_score: &CreateMovementScore = res2.get(0).unwrap();
         assert_eq!(&my_score.score, "1:34:40");
+    }
+
+    #[test]
+    fn test_parse_short_date() {
+        let res = parse_short_date("1991-12-06");
+        assert_eq!(res.unwrap(), "1991-12-06T00:00:00+00:00");
     }
 }

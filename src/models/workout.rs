@@ -164,6 +164,62 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_workout_model() {
+        let workout = WorkoutModel {
+            workout_id: "1".to_string(),
+            user_id: "2".to_string(),
+            name: "Fran".to_string(),
+            measurement: WorkoutMeasurement::Time,
+            description: "You know..".to_string(),
+            is_public: true,
+            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+        };
+
+        let doc = workout.to_doc();
+        let expected_doc = doc! {
+            "workout_id": "1",
+            "user_id": "2",
+            "name": "Fran",
+            "measurement": "time",
+            "description": "You know..",
+            "is_public": true,
+            "created_at": "2020-08-17T13:25:54.544746+00:00",
+            "updated_at": "2020-08-17T13:25:54.544746+00:00"
+        };
+
+        assert_eq!(doc, expected_doc);
+    }
+
+    #[test]
+    fn test_workout_score_response() {
+        let workout_score = WorkoutScoreResponse {
+            workout_score_id: "1".to_string(),
+            workout_id: "2".to_string(),
+            user_id: "3".to_string(),
+            score: "1:59".to_string(),
+            rx: true,
+            notes: "".to_string(),
+            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
+        };
+
+        let doc = workout_score.to_doc();
+        let expected_doc = doc! {
+            "workout_score_id": "1",
+            "workout_id": "2",
+            "user_id": "3",
+            "score": "1:59",
+            "rx": true,
+            "notes": "",
+            "created_at": "2020-08-17T13:25:54.544746+00:00",
+            "updated_at": "2020-08-17T13:25:54.544746+00:00",
+        };
+
+        assert_eq!(doc, expected_doc);
+    }
+
+    #[test]
     fn test_measurement_to_string() {
         assert_eq!(WorkoutMeasurement::Time.to_string(), "time");
         assert_eq!(WorkoutMeasurement::Distance.to_string(), "distance");
