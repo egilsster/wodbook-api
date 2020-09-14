@@ -25,7 +25,7 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "either",
  "futures",
  "http 0.2.1",
@@ -45,7 +45,7 @@ dependencies = [
  "actix-web",
  "bitflags",
  "bytes 0.5.4",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "futures-core",
  "futures-util",
  "log",
@@ -73,7 +73,7 @@ dependencies = [
  "bytes 0.5.4",
  "chrono",
  "copyless",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "either",
  "encoding_rs",
  "failure",
@@ -122,7 +122,7 @@ dependencies = [
  "actix-utils",
  "actix-web",
  "bytes 0.5.4",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "futures",
  "httparse",
  "log",
@@ -209,7 +209,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf4082192601de5f303013709ff84d81ca6a1bc4af7fb24f367a500a23c6e84e"
 dependencies = [
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "futures-channel",
  "lazy_static",
  "log",
@@ -228,7 +228,7 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "either",
  "futures",
  "log",
@@ -272,7 +272,7 @@ dependencies = [
  "actix-web-codegen",
  "awc",
  "bytes 0.5.4",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "encoding_rs",
  "futures",
  "fxhash",
@@ -369,7 +369,7 @@ dependencies = [
  "actix-service",
  "base64 0.11.0",
  "bytes 0.5.4",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "futures-core",
  "log",
  "mime",
@@ -642,9 +642,9 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.9"
+version = "0.99.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "298998b1cf6b5b2c8a7b023dfd45821825ce3ba8a8af55c921a0e734e4653f76"
+checksum = "1dcfabdab475c16a93d669dddfc393027803e347d09663f524447f642fbb84ba"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.4",
@@ -2983,7 +2983,7 @@ dependencies = [
  "chrono",
  "config",
  "data-encoding",
- "derive_more 0.99.9",
+ "derive_more 0.99.10",
  "dotenv",
  "env_logger",
  "futures",
