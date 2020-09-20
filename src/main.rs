@@ -7,6 +7,7 @@ use crate::db::connection::Connection;
 use crate::utils::mywod::AVATAR_FILE_LOCATION;
 use crate::utils::{AppState, Config};
 
+use actix_files;
 use actix_web::middleware::{Compress, Logger};
 use actix_web::{http, web, App, HttpServer};
 use dotenv::dotenv;

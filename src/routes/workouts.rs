@@ -122,12 +122,10 @@ async fn create_workout_score(
 #[patch("/{workout_id}/{score_id}")]
 async fn update_workout_score(
     state: web::Data<AppState>,
-    info: web::Path<(String, String)>,
+    web::Path((workout_id, score_id)): web::Path<(String, String)>,
     claims: Claims,
     workout_score_update: web::Json<UpdateWorkoutScore>,
 ) -> Result<impl Responder, AppError> {
-    let workout_id = info.0.to_owned();
-    let score_id = info.1.to_owned();
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -148,11 +146,9 @@ async fn update_workout_score(
 #[delete("/{workout_id}/{score_id}")]
 async fn delete_workout_score(
     state: web::Data<AppState>,
-    info: web::Path<(String, String)>,
+    web::Path((workout_id, score_id)): web::Path<(String, String)>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let workout_id = info.0.to_owned();
-    let score_id = info.1.to_owned();
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };

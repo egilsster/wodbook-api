@@ -128,12 +128,10 @@ async fn create_movement_score(
 #[patch("/{movement_id}/{score_id}")]
 async fn update_movement_score(
     state: web::Data<AppState>,
-    info: web::Path<(String, String)>,
+    web::Path((movement_id, score_id)): web::Path<(String, String)>,
     claims: Claims,
     movement_score_update: web::Json<UpdateMovementScore>,
 ) -> Result<impl Responder, AppError> {
-    let movement_id = info.0.to_owned();
-    let score_id = info.1.to_owned();
     let movement_repo = MovementRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -152,11 +150,9 @@ async fn update_movement_score(
 #[delete("/{movement_id}/{score_id}")]
 async fn delete_movement_score(
     state: web::Data<AppState>,
-    info: web::Path<(String, String)>,
+    web::Path((movement_id, score_id)): web::Path<(String, String)>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
-    let movement_id = info.0.to_owned();
-    let score_id = info.1.to_owned();
     let movement_repo = MovementRepository {
         mongo_client: state.mongo_client.clone(),
     };
