@@ -116,7 +116,7 @@ jobs:
       - name: Run integration tests
         run: |
           cargo run &
-          sleep 1 # let it start
+          sleep 2 # let it start
           yarn integration-test
         env:
           AUTH__SECRET: cHVibGljS2V5

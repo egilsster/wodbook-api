@@ -1,7 +1,7 @@
 {
   "testEnvironment": "node",
   "transform": {
-    "^.+\\.ts$": "ts-jest"
+    "^.+\\.ts$": "@swc-node/jest"
   },
   "testRegex": "(integration_tests)/.*\\.test\\.(ts)$",
   "moduleFileExtensions": [
