@@ -11,7 +11,7 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.45.2
           override: true
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
@@ -27,7 +27,7 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.45.2
           components: clippy
           override: true
       - name: Run cargo clippy
@@ -59,7 +59,7 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.45.2
           override: true
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
@@ -107,7 +107,7 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.45.2
           override: true
       - name: build app
         run: cargo build
