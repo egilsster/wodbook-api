@@ -41,7 +41,7 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-utils 2.0.0",
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "either",
  "futures-util",
  "http 0.2.1",
@@ -61,7 +61,7 @@ dependencies = [
  "actix-web",
  "bitflags",
  "bytes 0.5.4",
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "futures-core",
  "futures-util",
  "log",
@@ -89,7 +89,7 @@ dependencies = [
  "bytes 0.5.4",
  "cookie",
  "copyless",
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "either",
  "encoding_rs",
  "flate2",
@@ -138,7 +138,7 @@ dependencies = [
  "actix-utils 2.0.0",
  "actix-web",
  "bytes 0.5.4",
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "futures-util",
  "httparse",
  "log",
@@ -224,7 +224,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf4082192601de5f303013709ff84d81ca6a1bc4af7fb24f367a500a23c6e84e"
 dependencies = [
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "futures-channel",
  "lazy_static",
  "log",
@@ -303,7 +303,7 @@ dependencies = [
  "actix-web-codegen",
  "awc",
  "bytes 0.5.4",
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "encoding_rs",
  "futures-channel",
  "futures-core",
@@ -403,7 +403,7 @@ dependencies = [
  "actix-service",
  "base64 0.12.1",
  "bytes 0.5.4",
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "futures-core",
  "log",
  "mime",
@@ -709,9 +709,9 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.10"
+version = "0.99.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1dcfabdab475c16a93d669dddfc393027803e347d09663f524447f642fbb84ba"
+checksum = "41cb0e6161ad61ed084a36ba71fbba9e3ac5aee3606fb607fe08da6acbcf3d8c"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.4",
@@ -3029,7 +3029,7 @@ dependencies = [
  "chrono",
  "config",
  "data-encoding",
- "derive_more 0.99.10",
+ "derive_more 0.99.11",
  "dotenv",
  "env_logger",
  "futures",
