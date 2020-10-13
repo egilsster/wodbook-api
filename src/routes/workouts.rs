@@ -91,7 +91,9 @@ async fn get_workout_by_id(
 
     let user_id = claims.user_id.as_ref();
     let workout_result = workout_repo.get_workout_by_id(user_id, &workout_id).await;
-    let scores_result = workout_repo.get_workout_scores(user_id, &workout_id).await;
+    let scores_result = workout_repo
+        .get_workout_scores_for_workout(user_id, &workout_id)
+        .await;
 
     workout_result.map(|workout| {
         scores_result

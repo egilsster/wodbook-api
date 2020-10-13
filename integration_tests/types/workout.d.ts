@@ -24,7 +24,7 @@ declare type ManyWorkoutsResponse = {
   body: ManyWorkoutsData;
 };
 
-type WorkoutScoreData = {
+declare type WorkoutScoreData = {
   workout_id: string;
   workout_score_id: string;
   score: string;

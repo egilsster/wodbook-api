@@ -94,7 +94,7 @@ async fn get_movement_by_id(
         .get_movement_by_id(user_id, &movement_id)
         .await;
     let scores_result = movement_repo
-        .get_movement_scores(user_id, &movement_id)
+        .get_movement_scores_for_movement(user_id, &movement_id)
         .await;
 
     movement_result.map(|movement| {

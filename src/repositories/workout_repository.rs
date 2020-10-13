@@ -236,18 +236,11 @@ impl WorkoutRepository {
         self.get_workout_score_by_id(user_id, workout_id, &id).await
     }
 
-    pub async fn get_workout_scores(
+    pub async fn get_workout_scores_with_query(
         &self,
-        user_id: &str,
-        workout_id: &str,
+        query: bson::Document,
+        find_options: FindOptions,
     ) -> WebResult<Vec<WorkoutScoreResponse>> {
-        let query = query_utils::for_many_with_filter(
-            doc! { "user_id": user_id, "workout_id": workout_id },
-            user_id,
-        );
-        let find_options = FindOptions::builder()
-            .sort(doc! { "created_at": 1 })
-            .build();
         let mut cursor = self
             .get_score_collection()
             .find(query, find_options)
@@ -270,6 +263,36 @@ impl WorkoutRepository {
         }
 
         Ok(vec)
+    }
+
+    pub async fn get_workout_scores_for_user(
+        &self,
+        user_id: &str,
+    ) -> WebResult<Vec<WorkoutScoreResponse>> {
+        let query = query_utils::for_many_with_filter(doc! { "user_id": user_id }, user_id);
+        let find_options: FindOptions = FindOptions::builder()
+            .sort(doc! { "created_at": 1 })
+            .build();
+
+        self.get_workout_scores_with_query(query, find_options)
+            .await
+    }
+
+    pub async fn get_workout_scores_for_workout(
+        &self,
+        user_id: &str,
+        workout_id: &str,
+    ) -> WebResult<Vec<WorkoutScoreResponse>> {
+        let query = query_utils::for_many_with_filter(
+            doc! { "user_id": user_id, "workout_id": workout_id },
+            user_id,
+        );
+        let find_options = FindOptions::builder()
+            .sort(doc! { "created_at": 1 })
+            .build();
+
+        self.get_workout_scores_with_query(query, find_options)
+            .await
     }
 
     pub async fn get_workout_score_by_id(
