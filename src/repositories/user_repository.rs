@@ -71,18 +71,14 @@ impl UserRepository {
             user.to_doc(),
             None,
         )
-        .await
-        .map_err(|_| AppError::Internal("Could not update user".to_owned()))?;
+        .await?;
 
         self.find_user_with_email(email).await
     }
 
     pub async fn find_user_with_email(&self, email: &str) -> WebResult<User> {
         let coll = self.get_collection();
-        let cursor = coll
-            .find_one(doc! {"email": email}, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let cursor = coll.find_one(doc! {"email": email}, None).await?;
 
         if cursor.is_none() {
             return Err(AppError::NotFound("User not found".to_owned()));
@@ -117,13 +113,6 @@ impl UserRepository {
         let key = config.auth.secret.as_bytes();
         let user_email: &str = create_user.email.as_ref();
 
-        let existing_user = self.find_user_with_email(user_email).await;
-        if existing_user.is_ok() {
-            return Err(AppError::Conflict(
-                "This e-mail is using by some user, please enter another e-mail.".to_string(),
-            ));
-        }
-
         let coll = self.get_collection();
         let hash_pw = resources::create_hash(&create_user.password);
         let id = uuid::Uuid::new_v4().to_string();
@@ -140,12 +129,9 @@ impl UserRepository {
             "avatar_url": "",
         };
 
-        coll.insert_one(user_doc, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        coll.insert_one(user_doc, None).await?;
 
         let user = self.find_user_with_email(user_email).await?;
-
         gen_token(key, user, user_email, false)
     }
 }

@@ -40,11 +40,7 @@ impl WorkoutRepository {
         name: &str,
     ) -> WebResult<Option<WorkoutModel>> {
         let query = query_utils::for_one(doc! {"name": name }, user_id);
-        let cursor = self
-            .get_workout_collection()
-            .find_one(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let cursor = self.get_workout_collection().find_one(query, None).await?;
 
         if cursor.is_none() {
             return Ok(None);
@@ -62,11 +58,7 @@ impl WorkoutRepository {
         workout_id: &str,
     ) -> WebResult<Option<WorkoutModel>> {
         let query = query_utils::for_one(doc! {"workout_id": workout_id }, user_id);
-        let cursor = self
-            .get_workout_collection()
-            .find_one(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let cursor = self.get_workout_collection().find_one(query, None).await?;
 
         if cursor.is_none() {
             return Ok(None);
@@ -84,8 +76,7 @@ impl WorkoutRepository {
         let mut cursor = self
             .get_workout_collection()
             .find(query, find_options)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+            .await?;
 
         let mut vec: Vec<WorkoutModel> = Vec::new();
 
@@ -109,10 +100,8 @@ impl WorkoutRepository {
         user_id: &str,
         workout_id: &str,
     ) -> WebResult<WorkoutModel> {
-        let workout = self.find_workout_by_id(user_id, workout_id).await?;
-
-        match workout {
-            Some(_) => Ok(workout.unwrap()),
+        match self.find_workout_by_id(user_id, workout_id).await? {
+            Some(workout) => Ok(workout),
             None => Err(AppError::NotFound(
                 "Workout with this id does not exist".to_string(),
             )),
@@ -147,9 +136,7 @@ impl WorkoutRepository {
             updated_at: now,
         };
 
-        coll.insert_one(workout.to_doc(), None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        coll.insert_one(workout.to_doc(), None).await?;
 
         match self.find_workout_by_name(user_id, workout_name).await? {
             Some(new_workout) => Ok(new_workout),
@@ -201,8 +188,7 @@ impl WorkoutRepository {
 
         let coll = self.get_workout_collection();
         coll.update_one(doc! { "workout_id": workout_id }, workout.to_doc(), None)
-            .await
-            .map_err(|_| AppError::Internal("Could not update workout".to_owned()))?;
+            .await?;
 
         let model = self.find_workout_by_id(user_id, workout_id).await?.unwrap();
 
@@ -218,8 +204,7 @@ impl WorkoutRepository {
 
         let coll = self.get_workout_collection();
         coll.delete_one(doc! { "workout_id": workout_id }, None)
-            .await
-            .map_err(|_| AppError::Internal("Workout could not be deleted".to_owned()))?;
+            .await?;
 
         self.delete_workout_scores(user_id, workout_id).await?;
 
@@ -247,15 +232,7 @@ impl WorkoutRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(workout_score.to_doc(), None)
-            .await
-            .map_err(|err| {
-                AppError::Internal(format!(
-                    "Error inserting workout score: {}",
-                    err.to_string()
-                ))
-            })?;
-
+        coll.insert_one(workout_score.to_doc(), None).await?;
         self.get_workout_score_by_id(user_id, workout_id, &id).await
     }
 
@@ -305,11 +282,7 @@ impl WorkoutRepository {
             doc! { "workout_id":  workout_id, "workout_score_id": workout_score_id },
             user_id,
         );
-        let cursor = self
-            .get_score_collection()
-            .find_one(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let cursor = self.get_score_collection().find_one(query, None).await?;
 
         if cursor.is_none() {
             return Err(AppError::NotFound("Entity not found".to_string()));
@@ -341,15 +314,11 @@ impl WorkoutRepository {
         let _ = self
             .get_score_collection()
             .update_one(query, score.to_doc(), None)
-            .await
-            .map_err(|_| {
-                AppError::Internal("Something went wrong when updating the score.".to_owned())
-            })?;
+            .await?;
 
         let res = self
             .get_workout_score_by_id(user_id, workout_id, workout_score_id)
-            .await
-            .map_err(|_| AppError::Internal("New score not found after inserting".to_owned()))?;
+            .await?;
 
         Ok(res)
     }
@@ -365,21 +334,14 @@ impl WorkoutRepository {
             .await?;
 
         let query = query_utils::for_one(doc! { "workout_score_id": workout_score_id }, user_id);
-        let _ = self
-            .get_score_collection()
-            .delete_one(query, None)
-            .await
-            .map_err(|e| AppError::Internal(e.to_string()))?;
+        self.get_score_collection().delete_one(query, None).await?;
 
         Ok(())
     }
 
     async fn delete_workout_scores(&self, user_id: &str, workout_id: &str) -> WebResult<()> {
         let query = query_utils::for_many_with_filter(doc! { "workout_id": workout_id }, user_id);
-        self.get_score_collection()
-            .delete_many(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        self.get_score_collection().delete_many(query, None).await?;
 
         Ok(())
     }
