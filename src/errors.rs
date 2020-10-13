@@ -39,3 +39,26 @@ impl ResponseError for AppError {
 }
 
 pub type WebResult<T> = Result<T, AppError>;
+
+// Would be better to extract the error code and use that in a match
+// with a wide range of error codes to handle
+pub fn parse_mongodb_error(err: mongodb::error::Error) -> AppError {
+    let message = err.to_string();
+    match std::sync::Arc::try_unwrap(err.kind) {
+        Ok(mongodb::error::ErrorKind::WriteError(_)) => {
+            if message.contains("E11000") {
+                AppError::Conflict(format!("Entity already exists: {}", message))
+            } else {
+                AppError::Internal(message)
+            }
+        }
+        _ => AppError::Internal(message),
+    }
+}
+
+/// Makes it possible to use '?' to try into an app error
+impl From<mongodb::error::Error> for AppError {
+    fn from(err: mongodb::error::Error) -> Self {
+        parse_mongodb_error(err)
+    }
+}

@@ -40,11 +40,7 @@ impl MovementRepository {
         name: &str,
     ) -> WebResult<Option<MovementModel>> {
         let query = query_utils::for_one(doc! {"name": name }, user_id);
-        let cursor = self
-            .get_movement_collection()
-            .find_one(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let cursor = self.get_movement_collection().find_one(query, None).await?;
 
         match cursor {
             Some(doc) => match from_bson(Bson::Document(doc)) {
@@ -61,11 +57,7 @@ impl MovementRepository {
         movement_id: &str,
     ) -> WebResult<Option<MovementModel>> {
         let query = query_utils::for_one(doc! {"movement_id": movement_id }, user_id);
-        let cursor = self
-            .get_movement_collection()
-            .find_one(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let cursor = self.get_movement_collection().find_one(query, None).await?;
 
         if cursor.is_none() {
             return Ok(None);
@@ -83,8 +75,7 @@ impl MovementRepository {
         let mut cursor = self
             .get_movement_collection()
             .find(query, find_options)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+            .await?;
 
         let mut vec: Vec<MovementModel> = Vec::new();
 
@@ -111,9 +102,7 @@ impl MovementRepository {
         user_id: &str,
         movement_id: &str,
     ) -> WebResult<MovementModel> {
-        let movement = self.find_movement_by_id(user_id, movement_id).await?;
-
-        match movement {
+        match self.find_movement_by_id(user_id, movement_id).await? {
             Some(movement) => Ok(movement),
             None => Err(AppError::NotFound(
                 "Movement with this id does not exist".to_string(),
@@ -148,9 +137,7 @@ impl MovementRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(movement.to_doc(), None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        coll.insert_one(movement.to_doc(), None).await?;
 
         match self.find_movement_by_name(user_id, movement_name).await? {
             Some(new_movement) => Ok(new_movement),
@@ -173,18 +160,7 @@ impl MovementRepository {
         }
 
         let existing_movement = existing_movement.unwrap();
-
         let new_name = movement_update.name.unwrap_or(existing_movement.name);
-
-        // TODO: Remove the conflict check when I have indexes
-        // Check if there exists a movement with the new name
-        let conflicting_movement = self.find_movement_by_name(user_id, &new_name).await?;
-
-        if conflicting_movement.is_some() {
-            return Err(AppError::Conflict(
-                "Movement with this name already exists".to_owned(),
-            ));
-        }
 
         let now = Utc::now().to_rfc3339();
         let movement = MovementModel {
@@ -199,8 +175,7 @@ impl MovementRepository {
 
         let coll = self.get_movement_collection();
         coll.update_one(doc! { "movement_id": movement_id }, movement.to_doc(), None)
-            .await
-            .map_err(|_| AppError::Internal("Could not update movement".to_owned()))?;
+            .await?;
 
         let model = self
             .find_movement_by_id(user_id, movement_id)
@@ -219,8 +194,7 @@ impl MovementRepository {
 
         let coll = self.get_movement_collection();
         coll.delete_one(doc! { "movement_id": movement_id }, None)
-            .await
-            .map_err(|_| AppError::Internal("Movement could not be deleted".to_owned()))?;
+            .await?;
 
         self.delete_movement_scores(user_id, movement_id).await?;
 
@@ -249,18 +223,10 @@ impl MovementRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(new_score.to_doc(), None)
-            .await
-            .map_err(|err| {
-                AppError::Internal(format!(
-                    "Error inserting movement score: {}",
-                    err.to_string()
-                ))
-            })?;
+        coll.insert_one(new_score.to_doc(), None).await?;
 
         self.get_movement_score_by_id(user_id, movement_id, &id)
             .await
-            .map_err(|e| AppError::Internal(e.to_string()))
     }
 
     pub async fn get_movement_scores(
@@ -310,11 +276,7 @@ impl MovementRepository {
             doc! { "movement_id":  movement_id, "movement_score_id": movement_score_id },
             user_id,
         );
-        let cursor = self
-            .get_score_collection()
-            .find_one(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        let cursor = self.get_score_collection().find_one(query, None).await?;
 
         if cursor.is_none() {
             return Err(AppError::NotFound("Entity not found".to_string()));
@@ -350,15 +312,11 @@ impl MovementRepository {
         let _ = self
             .get_score_collection()
             .update_one(query, score.to_doc(), None)
-            .await
-            .map_err(|_| {
-                AppError::Internal("Something went wrong when inserting a score.".to_owned())
-            })?;
+            .await?;
 
         let res = self
             .get_movement_score_by_id(user_id, movement_id, movement_score_id)
-            .await
-            .map_err(|_| AppError::Internal("New score not found after inserting".to_owned()))?;
+            .await?;
 
         Ok(res)
     }
@@ -374,21 +332,14 @@ impl MovementRepository {
             .await?;
 
         let query = query_utils::for_one(doc! { "movement_score_id": movement_score_id }, user_id);
-        let _ = self
-            .get_score_collection()
-            .delete_one(query, None)
-            .await
-            .map_err(|e| AppError::Internal(e.to_string()))?;
+        let _ = self.get_score_collection().delete_one(query, None).await?;
 
         Ok(())
     }
 
     async fn delete_movement_scores(&self, user_id: &str, movement_id: &str) -> WebResult<()> {
         let query = query_utils::for_many_with_filter(doc! { "movement_id": movement_id }, user_id);
-        self.get_score_collection()
-            .delete_many(query, None)
-            .await
-            .map_err(|err| AppError::Internal(err.to_string()))?;
+        self.get_score_collection().delete_many(query, None).await?;
 
         Ok(())
     }
