@@ -23,7 +23,7 @@ declare type ManyMovementsResponse = {
   body: ManyMovementsData;
 };
 
-type MovementScoreData = {
+declare type MovementScoreData = {
   movement_id: string;
   movement_score_id: string;
   score: string;

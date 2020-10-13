@@ -229,18 +229,11 @@ impl MovementRepository {
             .await
     }
 
-    pub async fn get_movement_scores(
+    pub async fn get_movement_scores_with_query(
         &self,
-        user_id: &str,
-        movement_id: &str,
+        query: bson::Document,
+        find_options: FindOptions,
     ) -> WebResult<Vec<MovementScoreResponse>> {
-        let query = query_utils::for_many_with_filter(
-            doc! { "user_id": user_id, "movement_id": movement_id },
-            user_id,
-        );
-        let find_options = FindOptions::builder()
-            .sort(doc! { "created_at": 1 })
-            .build();
         let mut cursor = self
             .get_score_collection()
             .find(query, find_options)
@@ -264,6 +257,36 @@ impl MovementRepository {
         }
 
         Ok(vec)
+    }
+
+    pub async fn get_movement_scores_for_user(
+        &self,
+        user_id: &str,
+    ) -> WebResult<Vec<MovementScoreResponse>> {
+        let query = query_utils::for_many_with_filter(doc! { "user_id": user_id }, user_id);
+        let find_options: FindOptions = FindOptions::builder()
+            .sort(doc! { "created_at": 1 })
+            .build();
+
+        self.get_movement_scores_with_query(query, find_options)
+            .await
+    }
+
+    pub async fn get_movement_scores_for_movement(
+        &self,
+        user_id: &str,
+        movement_id: &str,
+    ) -> WebResult<Vec<MovementScoreResponse>> {
+        let query = query_utils::for_many_with_filter(
+            doc! { "user_id": user_id, "movement_id": movement_id },
+            user_id,
+        );
+        let find_options = FindOptions::builder()
+            .sort(doc! { "created_at": 1 })
+            .build();
+
+        self.get_movement_scores_with_query(query, find_options)
+            .await
     }
 
     pub async fn get_movement_score_by_id(

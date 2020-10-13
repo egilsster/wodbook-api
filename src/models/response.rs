@@ -1,3 +1,4 @@
+use crate::models::{movement::MovementScoreResponse, workout::WorkoutScoreResponse};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -21,4 +22,10 @@ pub struct UserResponse {
     pub weight: i32,
     pub box_name: String,
     pub avatar_url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserScoreResponse {
+    pub movement_scores: Vec<MovementScoreResponse>,
+    pub workout_scores: Vec<WorkoutScoreResponse>,
 }

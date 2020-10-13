@@ -24,9 +24,14 @@ describe("/users", () => {
 
   afterEach(async () => {
     const db = mongoClient.db();
-    const coll = db.collection("users");
-    await coll.deleteMany({});
-    await coll.insertMany(users);
+    const user_coll = db.collection("users");
+    await user_coll.deleteMany({});
+    await user_coll.insertMany(users);
+
+    db.collection("movements").deleteMany({});
+    db.collection("movementscores").deleteMany({});
+    db.collection("workouts").deleteMany({});
+    db.collection("workoutscores").deleteMany({});
   });
 
   afterAll(async () => {
@@ -353,6 +358,158 @@ describe("/users", () => {
           done(err);
         }
       });
+    });
+  });
+
+  describe("/me/scores", () => {
+    it("should return all scores for the user", async (done) => {
+      const movement = {
+        name: "Deadlift",
+        measurement: "weight",
+      };
+      const wod = {
+        name: "Heavy Fran",
+        measurement: "time",
+        description: "15-12-9 Thruster (60kg / 45kg) / Chest to bar (weighted)",
+      };
+
+      try {
+        const login_res = await request.post("users/login", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: {
+            email: "user@wodbook.com",
+            password: "user",
+          },
+        });
+
+        expect(login_res.statusCode).toBe(HttpStatus.OK);
+        expect(login_res.body).toHaveProperty("token");
+        const { token } = login_res.body;
+
+        const score_res1: UserScoreResponse = await request.get(
+          "users/me/scores",
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        expect(score_res1.statusCode).toBe(HttpStatus.OK);
+        expect(score_res1.body).toHaveProperty("movement_scores");
+        expect(score_res1.body).toHaveProperty("workout_scores");
+        expect(score_res1.body.movement_scores.length).toEqual(0);
+        expect(score_res1.body.workout_scores.length).toEqual(0);
+
+        // Create movement & score
+        const movement_res1: MovementResponse = await request.post(
+          "/movements",
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              name: movement.name,
+              measurement: movement.measurement,
+            },
+          }
+        );
+
+        expect(movement_res1.statusCode).toBe(HttpStatus.CREATED);
+        const movementId = movement_res1.body.movement_id;
+
+        const new_movement_score_res: MovementResponse = await request.post(
+          `/movements/${movementId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              score: "200kg",
+              measurement: "weight",
+            },
+          }
+        );
+
+        expect(new_movement_score_res.statusCode).toBe(HttpStatus.CREATED);
+
+        // Create workout & score
+        const workout_res1: WorkoutResponse = await request.post("/workouts", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: wod,
+        });
+
+        expect(workout_res1.statusCode).toBe(HttpStatus.CREATED);
+        const workoutId = workout_res1.body.workout_id;
+
+        const new_workout_score_res1: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              score: "4:20",
+              rx: true,
+            },
+          }
+        );
+
+        expect(new_workout_score_res1.statusCode).toBe(HttpStatus.CREATED);
+
+        const new_workout_score_res2: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: {
+              score: "4:19",
+              rx: true,
+            },
+          }
+        );
+
+        expect(new_workout_score_res2.statusCode).toBe(HttpStatus.CREATED);
+
+        const score_res2: UserScoreResponse = await request.get(
+          "users/me/scores",
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        expect(score_res2.statusCode).toBe(HttpStatus.OK);
+        expect(score_res2.body).toHaveProperty("movement_scores");
+        expect(score_res2.body).toHaveProperty("workout_scores");
+        expect(score_res2.body.movement_scores.length).toEqual(1);
+        expect(score_res2.body.workout_scores.length).toEqual(2);
+
+        done();
+      } catch (err) {
+        done(err);
+      }
     });
   });
 });

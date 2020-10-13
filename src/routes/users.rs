@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::models::mywod::MyWodResponse;
-use crate::models::response::TokenResponse;
+use crate::models::response::{TokenResponse, UserScoreResponse};
 use crate::models::user::Claims;
 use crate::models::user::{CreateUser, Login, UpdateUser};
 use crate::repositories::{MovementRepository, UserRepository, WorkoutRepository};
@@ -52,7 +52,32 @@ async fn get_user_information(
     user_repo
         .find_user_with_email(claims.sub.as_ref())
         .await
-        .map(|user| HttpResponse::Ok().json(user))
+        .map(|user_scores| HttpResponse::Ok().json(user_scores))
+}
+
+#[get("/me/scores")]
+async fn get_user_scores(
+    state: web::Data<AppState>,
+    claims: Claims,
+) -> Result<impl Responder, AppError> {
+    let movement_repo = MovementRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+    let movement_scores = movement_repo
+        .get_movement_scores_for_user(claims.user_id.as_ref())
+        .await?;
+
+    let workout_repo = WorkoutRepository {
+        mongo_client: state.mongo_client.clone(),
+    };
+    let workout_scores = workout_repo
+        .get_workout_scores_for_user(claims.user_id.as_ref())
+        .await?;
+
+    Ok(HttpResponse::Ok().json(UserScoreResponse {
+        movement_scores,
+        workout_scores,
+    }))
 }
 
 #[patch("/me")]
@@ -131,6 +156,7 @@ pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(login);
     cfg.service(register);
     cfg.service(get_user_information);
+    cfg.service(get_user_scores);
     cfg.service(update_user_information);
     cfg.service(sync_mywod);
 }

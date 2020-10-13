@@ -30,3 +30,13 @@ declare type UserResponse = {
   statusCode: number;
   body: UserData;
 };
+
+type UserScores = {
+  movement_scores: MovementScoreData[];
+  workout_scores: WorkoutScoreData[];
+};
+
+declare type UserScoreResponse = {
+  statusCode: number;
+  body: UserScores;
+};
