@@ -27,8 +27,9 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 # Run the server (Add --release for an optimized build)
 λ cargo run
 ...
-[2020-06-30T21:54:36Z INFO  wodbook_api::db::connection] Connected to mongodb
-[2020-06-30T21:54:36Z INFO  wodbook_api] Listening on 0.0.0.0:43210
+[2020-10-13T12:49:44Z INFO  wodbook_api::db::mongo] Connected to mongodb
+[2020-10-13T12:49:44Z INFO  actix_server::builder] Starting 16 workers
+[2020-10-13T12:49:44Z INFO  actix_server::builder] Starting "actix-web-service-0.0.0.0:43210" service on 0.0.0.0:43210
 ```
 
 ## APIs
