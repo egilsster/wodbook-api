@@ -27,7 +27,7 @@ derive_more = "0.99.11"
 oas3 = "0.2.1"
 rusqlite = { version = "0.24.1", features = ["bundled", "blob"] }
 ring = "0.16.15"
-data-encoding = "2.3.0"
+data-encoding = "2.3.1"
 
 [dev-dependencies]
 futures-await-test = "0.3.0"
