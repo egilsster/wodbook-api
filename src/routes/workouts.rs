@@ -114,11 +114,17 @@ async fn create_workout_score(
     };
 
     let user_id = claims.user_id.as_ref();
-    let scores_result = workout_repo
-        .create_workout_score(user_id, &workout_id, workout_score.into_inner())
-        .await;
+    let workout = workout_repo
+        .find_workout_by_id(user_id, &workout_id)
+        .await?;
 
-    scores_result.map(|score| HttpResponse::Created().json(score))
+    match workout {
+        Some(workout) => workout_repo
+            .create_workout_score(user_id, &workout, workout_score.into_inner())
+            .await
+            .map(|score| HttpResponse::Created().json(score)),
+        None => Err(AppError::NotFound("Workout not found".to_string())),
+    }
 }
 
 #[patch("/{workout_id}/{score_id}")]

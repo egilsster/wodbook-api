@@ -1,6 +1,6 @@
 use crate::errors::{AppError, WebResult};
 use crate::models::movement::{
-    CreateMovement, CreateMovementScore, MovementModel, MovementScoreResponse, UpdateMovement,
+    CreateMovement, CreateMovementScore, MovementModel, MovementScoreModel, UpdateMovement,
     UpdateMovementScore,
 };
 use crate::utils::{query_utils, Config};
@@ -204,17 +204,19 @@ impl MovementRepository {
     pub async fn create_movement_score(
         &self,
         user_id: &str,
-        movement_id: &str,
+        movement: &MovementModel,
         movement_score: CreateMovementScore,
-    ) -> WebResult<MovementScoreResponse> {
+    ) -> WebResult<MovementScoreModel> {
         let coll = self.get_score_collection();
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
-        let new_score = MovementScoreResponse {
+        let movement_id = movement.movement_id.to_owned();
+        let new_score = MovementScoreModel {
             movement_score_id: id.to_owned(),
             movement_id: movement_id.to_owned(),
             user_id: user_id.to_owned(),
             score: movement_score.score,
+            measurement: movement.measurement,
             sets: movement_score.sets,
             reps: movement_score.reps,
             notes: movement_score.notes,
@@ -225,7 +227,7 @@ impl MovementRepository {
 
         coll.insert_one(new_score.to_doc(), None).await?;
 
-        self.get_movement_score_by_id(user_id, movement_id, &id)
+        self.get_movement_score_by_id(user_id, &movement_id, &id)
             .await
     }
 
@@ -233,20 +235,19 @@ impl MovementRepository {
         &self,
         query: bson::Document,
         find_options: FindOptions,
-    ) -> WebResult<Vec<MovementScoreResponse>> {
+    ) -> WebResult<Vec<MovementScoreModel>> {
         let mut cursor = self
             .get_score_collection()
             .find(query, find_options)
             .await
             .unwrap();
 
-        let mut vec: Vec<MovementScoreResponse> = Vec::new();
+        let mut vec: Vec<MovementScoreModel> = Vec::new();
 
         while let Some(result) = cursor.next().await {
             match result {
                 Ok(document) => {
-                    let movement_score =
-                        from_bson::<MovementScoreResponse>(Bson::Document(document));
+                    let movement_score = from_bson::<MovementScoreModel>(Bson::Document(document));
                     match movement_score {
                         Ok(result) => vec.push(result),
                         Err(e) => warn!("Error parsing movement: {:?}", e),
@@ -262,7 +263,7 @@ impl MovementRepository {
     pub async fn get_movement_scores_for_user(
         &self,
         user_id: &str,
-    ) -> WebResult<Vec<MovementScoreResponse>> {
+    ) -> WebResult<Vec<MovementScoreModel>> {
         let query = query_utils::for_many_with_filter(doc! { "user_id": user_id }, user_id);
         let find_options: FindOptions = FindOptions::builder()
             .sort(doc! { "created_at": 1 })
@@ -276,7 +277,7 @@ impl MovementRepository {
         &self,
         user_id: &str,
         movement_id: &str,
-    ) -> WebResult<Vec<MovementScoreResponse>> {
+    ) -> WebResult<Vec<MovementScoreModel>> {
         let query = query_utils::for_many_with_filter(
             doc! { "user_id": user_id, "movement_id": movement_id },
             user_id,
@@ -294,7 +295,7 @@ impl MovementRepository {
         user_id: &str,
         movement_id: &str,
         movement_score_id: &str,
-    ) -> WebResult<MovementScoreResponse> {
+    ) -> WebResult<MovementScoreModel> {
         let query = query_utils::for_one(
             doc! { "movement_id":  movement_id, "movement_score_id": movement_score_id },
             user_id,
@@ -320,7 +321,7 @@ impl MovementRepository {
         movement_id: &str,
         movement_score_id: &str,
         new_score: UpdateMovementScore,
-    ) -> WebResult<MovementScoreResponse> {
+    ) -> WebResult<MovementScoreModel> {
         let mut score = self
             .get_movement_score_by_id(user_id, movement_id, movement_score_id)
             .await?;

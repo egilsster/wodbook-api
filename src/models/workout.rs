@@ -12,7 +12,7 @@ fn default_as_empty_string() -> String {
     "".to_string()
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkoutMeasurement {
     Time,
@@ -68,14 +68,14 @@ pub struct WorkoutResponse {
     pub name: String,
     pub measurement: WorkoutMeasurement,
     pub description: String,
-    pub scores: Vec<WorkoutScoreResponse>,
+    pub scores: Vec<WorkoutScoreModel>,
     pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
 
 impl WorkoutResponse {
-    pub fn from_model(model: WorkoutModel, scores: Vec<WorkoutScoreResponse>) -> Self {
+    pub fn from_model(model: WorkoutModel, scores: Vec<WorkoutScoreModel>) -> Self {
         WorkoutResponse {
             workout_id: model.workout_id,
             name: model.name,
@@ -96,7 +96,7 @@ pub struct ManyWorkoutsResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManyWorkoutScoresResponse {
-    pub data: Vec<WorkoutScoreResponse>,
+    pub data: Vec<WorkoutScoreModel>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -133,24 +133,26 @@ pub struct UpdateWorkoutScore {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WorkoutScoreResponse {
+pub struct WorkoutScoreModel {
     pub workout_score_id: String,
     pub workout_id: String,
     pub user_id: String,
     pub score: String,
+    pub measurement: WorkoutMeasurement,
     pub rx: bool,
     pub notes: String,
     pub created_at: String,
     pub updated_at: String,
 }
 
-impl WorkoutScoreResponse {
+impl WorkoutScoreModel {
     pub fn to_doc(&self) -> Document {
         doc! {
             "workout_score_id": self.workout_score_id.to_owned(),
             "workout_id": self.workout_id.to_owned(),
             "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
+            "measurement": self.measurement.to_string(),
             "rx": self.rx.to_owned(),
             "notes": self.notes.to_owned(),
             "created_at": self.created_at.to_owned(),
@@ -193,11 +195,12 @@ mod tests {
 
     #[test]
     fn test_workout_score_response() {
-        let workout_score = WorkoutScoreResponse {
+        let workout_score = WorkoutScoreModel {
             workout_score_id: "1".to_string(),
             workout_id: "2".to_string(),
             user_id: "3".to_string(),
             score: "1:59".to_string(),
+            measurement: WorkoutMeasurement::Time,
             rx: true,
             notes: "".to_string(),
             created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
@@ -210,6 +213,7 @@ mod tests {
             "workout_id": "2",
             "user_id": "3",
             "score": "1:59",
+            "measurement": "time",
             "rx": true,
             "notes": "",
             "created_at": "2020-08-17T13:25:54.544746+00:00",

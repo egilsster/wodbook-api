@@ -566,6 +566,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
         expect(res2.body).toHaveProperty("score", "4:20");
+        expect(res2.body).toHaveProperty("measurement", "time");
         expect(res2.body).toHaveProperty("rx", true);
 
         const res3: WorkoutResponse = await request.get(
