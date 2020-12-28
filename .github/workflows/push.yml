@@ -36,7 +36,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
 
-  unit-test-coverage:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -55,28 +55,16 @@ jobs:
         uses: actions/cache@v1
         with:
           path: target
-          key: ${{ runner.os }}-coverage-cargo-build-target-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('Cargo.lock') }}
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: 1.48.0
           override: true
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        env:
-          CARGO_INCREMENTAL: 0
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
         with:
-          version: 0.13.3
-          args: --all -- --test-threads 1
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1.0.2
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v1
-        with:
-          name: code-coverage-report
-          path: cobertura.xml
+          command: test
 
   integration-test:
     services:
@@ -103,7 +91,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: target
-          key: ${{ runner.os }}-coverage-cargo-build-target-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('Cargo.lock') }}
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -116,7 +104,7 @@ jobs:
       - name: Run integration tests
         run: |
           cargo run &
-          sleep 2 # let it start
+          sleep 10 # let it start
           npm run integration-test
         env:
           AUTH__SECRET: cHVibGljS2V5
