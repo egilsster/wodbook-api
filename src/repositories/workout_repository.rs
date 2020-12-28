@@ -1,7 +1,7 @@
 use crate::errors::{AppError, WebResult};
 use crate::models::workout::{
     CreateWorkout, CreateWorkoutScore, UpdateWorkout, UpdateWorkoutScore, WorkoutModel,
-    WorkoutScoreResponse,
+    WorkoutScoreModel,
 };
 use crate::utils::{query_utils, Config};
 
@@ -214,17 +214,19 @@ impl WorkoutRepository {
     pub async fn create_workout_score(
         &self,
         user_id: &str,
-        workout_id: &str,
+        workout: &WorkoutModel,
         workout_score: CreateWorkoutScore,
-    ) -> WebResult<WorkoutScoreResponse> {
+    ) -> WebResult<WorkoutScoreModel> {
         let coll = self.get_score_collection();
         let id = uuid::Uuid::new_v4().to_string();
         let now = Utc::now().to_rfc3339();
-        let workout_score = WorkoutScoreResponse {
+        let workout_id = workout.workout_id.to_owned();
+        let workout_score = WorkoutScoreModel {
             workout_score_id: id.to_owned(),
             workout_id: workout_id.to_owned(),
             user_id: user_id.to_owned(),
             score: workout_score.score,
+            measurement: workout.measurement,
             rx: workout_score.rx,
             notes: workout_score.notes,
             // This is for mywod items, as they have their own created at date which prefer to keep
@@ -233,26 +235,27 @@ impl WorkoutRepository {
         };
 
         coll.insert_one(workout_score.to_doc(), None).await?;
-        self.get_workout_score_by_id(user_id, workout_id, &id).await
+        self.get_workout_score_by_id(user_id, &workout_id, &id)
+            .await
     }
 
     pub async fn get_workout_scores_with_query(
         &self,
         query: bson::Document,
         find_options: FindOptions,
-    ) -> WebResult<Vec<WorkoutScoreResponse>> {
+    ) -> WebResult<Vec<WorkoutScoreModel>> {
         let mut cursor = self
             .get_score_collection()
             .find(query, find_options)
             .await
             .unwrap();
 
-        let mut vec: Vec<WorkoutScoreResponse> = Vec::new();
+        let mut vec: Vec<WorkoutScoreModel> = Vec::new();
 
         while let Some(result) = cursor.next().await {
             match result {
                 Ok(document) => {
-                    let workout_score = from_bson::<WorkoutScoreResponse>(Bson::Document(document));
+                    let workout_score = from_bson::<WorkoutScoreModel>(Bson::Document(document));
                     match workout_score {
                         Ok(result) => vec.push(result),
                         Err(e) => warn!("Error parsing workout: {:?}", e),
@@ -268,7 +271,7 @@ impl WorkoutRepository {
     pub async fn get_workout_scores_for_user(
         &self,
         user_id: &str,
-    ) -> WebResult<Vec<WorkoutScoreResponse>> {
+    ) -> WebResult<Vec<WorkoutScoreModel>> {
         let query = query_utils::for_many_with_filter(doc! { "user_id": user_id }, user_id);
         let find_options: FindOptions = FindOptions::builder()
             .sort(doc! { "created_at": 1 })
@@ -282,7 +285,7 @@ impl WorkoutRepository {
         &self,
         user_id: &str,
         workout_id: &str,
-    ) -> WebResult<Vec<WorkoutScoreResponse>> {
+    ) -> WebResult<Vec<WorkoutScoreModel>> {
         let query = query_utils::for_many_with_filter(
             doc! { "user_id": user_id, "workout_id": workout_id },
             user_id,
@@ -300,7 +303,7 @@ impl WorkoutRepository {
         user_id: &str,
         workout_id: &str,
         workout_score_id: &str,
-    ) -> WebResult<WorkoutScoreResponse> {
+    ) -> WebResult<WorkoutScoreModel> {
         let query = query_utils::for_one(
             doc! { "workout_id":  workout_id, "workout_score_id": workout_score_id },
             user_id,
@@ -323,7 +326,7 @@ impl WorkoutRepository {
         workout_id: &str,
         workout_score_id: &str,
         new_score: UpdateWorkoutScore,
-    ) -> WebResult<WorkoutScoreResponse> {
+    ) -> WebResult<WorkoutScoreModel> {
         let mut score = self
             .get_workout_score_by_id(user_id, workout_id, workout_score_id)
             .await?;

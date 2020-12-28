@@ -115,14 +115,18 @@ async fn create_movement_score(
         mongo_client: state.mongo_client.clone(),
     };
 
-    movement_repo
-        .create_movement_score(
-            claims.user_id.as_ref(),
-            &movement_id,
-            movement_score.into_inner(),
-        )
-        .await
-        .map(|score| HttpResponse::Created().json(score))
+    let user_id = claims.user_id.as_ref();
+    let movement = movement_repo
+        .find_movement_by_id(user_id, &movement_id)
+        .await?;
+
+    match movement {
+        Some(movement) => movement_repo
+            .create_movement_score(user_id, &movement, movement_score.into_inner())
+            .await
+            .map(|score| HttpResponse::Created().json(score)),
+        None => Err(AppError::NotFound("Movement not found".to_string())),
+    }
 }
 
 #[patch("/{movement_id}/{score_id}")]

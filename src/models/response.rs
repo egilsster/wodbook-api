@@ -1,4 +1,4 @@
-use crate::models::{movement::MovementScoreResponse, workout::WorkoutScoreResponse};
+use crate::models::{movement::MovementScoreModel, workout::WorkoutScoreModel};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -26,6 +26,6 @@ pub struct UserResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UserScoreResponse {
-    pub movement_scores: Vec<MovementScoreResponse>,
-    pub workout_scores: Vec<WorkoutScoreResponse>,
+    pub movement_scores: Vec<MovementScoreModel>,
+    pub workout_scores: Vec<WorkoutScoreModel>,
 }

@@ -841,6 +841,8 @@ components:
           description: The workout this score belongs to.
         score:
           type: string
+        measurement:
+          type: string
         rx:
           type: boolean
         created_at:
@@ -911,6 +913,8 @@ components:
           readOnly: true
           description: The movement this score belongs to.
         score:
+          type: string
+        measurement:
           type: string
         sets:
           type: number

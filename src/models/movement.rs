@@ -16,7 +16,7 @@ fn default_as_one() -> u32 {
     1
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 pub enum MovementMeasurement {
     Time, // fka Distance
@@ -64,14 +64,14 @@ pub struct MovementResponse {
     pub movement_id: String,
     pub name: String,
     pub measurement: MovementMeasurement,
-    pub scores: Vec<MovementScoreResponse>,
+    pub scores: Vec<MovementScoreModel>,
     pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
 }
 
 impl MovementResponse {
-    pub fn from_model(model: MovementModel, scores: Vec<MovementScoreResponse>) -> Self {
+    pub fn from_model(model: MovementModel, scores: Vec<MovementScoreModel>) -> Self {
         MovementResponse {
             movement_id: model.movement_id,
             name: model.name,
@@ -91,7 +91,7 @@ pub struct ManyMovementsResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManyMovementScoresResponse {
-    pub data: Vec<MovementScoreResponse>,
+    pub data: Vec<MovementScoreModel>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -128,11 +128,12 @@ pub struct UpdateMovementScore {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MovementScoreResponse {
+pub struct MovementScoreModel {
     pub movement_score_id: String,
     pub movement_id: String,
     pub user_id: String,
     pub score: String,
+    pub measurement: MovementMeasurement,
     pub sets: u32,
     pub reps: u32,
     pub notes: String,
@@ -140,13 +141,14 @@ pub struct MovementScoreResponse {
     pub updated_at: String,
 }
 
-impl MovementScoreResponse {
+impl MovementScoreModel {
     pub fn to_doc(&self) -> Document {
         doc! {
             "movement_score_id": self.movement_score_id.to_owned(),
             "movement_id": self.movement_id.to_owned(),
             "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
+            "measurement": self.measurement.to_string(),
             "sets": self.sets.to_owned(),
             "reps": self.reps.to_owned(),
             "notes": self.notes.to_owned(),
@@ -188,11 +190,12 @@ mod tests {
 
     #[test]
     fn test_movement_score_response() {
-        let movement_score = MovementScoreResponse {
+        let movement_score = MovementScoreModel {
             movement_score_id: "1".to_string(),
             movement_id: "2".to_string(),
             user_id: "3".to_string(),
             score: "100".to_string(),
+            measurement: MovementMeasurement::Weight,
             sets: 1,
             reps: 1,
             notes: "".to_string(),
@@ -206,6 +209,7 @@ mod tests {
             "movement_id": "2",
             "user_id": "3",
             "score": "100",
+            "measurement": "weight",
             "sets": 1,
             "reps": 1,
             "notes": "",

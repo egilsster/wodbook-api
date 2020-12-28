@@ -86,7 +86,7 @@ pub async fn save_workouts_and_scores(
         if let Some(workout) = workout {
             let score_data = parse_workout_score(score);
             let added_score = workout_repo
-                .create_workout_score(user_id, &workout.workout_id, score_data)
+                .create_workout_score(user_id, &workout, score_data)
                 .await;
             if added_score.is_ok() {
                 added_scores += 1;
@@ -119,7 +119,7 @@ pub async fn save_movements_and_scores(
                 let all_scores = get_scores_for_movement(m, &movement_scores);
                 for score in all_scores {
                     movement_repo
-                        .create_movement_score(user_id, &created_movement.movement_id, score)
+                        .create_movement_score(user_id, &created_movement, score)
                         .await?;
                     added_movement_scores += 1;
                 }
