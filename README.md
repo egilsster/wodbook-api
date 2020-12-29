@@ -2,7 +2,6 @@
 
 ![Build status](https://github.com/egilsster/wodbook-api/workflows/build/badge.svg?branch=main)
 ![Audit status](https://github.com/egilsster/wodbook-api/workflows/audit/badge.svg?branch=main)
-[![codecov](https://codecov.io/gh/egilsster/wodbook-api/branch/main/graph/badge.svg)](https://codecov.io/gh/egilsster/wodbook-api)
 
 Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
