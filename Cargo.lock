@@ -3438,6 +3438,7 @@ dependencies = [
  "log",
  "mongodb",
  "oas3",
+ "regex",
  "ring",
  "rusqlite",
  "serde 1.0.118",

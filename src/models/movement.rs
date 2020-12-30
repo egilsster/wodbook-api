@@ -109,7 +109,7 @@ pub struct UpdateMovement {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateMovementScore {
-    pub score: String,
+    pub score: f64,
     #[serde(default = "default_as_one")]
     pub sets: u32,
     #[serde(default = "default_as_one")]
@@ -121,7 +121,7 @@ pub struct CreateMovementScore {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateMovementScore {
-    pub score: Option<String>,
+    pub score: Option<f64>,
     pub sets: Option<u32>,
     pub reps: Option<u32>,
     pub notes: Option<String>,
@@ -132,7 +132,7 @@ pub struct MovementScoreModel {
     pub movement_score_id: String,
     pub movement_id: String,
     pub user_id: String,
-    pub score: String,
+    pub score: f64,
     pub measurement: MovementMeasurement,
     pub sets: u32,
     pub reps: u32,
@@ -194,7 +194,7 @@ mod tests {
             movement_score_id: "1".to_string(),
             movement_id: "2".to_string(),
             user_id: "3".to_string(),
-            score: "100".to_string(),
+            score: 100.0,
             measurement: MovementMeasurement::Weight,
             sets: 1,
             reps: 1,
@@ -208,7 +208,7 @@ mod tests {
             "movement_score_id": "1",
             "movement_id": "2",
             "user_id": "3",
-            "score": "100",
+            "score": 100.0,
             "measurement": "weight",
             "sets": 1,
             "reps": 1,

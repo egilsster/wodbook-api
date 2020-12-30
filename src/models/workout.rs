@@ -116,7 +116,7 @@ pub struct UpdateWorkout {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkoutScore {
-    pub score: String,
+    pub score: f64,
     #[serde(default = "default_as_false")]
     pub rx: bool,
     #[serde(default = "default_as_empty_string")]
@@ -126,7 +126,7 @@ pub struct CreateWorkoutScore {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateWorkoutScore {
-    pub score: Option<String>,
+    pub score: Option<f64>,
     pub rx: Option<bool>,
     pub notes: Option<String>,
     pub created_at: Option<String>,
@@ -137,7 +137,7 @@ pub struct WorkoutScoreModel {
     pub workout_score_id: String,
     pub workout_id: String,
     pub user_id: String,
-    pub score: String,
+    pub score: f64,
     pub measurement: WorkoutMeasurement,
     pub rx: bool,
     pub notes: String,
@@ -199,7 +199,7 @@ mod tests {
             workout_score_id: "1".to_string(),
             workout_id: "2".to_string(),
             user_id: "3".to_string(),
-            score: "1:59".to_string(),
+            score: 119.0,
             measurement: WorkoutMeasurement::Time,
             rx: true,
             notes: "".to_string(),
@@ -212,7 +212,7 @@ mod tests {
             "workout_score_id": "1",
             "workout_id": "2",
             "user_id": "3",
-            "score": "1:59",
+            "score": 119.0,
             "measurement": "time",
             "rx": true,
             "notes": "",
