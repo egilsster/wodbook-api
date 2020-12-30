@@ -840,7 +840,7 @@ components:
           readOnly: true
           description: The workout this score belongs to.
         score:
-          type: string
+          type: number
         measurement:
           type: string
         rx:
@@ -913,7 +913,7 @@ components:
           readOnly: true
           description: The movement this score belongs to.
         score:
-          type: string
+          type: number
         measurement:
           type: string
         sets:
