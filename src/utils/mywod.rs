@@ -6,7 +6,6 @@ use actix_multipart::Multipart;
 use actix_web::web;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use futures::{StreamExt, TryStreamExt};
-use regex::Regex;
 use rusqlite::{params, Connection};
 use std::fs;
 use std::io::Write;
@@ -258,8 +257,10 @@ pub fn parse_workout_score(score: &MyWOD) -> CreateWorkoutScore {
         time_to_seconds(&score.score)
     } else {
         // Rounds score could have '+reps' for the additional repetitions.
-        let re = Regex::new(r"^(\d+).+$").unwrap();
-        let score_value = re.replace_all(&score.score, "$1");
+        let score_value = match score.score.find('+') {
+            Some(idx) => score.score[0..idx].to_string(),
+            None => score.score.to_owned(),
+        };
 
         match score_value.parse::<f64>() {
             Ok(val) => val,
@@ -572,6 +573,25 @@ mod tests {
         assert_eq!(res.rx, true);
         assert_eq!(res.notes, "");
         assert_eq!(res.created_at.unwrap(), "2017-11-18T00:00:00+00:00");
+    }
+
+    #[test]
+    fn test_parse_workout_rounds() {
+        let score = MyWOD {
+            title: "Cindy".to_owned(),
+            date: "2010-12-27".to_owned(),
+            score_type: "For Rounds:".to_owned(),
+            score: "20".to_owned(),
+            as_prescribed: 1,
+            description: "20 min AMRAP:\n5 Pull-ups,\n10 Push-ups,\n15 Squats.\n".to_owned(),
+            notes: "".to_owned(),
+        };
+
+        let res = parse_workout_score(&score);
+        assert_eq!(res.score, 20.0);
+        assert_eq!(res.rx, true);
+        assert_eq!(res.notes, "");
+        assert_eq!(res.created_at.unwrap(), "2010-12-27T00:00:00+00:00");
     }
 
     #[test]
