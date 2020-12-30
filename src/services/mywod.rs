@@ -45,6 +45,7 @@ pub async fn save_workouts_and_scores(
     let mut added_scores = 0u32;
 
     for workout in workouts {
+        debug!("Processing workout '{}'", workout.title);
         let new_workout = CreateWorkout {
             name: workout.title.to_owned(),
             description: workout.description,
@@ -84,6 +85,7 @@ pub async fn save_workouts_and_scores(
         }
 
         if let Some(workout) = workout {
+            debug!("Processing scores for '{}", workout.name);
             let score_data = parse_workout_score(score);
             let added_score = workout_repo
                 .create_workout_score(user_id, &workout, score_data)
