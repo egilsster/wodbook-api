@@ -6,10 +6,13 @@ use actix_multipart::Multipart;
 use actix_web::web;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use futures::{StreamExt, TryStreamExt};
+use regex::Regex;
 use rusqlite::{params, Connection};
 use std::fs;
 use std::io::Write;
 use std::path::Path;
+
+use super::resources::time_to_seconds;
 
 pub const AVATAR_FILE_LOCATION: &str = "./static/avatars";
 
@@ -246,11 +249,45 @@ pub fn map_movement_measurement(score_type: i32) -> MovementMeasurement {
     }
 }
 
+/// Deals with all sorts of scoring inconsistencies between my models
+/// and the myWOD models, as well as how the scoring
 pub fn parse_workout_score(score: &MyWOD) -> CreateWorkoutScore {
+    let mut note = "".to_string();
+    let workout_measurement = map_workout_measurement(&score.score_type);
+    let s = if workout_measurement == WorkoutMeasurement::Time {
+        time_to_seconds(&score.score)
+    } else {
+        // Rounds score could have '+reps' for the additional repetitions.
+        let re = Regex::new(r"^(\d+).+$").unwrap();
+        let score_value = re.replace_all(&score.score, "$1");
+
+        match score_value.parse::<f64>() {
+            Ok(val) => val,
+            Err(e) => {
+                error!(
+                    "Tried to parse score from: {} (score: {}). Could not parse: {}",
+                    score.title,
+                    score.score,
+                    e.to_string()
+                );
+                note = format!(
+                    "Score could not be processed. Original value: {}",
+                    score.score
+                );
+                0.0
+            }
+        }
+    };
+
+    // Prepend the error above to the note
+    if !note.is_empty() {
+        note = format!("{}\n\n{}", note, score.notes);
+    }
+
     CreateWorkoutScore {
-        score: score.score.to_owned(),
+        score: s,
         rx: score.as_prescribed != 0,
-        notes: score.notes.to_owned(),
+        notes: note.trim().to_string(),
         created_at: parse_short_date(&score.date),
     }
 }
@@ -288,7 +325,7 @@ pub fn adjust_movement_score_to_measurement(
     match score_type {
         // Lifting
         MovementMeasurement::Weight => Some(CreateMovementScore {
-            score: score.measurement_a_value.to_string(),
+            score: score.measurement_a_value,
             sets: score.sets.parse::<u32>().unwrap(),
             reps: score.measurement_b.parse::<u32>().unwrap(),
             notes: score.notes.trim().to_owned(),
@@ -296,7 +333,7 @@ pub fn adjust_movement_score_to_measurement(
         }),
         // Box jumps
         MovementMeasurement::Height => Some(CreateMovementScore {
-            score: score.measurement_a_value.to_string(),
+            score: score.measurement_a_value,
             sets: score.measurement_b.parse::<u32>().unwrap(),
             reps: 1,
             notes: score.notes.trim().to_owned(),
@@ -304,7 +341,7 @@ pub fn adjust_movement_score_to_measurement(
         }),
         // Rowing, running, something for a set distance
         MovementMeasurement::Time => Some(CreateMovementScore {
-            score: score.measurement_b.to_string(),
+            score: time_to_seconds(&score.measurement_b),
             sets: score.sets.parse::<u32>().unwrap(),
             reps: 1,
             notes: score.notes.trim().to_owned(),
@@ -312,7 +349,7 @@ pub fn adjust_movement_score_to_measurement(
         }),
         // Double unders
         MovementMeasurement::Reps => Some(CreateMovementScore {
-            score: score.measurement_a_value.to_string(),
+            score: score.measurement_a_value,
             sets: score.sets.parse::<u32>().unwrap(),
             reps: score.measurement_a_value as u32,
             notes: score.notes.trim().to_owned(),
@@ -425,7 +462,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 12,
-            measurement_a_value: 70f64,
+            measurement_a_value: 70.0,
             measurement_a_units_code: 1,
             measurement_b: 1.to_string(),
             sets: 1.to_string(),
@@ -434,7 +471,7 @@ mod tests {
         };
         let res =
             adjust_movement_score_to_measurement(&MovementMeasurement::Weight, &score).unwrap();
-        assert_eq!(res.score, "70");
+        assert_eq!(res.score, 70.0);
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
         assert_eq!(res.notes, "back squat");
@@ -446,7 +483,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 13,
-            measurement_a_value: 126f64,
+            measurement_a_value: 126.0,
             measurement_a_units_code: 1,
             measurement_b: 1.to_string(),
             sets: 1.to_string(),
@@ -455,7 +492,7 @@ mod tests {
         };
         let res =
             adjust_movement_score_to_measurement(&MovementMeasurement::Height, &score).unwrap();
-        assert_eq!(res.score, "126");
+        assert_eq!(res.score, 126.0);
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
         assert_eq!(res.notes, "box jumps");
@@ -467,7 +504,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 14,
-            measurement_a_value: 1000f64,
+            measurement_a_value: 1000.0,
             measurement_a_units_code: 1,
             measurement_b: "2:50".to_string(),
             sets: 1.to_string(),
@@ -475,7 +512,7 @@ mod tests {
             date: "2012-10-12".to_owned(),
         };
         let res = adjust_movement_score_to_measurement(&MovementMeasurement::Time, &score).unwrap();
-        assert_eq!(res.score, "2:50");
+        assert_eq!(res.score, time_to_seconds("2:50"));
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 1);
         assert_eq!(res.notes, "1000m rowing");
@@ -487,7 +524,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "initial".to_string(),
             foreign_movement_record_id: 15,
-            measurement_a_value: 7f64,
+            measurement_a_value: 7.0,
             measurement_a_units_code: 1,
             measurement_b: "".to_string(),
             sets: 1.to_string(),
@@ -495,7 +532,7 @@ mod tests {
             date: "2012-10-13".to_owned(),
         };
         let res = adjust_movement_score_to_measurement(&MovementMeasurement::Reps, &score).unwrap();
-        assert_eq!(res.score, "7");
+        assert_eq!(res.score, 7.0);
         assert_eq!(res.sets, 1);
         assert_eq!(res.reps, 7);
         assert_eq!(res.notes, "hspu");
@@ -507,7 +544,7 @@ mod tests {
         let score = MovementSession {
             foreign_movement_client_id: "".to_string(),
             foreign_movement_record_id: 0,
-            measurement_a_value: 0f64,
+            measurement_a_value: 0.0,
             measurement_a_units_code: 1,
             measurement_b: "".to_string(),
             sets: 1.to_string(),
@@ -531,7 +568,26 @@ mod tests {
         };
 
         let res = parse_workout_score(&score);
-        assert_eq!(res.score, "14:20");
+        assert_eq!(res.score, time_to_seconds("14:20"));
+        assert_eq!(res.rx, true);
+        assert_eq!(res.notes, "");
+        assert_eq!(res.created_at.unwrap(), "2017-11-18T00:00:00+00:00");
+    }
+
+    #[test]
+    fn test_parse_workout_rounds_plus_reps() {
+        let score = MyWOD {
+            title: "Death By Clean & Jerk".to_owned(),
+            date: "2017-11-18".to_owned(),
+            score_type: "For Rounds:".to_owned(),
+            score: "10+6".to_owned(),
+            as_prescribed: 1,
+            description: "1 Rep minute 1,\n2 reps minute 2,\n3 reps minute 3,\n….. etc. for as long as you are able to complete the reps in the minute allotted.\n\nWeight (135/95#)\n".to_owned(),
+            notes: "".to_owned(),
+        };
+
+        let res = parse_workout_score(&score);
+        assert_eq!(res.score, 10.0);
         assert_eq!(res.rx, true);
         assert_eq!(res.notes, "");
         assert_eq!(res.created_at.unwrap(), "2017-11-18T00:00:00+00:00");
@@ -553,7 +609,7 @@ mod tests {
                     "i-1fa65b03fbd343ef86270ad1bad1c369-2017-01-02 17:32:34 +0000".to_owned(),
                 foreign_movement_record_id: 5,
                 date: "2017-11-07".to_owned(),
-                measurement_a_value: 7 as f64,
+                measurement_a_value: 7.0,
                 measurement_a_units_code: 8,
                 measurement_b: "".to_owned(),
                 sets: 1.to_string(),
@@ -563,7 +619,7 @@ mod tests {
                 foreign_movement_client_id: "initial".to_owned(),
                 foreign_movement_record_id: 3,
                 date: "2017-04-11".to_owned(),
-                measurement_a_value: 70 as f64,
+                measurement_a_value: 70.0,
                 measurement_a_units_code: 1,
                 measurement_b: "1".to_owned(),
                 sets: 1.to_string(),
@@ -623,12 +679,12 @@ mod tests {
         let res1 = get_scores_for_movement(&movement1, &movement_scores);
         assert_eq!(res1.len(), 1);
         let my_score: &CreateMovementScore = res1.get(0).unwrap();
-        assert_eq!(&my_score.score, "3:14.1");
+        assert_eq!(my_score.score, time_to_seconds("3:14.1"));
 
         let res2 = get_scores_for_movement(&movement2, &movement_scores);
         assert_eq!(res2.len(), 1);
         let my_score: &CreateMovementScore = res2.get(0).unwrap();
-        assert_eq!(&my_score.score, "1:34:40");
+        assert_eq!(my_score.score, time_to_seconds("1:34:40"));
     }
 
     #[test]

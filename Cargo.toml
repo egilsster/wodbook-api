@@ -28,6 +28,7 @@ oas3 = "0.2.1"
 rusqlite = { version = "0.24.2", features = ["bundled", "blob"] }
 ring = "0.16.19"
 data-encoding = "2.3.1"
+regex = "1"
 
 [dev-dependencies]
 futures-await-test = "0.3.0"

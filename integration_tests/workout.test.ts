@@ -446,7 +446,7 @@ describe("/v1/workouts", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "4:20",
+              score: 260,
               rx: true,
             },
           }
@@ -555,7 +555,7 @@ describe("/v1/workouts", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "4:20",
+              score: 260,
               rx: true,
             },
           }
@@ -565,7 +565,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("workout_id", workoutId);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
-        expect(res2.body).toHaveProperty("score", "4:20");
+        expect(res2.body).toHaveProperty("score", 260); // 4:20 in seconds
         expect(res2.body).toHaveProperty("measurement", "time");
         expect(res2.body).toHaveProperty("rx", true);
 
@@ -634,7 +634,7 @@ describe("/v1/workouts", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "4:20",
+              score: 260,
               rx: false,
             },
           }
@@ -644,7 +644,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("workout_id", workoutId);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
-        expect(res2.body).toHaveProperty("score", "4:20");
+        expect(res2.body).toHaveProperty("score", 260);
         expect(res2.body).toHaveProperty("rx", false);
 
         const res3: WorkoutResponse = await request.get(
@@ -664,7 +664,7 @@ describe("/v1/workouts", () => {
         expect(res3.body.scores[0]).toHaveProperty("workout_id", workoutId);
         expect(res3.body.scores[0]).toHaveProperty("created_at");
         expect(res3.body.scores[0]).toHaveProperty("updated_at");
-        expect(res3.body.scores[0]).toHaveProperty("score", "4:20");
+        expect(res3.body.scores[0]).toHaveProperty("score", 260);
         expect(res3.body.scores[0]).toHaveProperty("rx", false);
 
         const workoutScore = res3.body.scores[0];
@@ -678,7 +678,7 @@ describe("/v1/workouts", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "4:10",
+              score: 250,
               rx: true,
               notes: "Deadly!",
             },
@@ -689,7 +689,7 @@ describe("/v1/workouts", () => {
         expect(res4.body).toHaveProperty("workout_id", workoutId);
         expect(res4.body).toHaveProperty("created_at");
         expect(res4.body).toHaveProperty("updated_at");
-        expect(res4.body).toHaveProperty("score", "4:10");
+        expect(res4.body).toHaveProperty("score", 250);
         expect(res4.body).toHaveProperty("rx", true);
         expect(res4.body).toHaveProperty("notes", "Deadly!");
 
@@ -739,7 +739,7 @@ describe("/v1/workouts", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "4:20",
+              score: 260,
               rx: false,
             },
           }
@@ -749,7 +749,7 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("workout_id", workoutId);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
-        expect(res2.body).toHaveProperty("score", "4:20");
+        expect(res2.body).toHaveProperty("score", 260);
         expect(res2.body).toHaveProperty("rx", false);
 
         const res3: WorkoutResponse = await request.get(
@@ -769,7 +769,7 @@ describe("/v1/workouts", () => {
         expect(res3.body.scores[0]).toHaveProperty("workout_id", workoutId);
         expect(res3.body.scores[0]).toHaveProperty("created_at");
         expect(res3.body.scores[0]).toHaveProperty("updated_at");
-        expect(res3.body.scores[0]).toHaveProperty("score", "4:20");
+        expect(res3.body.scores[0]).toHaveProperty("score", 260);
         expect(res3.body.scores[0]).toHaveProperty("rx", false);
 
         const workoutScore = res3.body.scores[0];

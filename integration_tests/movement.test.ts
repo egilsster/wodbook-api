@@ -432,7 +432,7 @@ describe("/v1/movements", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "100kg",
+              score: 100,
             },
           }
         );
@@ -536,7 +536,7 @@ describe("/v1/movements", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "200kg",
+              score: 200,
               measurement: "weight",
             },
           }
@@ -545,7 +545,7 @@ describe("/v1/movements", () => {
         expect(res2.statusCode).toBe(HttpStatus.CREATED);
         expect(res2.body).toHaveProperty("movement_score_id");
         expect(res2.body).toHaveProperty("movement_id", movementId);
-        expect(res2.body).toHaveProperty("score", "200kg");
+        expect(res2.body).toHaveProperty("score", 200);
         expect(res2.body).toHaveProperty("measurement", "weight");
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
@@ -610,7 +610,7 @@ describe("/v1/movements", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "200kg",
+              score: 200,
             },
           }
         );
@@ -618,7 +618,7 @@ describe("/v1/movements", () => {
         expect(res2.statusCode).toBe(HttpStatus.CREATED);
         expect(res2.body).toHaveProperty("movement_score_id");
         expect(res2.body).toHaveProperty("movement_id", movementId);
-        expect(res2.body).toHaveProperty("score", "200kg");
+        expect(res2.body).toHaveProperty("score", 200);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 
@@ -652,7 +652,7 @@ describe("/v1/movements", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "205kg",
+              score: 205,
               measurement: "weight",
               notes: "Jättebra!",
             },
@@ -662,7 +662,7 @@ describe("/v1/movements", () => {
         expect(res4.statusCode).toBe(HttpStatus.OK);
         expect(res4.body).toHaveProperty("movement_score_id");
         expect(res4.body).toHaveProperty("movement_id", movementId);
-        expect(res4.body).toHaveProperty("score", "205kg");
+        expect(res4.body).toHaveProperty("score", 205);
         expect(res4.body).toHaveProperty("notes", "Jättebra!");
         expect(res4.body).toHaveProperty("created_at");
         expect(res4.body).toHaveProperty("updated_at");
@@ -710,7 +710,7 @@ describe("/v1/movements", () => {
               Authorization: `Bearer ${userToken}`,
             },
             body: {
-              score: "200kg",
+              score: 200,
             },
           }
         );
@@ -718,7 +718,7 @@ describe("/v1/movements", () => {
         expect(res2.statusCode).toBe(HttpStatus.CREATED);
         expect(res2.body).toHaveProperty("movement_score_id");
         expect(res2.body).toHaveProperty("movement_id", movementId);
-        expect(res2.body).toHaveProperty("score", "200kg");
+        expect(res2.body).toHaveProperty("score", 200);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 

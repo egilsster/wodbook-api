@@ -434,7 +434,7 @@ describe("/users", () => {
               Authorization: `Bearer ${token}`,
             },
             body: {
-              score: "200kg",
+              score: 200,
               measurement: "weight",
             },
           }
@@ -464,7 +464,7 @@ describe("/users", () => {
               Authorization: `Bearer ${token}`,
             },
             body: {
-              score: "4:20",
+              score: 260,
               rx: true,
             },
           }
@@ -481,7 +481,7 @@ describe("/users", () => {
               Authorization: `Bearer ${token}`,
             },
             body: {
-              score: "4:19",
+              score: 260,
               rx: true,
             },
           }
