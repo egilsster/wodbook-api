@@ -90,17 +90,16 @@ async fn get_movement_by_id(
     };
 
     let user_id = claims.user_id.as_ref();
-    let movement_result = movement_repo
+    let movement = movement_repo
         .get_movement_by_id(user_id, &movement_id)
-        .await;
+        .await?;
+
     let scores_result = movement_repo
-        .get_movement_scores_for_movement(user_id, &movement_id)
+        .get_movement_scores_for_movement(user_id, &movement)
         .await;
 
-    movement_result.map(|movement| {
-        scores_result
-            .map(|scores| HttpResponse::Ok().json(MovementResponse::from_model(movement, scores)))
-    })
+    scores_result
+        .map(|scores| HttpResponse::Ok().json(MovementResponse::from_model(movement, scores)))
 }
 
 #[post("/{id}")]

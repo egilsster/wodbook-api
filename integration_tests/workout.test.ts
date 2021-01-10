@@ -529,6 +529,122 @@ describe("/v1/workouts", () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userToken}`,
           },
+          body: wod,
+        });
+
+        expect(res1.statusCode).toBe(HttpStatus.CREATED);
+        expect(res1.body).toHaveProperty("workout_id");
+        const workoutId = res1.body.workout_id;
+        expect(res1.body).toHaveProperty("created_at");
+        expect(res1.body).toHaveProperty("updated_at");
+        expect(res1.body).toHaveProperty("description", wod.description);
+        expect(res1.body).toHaveProperty("is_public", false);
+        expect(res1.body).toHaveProperty("measurement", wod.measurement);
+        expect(res1.body).toHaveProperty("name", wod.name);
+
+        const res2: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: 260,
+              rx: false,
+            },
+          }
+        );
+
+        expect(res2.statusCode).toBe(HttpStatus.CREATED);
+        expect(res2.body).toHaveProperty("workout_id", workoutId);
+        expect(res2.body).toHaveProperty("created_at");
+        expect(res2.body).toHaveProperty("updated_at");
+        expect(res2.body).toHaveProperty("score", 260);
+        expect(res2.body).toHaveProperty("rx", false);
+
+        const res3: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: 270,
+              rx: false,
+            },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.CREATED);
+        expect(res3.body).toHaveProperty("workout_id", workoutId);
+        expect(res3.body).toHaveProperty("score", 270);
+        expect(res3.body).toHaveProperty("rx", false);
+
+        const res4: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: {
+              score: 270,
+              rx: true,
+            },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.CREATED);
+        expect(res4.body).toHaveProperty("workout_id", workoutId);
+        expect(res4.body).toHaveProperty("score", 270);
+        expect(res4.body).toHaveProperty("rx", true);
+
+        const res5: WorkoutResponse = await request.get(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+          }
+        );
+
+        expect(res5.statusCode).toBe(HttpStatus.OK);
+        expect(res5.body).toHaveProperty("scores");
+
+        const scores = res5.body.scores.map(({ score, rx }) => ({ score, rx }));
+        const expectedScores = [
+          { score: 260, rx: false },
+          { score: 270, rx: true },
+          { score: 270, rx: false },
+        ];
+        expect(scores).toEqual(expectedScores);
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+
+    it("should create a new for rounds workout and add scores to it and they should be sorted", async (done) => {
+      const wod = {
+        name: "Cindy",
+        measurement: "rounds",
+        description: "AMRAP20: 5 pull-ups, 10 push-ups, 15 squats",
+      };
+
+      try {
+        const res1: WorkoutResponse = await request.post("/workouts", {
+          ...reqOpts,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
           body: {
             name: wod.name,
             measurement: wod.measurement,
@@ -554,10 +670,7 @@ describe("/v1/workouts", () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${userToken}`,
             },
-            body: {
-              score: 260,
-              rx: true,
-            },
+            body: { score: 20, rx: true },
           }
         );
 
@@ -565,11 +678,44 @@ describe("/v1/workouts", () => {
         expect(res2.body).toHaveProperty("workout_id", workoutId);
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
-        expect(res2.body).toHaveProperty("score", 260); // 4:20 in seconds
-        expect(res2.body).toHaveProperty("measurement", "time");
+        expect(res2.body).toHaveProperty("score", 20);
         expect(res2.body).toHaveProperty("rx", true);
 
-        const res3: WorkoutResponse = await request.get(
+        const res3: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: { score: 24, rx: false },
+          }
+        );
+
+        expect(res3.statusCode).toBe(HttpStatus.CREATED);
+        expect(res3.body).toHaveProperty("workout_id", workoutId);
+        expect(res3.body).toHaveProperty("score", 24);
+        expect(res3.body).toHaveProperty("rx", false);
+
+        const res4: WorkoutResponse = await request.post(
+          `/workouts/${workoutId}`,
+          {
+            ...reqOpts,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userToken}`,
+            },
+            body: { score: 23, rx: true },
+          }
+        );
+
+        expect(res4.statusCode).toBe(HttpStatus.CREATED);
+        expect(res4.body).toHaveProperty("workout_id", workoutId);
+        expect(res4.body).toHaveProperty("score", 23);
+        expect(res4.body).toHaveProperty("rx", true);
+
+        const res5: WorkoutResponse = await request.get(
           `/workouts/${workoutId}`,
           {
             ...reqOpts,
@@ -580,14 +726,15 @@ describe("/v1/workouts", () => {
           }
         );
 
-        expect(res3.statusCode).toBe(HttpStatus.OK);
-        expect(res3.body).toHaveProperty("scores");
-        expect(res3.body.scores[0]).toHaveProperty("workout_score_id");
-        expect(res3.body.scores[0]).toHaveProperty("workout_id", workoutId);
-        expect(res3.body.scores[0]).toHaveProperty("created_at");
-        expect(res3.body.scores[0]).toHaveProperty("updated_at");
-        expect(res3.body.scores[0]).toHaveProperty("score");
-        expect(res3.body.scores[0]).toHaveProperty("rx");
+        expect(res5.statusCode).toBe(HttpStatus.OK);
+        expect(res5.body).toHaveProperty("scores");
+        const scores = res5.body.scores.map(({ score, rx }) => ({ score, rx }));
+        const expectedScores = [
+          { score: 24, rx: false },
+          { score: 23, rx: true },
+          { score: 20, rx: true },
+        ];
+        expect(scores).toEqual(expectedScores);
         done();
       } catch (err) {
         done(err);

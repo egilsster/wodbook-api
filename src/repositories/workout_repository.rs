@@ -1,9 +1,12 @@
-use crate::errors::{AppError, WebResult};
 use crate::models::workout::{
     CreateWorkout, CreateWorkoutScore, UpdateWorkout, UpdateWorkoutScore, WorkoutModel,
     WorkoutScoreModel,
 };
 use crate::utils::{query_utils, Config};
+use crate::{
+    errors::{AppError, WebResult},
+    models::workout::WorkoutMeasurement,
+};
 
 use bson::{from_bson, Bson};
 use chrono::Utc;
@@ -226,11 +229,10 @@ impl WorkoutRepository {
             workout_id: workout_id.to_owned(),
             user_id: user_id.to_owned(),
             score: workout_score.score,
-            measurement: workout.measurement,
             rx: workout_score.rx,
             notes: workout_score.notes,
             // This is for mywod items, as they have their own created at date which prefer to keep
-            created_at: workout_score.created_at.unwrap_or_else(|| now.to_owned()),
+            created_at: workout_score.created_at.unwrap_or(now.to_owned()),
             updated_at: now.to_owned(),
         };
 
@@ -284,15 +286,19 @@ impl WorkoutRepository {
     pub async fn get_workout_scores_for_workout(
         &self,
         user_id: &str,
-        workout_id: &str,
+        workout: &WorkoutModel,
     ) -> WebResult<Vec<WorkoutScoreModel>> {
         let query = query_utils::for_many_with_filter(
-            doc! { "user_id": user_id, "workout_id": workout_id },
+            doc! { "user_id": user_id, "workout_id": &workout.workout_id },
             user_id,
         );
-        let find_options = FindOptions::builder()
-            .sort(doc! { "created_at": 1 })
-            .build();
+
+        // ascending for timed, descending for the rest
+        let score_filter = doc! {
+            "score": if workout.measurement == WorkoutMeasurement::Time { 1 } else { -1 },
+            "rx": -1,
+        };
+        let find_options = FindOptions::builder().sort(score_filter).build();
 
         self.get_workout_scores_with_query(query, find_options)
             .await

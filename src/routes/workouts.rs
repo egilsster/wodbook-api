@@ -90,15 +90,14 @@ async fn get_workout_by_id(
     };
 
     let user_id = claims.user_id.as_ref();
-    let workout_result = workout_repo.get_workout_by_id(user_id, &workout_id).await;
+    let workout = workout_repo.get_workout_by_id(user_id, &workout_id).await?;
+
     let scores_result = workout_repo
-        .get_workout_scores_for_workout(user_id, &workout_id)
+        .get_workout_scores_for_workout(user_id, &workout)
         .await;
 
-    workout_result.map(|workout| {
-        scores_result
-            .map(|scores| HttpResponse::Ok().json(WorkoutResponse::from_model(workout, scores)))
-    })
+    scores_result
+        .map(|scores| HttpResponse::Ok().json(WorkoutResponse::from_model(workout, scores)))
 }
 
 #[post("/{id}")]

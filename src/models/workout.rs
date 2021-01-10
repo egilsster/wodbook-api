@@ -30,7 +30,7 @@ pub enum WorkoutMeasurement {
 // TODO: Find a nicer way of serializing into strings without the quotes
 impl fmt::Display for WorkoutMeasurement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let string_val = serde_json::to_string(self).unwrap_or_else(|_| "none".to_owned());
+        let string_val = serde_json::to_string(self).unwrap_or("none".to_owned());
         write!(f, "{}", string_val.trim_matches('"'))
     }
 }
@@ -138,7 +138,6 @@ pub struct WorkoutScoreModel {
     pub workout_id: String,
     pub user_id: String,
     pub score: f64,
-    pub measurement: WorkoutMeasurement,
     pub rx: bool,
     pub notes: String,
     pub created_at: String,
@@ -152,7 +151,6 @@ impl WorkoutScoreModel {
             "workout_id": self.workout_id.to_owned(),
             "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
-            "measurement": self.measurement.to_string(),
             "rx": self.rx.to_owned(),
             "notes": self.notes.to_owned(),
             "created_at": self.created_at.to_owned(),
@@ -200,7 +198,6 @@ mod tests {
             workout_id: "2".to_string(),
             user_id: "3".to_string(),
             score: 119.0,
-            measurement: WorkoutMeasurement::Time,
             rx: true,
             notes: "".to_string(),
             created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
@@ -213,7 +210,6 @@ mod tests {
             "workout_id": "2",
             "user_id": "3",
             "score": 119.0,
-            "measurement": "time",
             "rx": true,
             "notes": "",
             "created_at": "2020-08-17T13:25:54.544746+00:00",
