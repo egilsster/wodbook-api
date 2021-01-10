@@ -26,7 +26,7 @@ declare type ManyMovementsResponse = {
 declare type MovementScoreData = {
   movement_id: string;
   movement_score_id: string;
-  score: string;
+  score: number;
   reps: number;
   sets: number;
   notes: string;

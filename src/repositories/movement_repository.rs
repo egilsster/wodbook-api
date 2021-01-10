@@ -1,9 +1,12 @@
-use crate::errors::{AppError, WebResult};
 use crate::models::movement::{
     CreateMovement, CreateMovementScore, MovementModel, MovementScoreModel, UpdateMovement,
     UpdateMovementScore,
 };
 use crate::utils::{query_utils, Config};
+use crate::{
+    errors::{AppError, WebResult},
+    models::movement::MovementMeasurement,
+};
 
 use bson::{from_bson, Bson};
 use chrono::Utc;
@@ -216,12 +219,11 @@ impl MovementRepository {
             movement_id: movement_id.to_owned(),
             user_id: user_id.to_owned(),
             score: movement_score.score,
-            measurement: movement.measurement,
             sets: movement_score.sets,
             reps: movement_score.reps,
             notes: movement_score.notes,
             // This is for mywod items, as they have their own created at date which prefer to keep
-            created_at: movement_score.created_at.unwrap_or_else(|| now.to_owned()),
+            created_at: movement_score.created_at.unwrap_or(now.to_owned()),
             updated_at: now.to_owned(),
         };
 
@@ -276,15 +278,16 @@ impl MovementRepository {
     pub async fn get_movement_scores_for_movement(
         &self,
         user_id: &str,
-        movement_id: &str,
+        movement: &MovementModel,
     ) -> WebResult<Vec<MovementScoreModel>> {
         let query = query_utils::for_many_with_filter(
-            doc! { "user_id": user_id, "movement_id": movement_id },
+            doc! { "user_id": user_id, "movement_id": &movement.movement_id },
             user_id,
         );
-        let find_options = FindOptions::builder()
-            .sort(doc! { "created_at": 1 })
-            .build();
+
+        // ascending for timed, descending for the rest
+        let score_filter = doc! { "score": if movement.measurement == MovementMeasurement::Time { 1 } else { -1 } };
+        let find_options = FindOptions::builder().sort(score_filter).build();
 
         self.get_movement_scores_with_query(query, find_options)
             .await

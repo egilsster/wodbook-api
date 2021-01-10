@@ -546,7 +546,6 @@ describe("/v1/movements", () => {
         expect(res2.body).toHaveProperty("movement_score_id");
         expect(res2.body).toHaveProperty("movement_id", movementId);
         expect(res2.body).toHaveProperty("score", 200);
-        expect(res2.body).toHaveProperty("measurement", "weight");
         expect(res2.body).toHaveProperty("created_at");
         expect(res2.body).toHaveProperty("updated_at");
 

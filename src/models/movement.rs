@@ -29,7 +29,7 @@ pub enum MovementMeasurement {
 // TODO: Find a nicer way of serializing into strings without the quotes
 impl fmt::Display for MovementMeasurement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let string_val = serde_json::to_string(self).unwrap_or_else(|_| "none".to_owned());
+        let string_val = serde_json::to_string(self).unwrap_or("none".to_owned());
         write!(f, "{}", string_val.trim_matches('"'))
     }
 }
@@ -133,7 +133,6 @@ pub struct MovementScoreModel {
     pub movement_id: String,
     pub user_id: String,
     pub score: f64,
-    pub measurement: MovementMeasurement,
     pub sets: u32,
     pub reps: u32,
     pub notes: String,
@@ -148,7 +147,6 @@ impl MovementScoreModel {
             "movement_id": self.movement_id.to_owned(),
             "user_id": self.user_id.to_owned(),
             "score": self.score.to_owned(),
-            "measurement": self.measurement.to_string(),
             "sets": self.sets.to_owned(),
             "reps": self.reps.to_owned(),
             "notes": self.notes.to_owned(),
@@ -195,7 +193,6 @@ mod tests {
             movement_id: "2".to_string(),
             user_id: "3".to_string(),
             score: 100.0,
-            measurement: MovementMeasurement::Weight,
             sets: 1,
             reps: 1,
             notes: "".to_string(),
@@ -209,7 +206,6 @@ mod tests {
             "movement_id": "2",
             "user_id": "3",
             "score": 100.0,
-            "measurement": "weight",
             "sets": 1,
             "reps": 1,
             "notes": "",

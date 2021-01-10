@@ -34,3 +34,18 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 ## APIs
 
 See [api-docs](api-docs.yml)
+
+## Scoring
+
+Scores are sorted in the following order:
+
+- By score
+  - For timed workouts: descending (lowest value first)
+  - For other workouts: ascending
+- Wether it is Rx'd or not
+
+That means the following order for timed workouts:
+
+1. 100 seconds, non-Rx
+2. 120 seconds, Rx
+3. 120 seconds, non-Rx

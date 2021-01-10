@@ -27,7 +27,7 @@ declare type ManyWorkoutsResponse = {
 declare type WorkoutScoreData = {
   workout_id: string;
   workout_score_id: string;
-  score: string;
+  score: number;
   rx: boolean;
   notes: string;
   created_at: string;
