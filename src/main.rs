@@ -21,7 +21,7 @@ mod routes;
 mod services;
 mod utils;
 
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> io::Result<()> {
     fs::create_dir_all("./tmp")?;
     fs::create_dir_all(AVATAR_FILE_LOCATION)?;

@@ -3446,7 +3446,6 @@ version = "0.1.0"
 dependencies = [
  "actix-files",
  "actix-multipart",
- "actix-rt",
  "actix-web",
  "bson",
  "chrono",
