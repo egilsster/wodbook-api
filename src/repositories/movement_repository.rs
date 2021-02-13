@@ -223,7 +223,7 @@ impl MovementRepository {
             reps: movement_score.reps,
             notes: movement_score.notes,
             // This is for mywod items, as they have their own created at date which prefer to keep
-            created_at: movement_score.created_at.unwrap_or(now.to_owned()),
+            created_at: movement_score.created_at.unwrap_or_else(|| now.to_owned()),
             updated_at: now.to_owned(),
         };
 
