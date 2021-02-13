@@ -30,7 +30,7 @@ pub enum WorkoutMeasurement {
 // TODO: Find a nicer way of serializing into strings without the quotes
 impl fmt::Display for WorkoutMeasurement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let string_val = serde_json::to_string(self).unwrap_or("none".to_owned());
+        let string_val = serde_json::to_string(self).unwrap_or_else(|_| "none".to_owned());
         write!(f, "{}", string_val.trim_matches('"'))
     }
 }
