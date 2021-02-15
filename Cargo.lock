@@ -547,9 +547,9 @@ dependencies = [
 
 [[package]]
 name = "bson"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c11f16001d679cb13d14b2c93c7d0fa13bb484a87c34a6c4c39707ad936499b5"
+checksum = "2abd828df036867b89a07c5a4824df1168b42d74f41af7253f20e55a32e5ca4b"
 dependencies = [
  "base64 0.12.1",
  "chrono",
@@ -559,6 +559,7 @@ dependencies = [
  "rand",
  "serde 1.0.123",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]
