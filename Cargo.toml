@@ -22,7 +22,7 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
 futures = "0.3.13"
 dotenv = "0.15.0"
 config = "0.11.0"
-derive_more = "0.99.11"
+derive_more = "0.99.13"
 oas3 = "0.2.1"
 rusqlite = { version = "0.24.2", features = ["bundled", "blob"] }
 ring = "0.16.20"
