@@ -547,9 +547,9 @@ dependencies = [
 
 [[package]]
 name = "bson"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2abd828df036867b89a07c5a4824df1168b42d74f41af7253f20e55a32e5ca4b"
+checksum = "4b8fa0e9a7fedd4c2753e0a85fa376ca2c0f6ba19e4e9f23a12a5b641c84a10a"
 dependencies = [
  "base64 0.12.1",
  "chrono",
