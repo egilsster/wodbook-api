@@ -8,7 +8,6 @@ use crate::{
     models::workout::WorkoutMeasurement,
 };
 
-use bson::{from_bson, Bson};
 use chrono::Utc;
 use futures::stream::StreamExt;
 use mongodb::options::FindOptions;
@@ -23,14 +22,14 @@ pub struct WorkoutRepository {
 }
 
 impl WorkoutRepository {
-    fn get_score_collection(&self) -> Collection {
+    fn get_score_collection(&self) -> Collection<WorkoutScoreModel> {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
         let db = self.mongo_client.database(database_name.as_str());
         db.collection(SCORE_COLLECTION_NAME)
     }
 
-    fn get_workout_collection(&self) -> Collection {
+    fn get_workout_collection(&self) -> Collection<WorkoutModel> {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
         let db = self.mongo_client.database(database_name.as_str());
@@ -43,14 +42,10 @@ impl WorkoutRepository {
         name: &str,
     ) -> WebResult<Option<WorkoutModel>> {
         let query = query_utils::for_one(doc! {"name": name }, user_id);
-        let cursor = self.get_workout_collection().find_one(query, None).await?;
+        let cursor = self.get_workout_collection().find_one(query, None).await;
 
-        if cursor.is_none() {
-            return Ok(None);
-        }
-
-        match from_bson(Bson::Document(cursor.unwrap())) {
-            Ok(model) => Ok(model),
+        match cursor {
+            Ok(workout) => Ok(workout),
             Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
@@ -61,15 +56,11 @@ impl WorkoutRepository {
         workout_id: &str,
     ) -> WebResult<Option<WorkoutModel>> {
         let query = query_utils::for_one(doc! {"workout_id": workout_id }, user_id);
-        let cursor = self.get_workout_collection().find_one(query, None).await?;
+        let cursor = self.get_workout_collection().find_one(query, None).await;
 
-        if cursor.is_none() {
-            return Ok(None);
-        }
-
-        match from_bson(Bson::Document(cursor.unwrap())) {
-            Ok(workout) => Ok(Some(workout)),
-            Err(err) => Err(AppError::Internal(err.to_string())),
+        match cursor {
+            Ok(workout) => Ok(workout),
+            Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
 
@@ -85,11 +76,7 @@ impl WorkoutRepository {
 
         while let Some(result) = cursor.next().await {
             if let Ok(result) = result {
-                let workout = from_bson::<WorkoutModel>(Bson::Document(result));
-                match workout {
-                    Ok(result) => vec.push(result),
-                    Err(e) => warn!("Error parsing workout: {:?}", e),
-                }
+                vec.push(result);
             } else {
                 warn!("Error reading workout: {:?}", result.unwrap_err())
             }
@@ -139,7 +126,7 @@ impl WorkoutRepository {
             updated_at: now,
         };
 
-        coll.insert_one(workout.to_doc(), None).await?;
+        coll.insert_one(workout, None).await?;
 
         match self.find_workout_by_name(user_id, workout_name).await? {
             Some(new_workout) => Ok(new_workout),
@@ -177,21 +164,17 @@ impl WorkoutRepository {
             ));
         }
 
-        let now = Utc::now().to_rfc3339();
-        let workout = WorkoutModel {
-            workout_id: existing_workout.workout_id,
-            user_id: user_id.to_owned(),
-            name: new_name,
-            description: new_desc,
-            measurement: existing_workout.measurement,
-            is_public: existing_workout.is_public,
-            created_at: existing_workout.created_at,
-            updated_at: now,
+        let query = doc! { "workout_id": workout_id };
+        let update = doc! {
+            "$set": {
+                "name": new_name,
+                "description": new_desc,
+                "updated_at": Utc::now().to_rfc3339()
+            }
         };
 
         let coll = self.get_workout_collection();
-        coll.update_one(doc! { "workout_id": workout_id }, workout.to_doc(), None)
-            .await?;
+        coll.update_one(query, update, None).await?;
 
         let model = self.find_workout_by_id(user_id, workout_id).await?.unwrap();
 
@@ -236,7 +219,7 @@ impl WorkoutRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(workout_score.to_doc(), None).await?;
+        coll.insert_one(workout_score, None).await?;
         self.get_workout_score_by_id(user_id, &workout_id, &id)
             .await
     }
@@ -256,13 +239,7 @@ impl WorkoutRepository {
 
         while let Some(result) = cursor.next().await {
             match result {
-                Ok(document) => {
-                    let workout_score = from_bson::<WorkoutScoreModel>(Bson::Document(document));
-                    match workout_score {
-                        Ok(result) => vec.push(result),
-                        Err(e) => warn!("Error parsing workout: {:?}", e),
-                    }
-                }
+                Ok(document) => vec.push(document),
                 Err(e) => warn!("Error reading workout: {:?}", e),
             }
         }
@@ -316,13 +293,9 @@ impl WorkoutRepository {
         );
         let cursor = self.get_score_collection().find_one(query, None).await?;
 
-        if cursor.is_none() {
-            return Err(AppError::NotFound("Entity not found".to_string()));
-        }
-
-        match from_bson(Bson::Document(cursor.unwrap())) {
-            Ok(model) => Ok(model),
-            Err(err) => Err(AppError::Internal(err.to_string())),
+        match cursor {
+            Some(model) => Ok(model),
+            None => Err(AppError::NotFound("Entity not found".to_string())),
         }
     }
 
@@ -333,19 +306,28 @@ impl WorkoutRepository {
         workout_score_id: &str,
         new_score: UpdateWorkoutScore,
     ) -> WebResult<WorkoutScoreModel> {
-        let mut score = self
+        let score = self
             .get_workout_score_by_id(user_id, workout_id, workout_score_id)
             .await?;
 
-        score.score = new_score.score.unwrap_or(score.score);
-        score.rx = new_score.rx.unwrap_or(score.rx);
-        score.notes = new_score.notes.unwrap_or(score.notes);
-        score.updated_at = Utc::now().to_rfc3339();
+        let updated_score = new_score.score.unwrap_or(score.score);
+        let updated_rx = new_score.rx.unwrap_or(score.rx);
+        let updated_notes = new_score.notes.unwrap_or(score.notes);
+        let updated_updated_at = Utc::now().to_rfc3339();
 
         let query = query_utils::for_one(doc! { "workout_score_id": workout_score_id }, user_id);
+        let update = doc! {
+            "$set": {
+                "score": updated_score,
+                "rx": updated_rx,
+                "notes": updated_notes,
+                "updated_at": updated_updated_at,
+            }
+        };
+
         let _ = self
             .get_score_collection()
-            .update_one(query, score.to_doc(), None)
+            .update_one(query, update, None)
             .await?;
 
         let res = self

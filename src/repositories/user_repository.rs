@@ -2,7 +2,6 @@ use crate::errors::{AppError, WebResult};
 use crate::models::user::{Claims, CreateUser, Login, UpdateUser, User};
 use crate::utils::{resources, Config};
 
-use bson::{from_bson, Bson};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use mongodb::{Client, Collection};
@@ -38,7 +37,7 @@ fn gen_token(key: &[u8], user: User, email: &str, remember_me: bool) -> WebResul
 }
 
 impl UserRepository {
-    fn get_collection(&self) -> Collection {
+    fn get_collection(&self) -> Collection<User> {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
         let db = self.mongo_client.database(database_name.as_str());
@@ -50,28 +49,36 @@ impl UserRepository {
         email: &str,
         user_update: UpdateUser,
     ) -> WebResult<User> {
-        let mut user = self.find_user_with_email(email).await?;
+        let user = self.find_user_with_email(email).await?;
 
-        user.password = if user_update.password.is_some() {
+        let updated_password = if user_update.password.is_some() {
             resources::create_hash(&user_update.password.unwrap())
         } else {
             user.password
         };
-        user.first_name = user_update.first_name.unwrap_or(user.first_name);
-        user.last_name = user_update.last_name.unwrap_or(user.last_name);
-        user.date_of_birth = user_update.date_of_birth.unwrap_or(user.date_of_birth);
-        user.height = user_update.height.unwrap_or(user.height);
-        user.weight = user_update.weight.unwrap_or(user.weight);
-        user.box_name = user_update.box_name.unwrap_or(user.box_name);
-        user.avatar_url = user_update.avatar_url.unwrap_or(user.avatar_url);
+        let updated_first_name = user_update.first_name.unwrap_or(user.first_name);
+        let updated_last_name = user_update.last_name.unwrap_or(user.last_name);
+        let updated_date_of_birth = user_update.date_of_birth.unwrap_or(user.date_of_birth);
+        let updated_height = user_update.height.unwrap_or(user.height);
+        let updated_weight = user_update.weight.unwrap_or(user.weight);
+        let updated_box_name = user_update.box_name.unwrap_or(user.box_name);
+        let updated_avatar_url = user_update.avatar_url.unwrap_or(user.avatar_url);
 
+        let query = doc! { "user_id": user.user_id.to_owned() };
+        let update = doc! {
+            "$set": {
+                "password": updated_password,
+                "first_name": updated_first_name,
+                "last_name": updated_last_name,
+                "date_of_birth": updated_date_of_birth,
+                "height": updated_height,
+                "weight": updated_weight,
+                "box_name": updated_box_name,
+                "avatar_url": updated_avatar_url,
+            }
+        };
         let coll = self.get_collection();
-        coll.update_one(
-            doc! { "user_id": user.user_id.to_owned() },
-            user.to_doc(),
-            None,
-        )
-        .await?;
+        coll.update_one(query, update, None).await?;
 
         self.find_user_with_email(email).await
     }
@@ -80,13 +87,9 @@ impl UserRepository {
         let coll = self.get_collection();
         let cursor = coll.find_one(doc! {"email": email}, None).await?;
 
-        if cursor.is_none() {
-            return Err(AppError::NotFound("User not found".to_owned()));
-        }
-
-        match from_bson(Bson::Document(cursor.unwrap())) {
-            Ok(model) => Ok(model),
-            Err(_) => Err(AppError::Internal("Invalid document".to_owned())),
+        match cursor {
+            Some(model) => Ok(model),
+            None => Err(AppError::NotFound("User not found".to_owned())),
         }
     }
 
@@ -116,17 +119,18 @@ impl UserRepository {
         let coll = self.get_collection();
         let hash_pw = resources::create_hash(&create_user.password);
         let id = uuid::Uuid::new_v4().to_string();
-        let user_doc = doc! {
-            "user_id": id,
-            "email": user_email,
-            "password": hash_pw,
-            "first_name": create_user.first_name,
-            "last_name": create_user.last_name,
-            "date_of_birth": create_user.date_of_birth,
-            "height": create_user.height,
-            "weight": create_user.weight,
-            "box_name": create_user.box_name,
-            "avatar_url": "",
+        let user_doc = User {
+            user_id: id,
+            admin: false,
+            email: user_email.to_owned(),
+            password: hash_pw,
+            first_name: create_user.first_name,
+            last_name: create_user.last_name,
+            date_of_birth: create_user.date_of_birth,
+            height: create_user.height,
+            weight: create_user.weight,
+            box_name: create_user.box_name,
+            avatar_url: "".to_owned(),
         };
 
         coll.insert_one(user_doc, None).await?;

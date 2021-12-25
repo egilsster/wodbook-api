@@ -44,8 +44,9 @@ pub type WebResult<T> = Result<T, AppError>;
 // with a wide range of error codes to handle
 pub fn parse_mongodb_error(err: mongodb::error::Error) -> AppError {
     let message = err.to_string();
-    match std::sync::Arc::try_unwrap(err.kind) {
-        Ok(mongodb::error::ErrorKind::WriteError(_)) => {
+    let error_kind = *err.kind;
+    match error_kind {
+        mongodb::error::ErrorKind::Write(_) => {
             if message.contains("E11000") {
                 AppError::Conflict(format!("Entity already exists: {}", message))
             } else {

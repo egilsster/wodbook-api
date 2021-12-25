@@ -1,4 +1,3 @@
-use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::vec::Vec;
@@ -43,20 +42,6 @@ pub struct MovementModel {
     pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
-}
-
-impl MovementModel {
-    pub fn to_doc(&self) -> Document {
-        doc! {
-            "movement_id": self.movement_id.to_owned(),
-            "user_id": self.user_id.to_owned(),
-            "name": self.name.to_owned(),
-            "measurement": self.measurement.to_string().to_lowercase(),
-            "is_public": self.is_public,
-            "created_at": self.created_at.to_owned(),
-            "updated_at": self.updated_at.to_owned(),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -140,81 +125,9 @@ pub struct MovementScoreModel {
     pub updated_at: String,
 }
 
-impl MovementScoreModel {
-    pub fn to_doc(&self) -> Document {
-        doc! {
-            "movement_score_id": self.movement_score_id.to_owned(),
-            "movement_id": self.movement_id.to_owned(),
-            "user_id": self.user_id.to_owned(),
-            "score": self.score.to_owned(),
-            "sets": self.sets.to_owned(),
-            "reps": self.reps.to_owned(),
-            "notes": self.notes.to_owned(),
-            "created_at": self.created_at.to_owned(),
-            "updated_at": self.updated_at.to_owned(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_movement_model() {
-        let movement = MovementModel {
-            movement_id: "1".to_string(),
-            user_id: "2".to_string(),
-            name: "Snatch".to_string(),
-            measurement: MovementMeasurement::Weight,
-            is_public: false,
-            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-        };
-
-        let doc = movement.to_doc();
-        let expected_doc = doc! {
-            "movement_id": "1",
-            "user_id": "2",
-            "name": "Snatch",
-            "measurement": "weight",
-            "is_public": false,
-            "created_at": "2020-08-17T13:25:54.544746+00:00",
-            "updated_at": "2020-08-17T13:25:54.544746+00:00"
-        };
-
-        assert_eq!(doc, expected_doc);
-    }
-
-    #[test]
-    fn test_movement_score_response() {
-        let movement_score = MovementScoreModel {
-            movement_score_id: "1".to_string(),
-            movement_id: "2".to_string(),
-            user_id: "3".to_string(),
-            score: 100.0,
-            sets: 1,
-            reps: 1,
-            notes: "".to_string(),
-            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-        };
-
-        let doc = movement_score.to_doc();
-        let expected_doc = doc! {
-            "movement_score_id": "1",
-            "movement_id": "2",
-            "user_id": "3",
-            "score": 100.0,
-            "sets": 1,
-            "reps": 1,
-            "notes": "",
-            "created_at": "2020-08-17T13:25:54.544746+00:00",
-            "updated_at": "2020-08-17T13:25:54.544746+00:00",
-        };
-
-        assert_eq!(doc, expected_doc);
-    }
 
     #[test]
     fn test_measurement_to_string() {
