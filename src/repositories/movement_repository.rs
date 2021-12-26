@@ -42,11 +42,10 @@ impl MovementRepository {
         name: &str,
     ) -> WebResult<Option<MovementModel>> {
         let query = query_utils::for_one(doc! {"name": name }, user_id);
-        let cursor = self.get_movement_collection().find_one(query, None).await?;
 
-        match cursor {
-            Some(_) => Ok(cursor),
-            None => Err(AppError::NotFound("Movement not found".to_owned())),
+        match self.get_movement_collection().find_one(query, None).await {
+            Ok(movement) => Ok(movement),
+            Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
 
@@ -56,11 +55,10 @@ impl MovementRepository {
         movement_id: &str,
     ) -> WebResult<Option<MovementModel>> {
         let query = query_utils::for_one(doc! {"movement_id": movement_id }, user_id);
-        let cursor = self.get_movement_collection().find_one(query, None).await?;
 
-        match cursor {
-            Some(_) => Ok(cursor),
-            None => Err(AppError::NotFound("Movement not found".to_owned())),
+        match self.get_movement_collection().find_one(query, None).await {
+            Ok(movement) => Ok(movement),
+            Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
 
@@ -155,10 +153,10 @@ impl MovementRepository {
         let query = doc! { "movement_id": movement_id };
         let update = doc! {
         "$set": {
-             "name": new_name,
-              "measurement": bson::to_bson(&new_movement).expect("Could not convert movement to bson"),
-              "is_public": existing_movement.is_public.to_owned(),
-               "updated_at": Utc::now().to_rfc3339()
+                "name": new_name,
+                "measurement": bson::to_bson(&new_movement).expect("Could not convert movement to bson"),
+                "is_public": existing_movement.is_public.to_owned(),
+                "updated_at": Utc::now().to_rfc3339()
             }
         };
 

@@ -42,9 +42,8 @@ impl WorkoutRepository {
         name: &str,
     ) -> WebResult<Option<WorkoutModel>> {
         let query = query_utils::for_one(doc! {"name": name }, user_id);
-        let cursor = self.get_workout_collection().find_one(query, None).await;
 
-        match cursor {
+        match self.get_workout_collection().find_one(query, None).await {
             Ok(workout) => Ok(workout),
             Err(e) => Err(AppError::Internal(e.to_string())),
         }
