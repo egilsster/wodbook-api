@@ -8,7 +8,6 @@ use crate::{
     models::movement::MovementMeasurement,
 };
 
-use bson::{from_bson, Bson};
 use chrono::Utc;
 use futures::stream::StreamExt;
 use mongodb::options::FindOptions;
@@ -23,14 +22,14 @@ pub struct MovementRepository {
 }
 
 impl MovementRepository {
-    fn get_score_collection(&self) -> Collection {
+    fn get_score_collection(&self) -> Collection<MovementScoreModel> {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
         let db = self.mongo_client.database(database_name.as_str());
         db.collection(SCORE_COLLECTION_NAME)
     }
 
-    fn get_movement_collection(&self) -> Collection {
+    fn get_movement_collection(&self) -> Collection<MovementModel> {
         let config = Config::from_env().unwrap();
         let database_name = config.mongo.db_name;
         let db = self.mongo_client.database(database_name.as_str());
@@ -43,14 +42,10 @@ impl MovementRepository {
         name: &str,
     ) -> WebResult<Option<MovementModel>> {
         let query = query_utils::for_one(doc! {"name": name }, user_id);
-        let cursor = self.get_movement_collection().find_one(query, None).await?;
 
-        match cursor {
-            Some(doc) => match from_bson(Bson::Document(doc)) {
-                Ok(model) => Ok(model),
-                Err(e) => Err(AppError::Internal(e.to_string())),
-            },
-            None => Ok(None),
+        match self.get_movement_collection().find_one(query, None).await {
+            Ok(movement) => Ok(movement),
+            Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
 
@@ -60,14 +55,9 @@ impl MovementRepository {
         movement_id: &str,
     ) -> WebResult<Option<MovementModel>> {
         let query = query_utils::for_one(doc! {"movement_id": movement_id }, user_id);
-        let cursor = self.get_movement_collection().find_one(query, None).await?;
 
-        if cursor.is_none() {
-            return Ok(None);
-        }
-
-        match from_bson(Bson::Document(cursor.unwrap())) {
-            Ok(model) => Ok(model),
+        match self.get_movement_collection().find_one(query, None).await {
+            Ok(movement) => Ok(movement),
             Err(e) => Err(AppError::Internal(e.to_string())),
         }
     }
@@ -84,13 +74,7 @@ impl MovementRepository {
 
         while let Some(result) = cursor.next().await {
             match result {
-                Ok(result) => {
-                    let movement = from_bson::<MovementModel>(Bson::Document(result));
-                    match movement {
-                        Ok(result) => vec.push(result),
-                        Err(e) => warn!("Error parsing movement: {:?}", e),
-                    }
-                }
+                Ok(result) => vec.push(result),
                 // Should this really be swallowing the errors?
                 // Is it because I still want to return _some_ data?
                 Err(e) => warn!("Error reading movement: {:?}", e.to_string()),
@@ -140,7 +124,7 @@ impl MovementRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(movement.to_doc(), None).await?;
+        coll.insert_one(movement, None).await?;
 
         match self.find_movement_by_name(user_id, movement_name).await? {
             Some(new_movement) => Ok(new_movement),
@@ -164,21 +148,20 @@ impl MovementRepository {
 
         let existing_movement = existing_movement.unwrap();
         let new_name = movement_update.name.unwrap_or(existing_movement.name);
+        let new_movement = existing_movement.measurement;
 
-        let now = Utc::now().to_rfc3339();
-        let movement = MovementModel {
-            movement_id: existing_movement.movement_id,
-            user_id: user_id.to_owned(),
-            name: new_name,
-            measurement: existing_movement.measurement,
-            is_public: existing_movement.is_public,
-            created_at: existing_movement.created_at,
-            updated_at: now.to_owned(),
+        let query = doc! { "movement_id": movement_id };
+        let update = doc! {
+        "$set": {
+                "name": new_name,
+                "measurement": bson::to_bson(&new_movement).expect("Could not convert movement to bson"),
+                "is_public": existing_movement.is_public.to_owned(),
+                "updated_at": Utc::now().to_rfc3339()
+            }
         };
 
         let coll = self.get_movement_collection();
-        coll.update_one(doc! { "movement_id": movement_id }, movement.to_doc(), None)
-            .await?;
+        coll.update_one(query, update, None).await?;
 
         let model = self
             .find_movement_by_id(user_id, movement_id)
@@ -227,7 +210,7 @@ impl MovementRepository {
             updated_at: now.to_owned(),
         };
 
-        coll.insert_one(new_score.to_doc(), None).await?;
+        coll.insert_one(new_score, None).await?;
 
         self.get_movement_score_by_id(user_id, &movement_id, &id)
             .await
@@ -248,13 +231,7 @@ impl MovementRepository {
 
         while let Some(result) = cursor.next().await {
             match result {
-                Ok(document) => {
-                    let movement_score = from_bson::<MovementScoreModel>(Bson::Document(document));
-                    match movement_score {
-                        Ok(result) => vec.push(result),
-                        Err(e) => warn!("Error parsing movement: {:?}", e),
-                    }
-                }
+                Ok(document) => vec.push(document),
                 Err(e) => warn!("Error reading movement: {:?}", e),
             }
         }
@@ -305,16 +282,9 @@ impl MovementRepository {
         );
         let cursor = self.get_score_collection().find_one(query, None).await?;
 
-        if cursor.is_none() {
-            return Err(AppError::NotFound("Entity not found".to_string()));
-        }
-
-        match from_bson(Bson::Document(cursor.unwrap())) {
-            Ok(model) => Ok(model),
-            Err(err) => Err(AppError::Internal(format!(
-                "Error getting new score: {}",
-                err.to_string()
-            ))),
+        match cursor {
+            Some(model) => Ok(model),
+            None => Err(AppError::NotFound("Entity not found".to_string())),
         }
     }
 
@@ -325,20 +295,30 @@ impl MovementRepository {
         movement_score_id: &str,
         new_score: UpdateMovementScore,
     ) -> WebResult<MovementScoreModel> {
-        let mut score = self
+        let score = self
             .get_movement_score_by_id(user_id, movement_id, movement_score_id)
             .await?;
 
-        score.score = new_score.score.unwrap_or(score.score);
-        score.reps = new_score.reps.unwrap_or(score.reps);
-        score.sets = new_score.sets.unwrap_or(score.sets);
-        score.notes = new_score.notes.unwrap_or(score.notes);
-        score.updated_at = Utc::now().to_rfc3339();
+        let updated_score = new_score.score.unwrap_or(score.score);
+        let updated_reps = new_score.reps.unwrap_or(score.reps);
+        let updated_sets = new_score.sets.unwrap_or(score.sets);
+        let updated_notes = new_score.notes.unwrap_or(score.notes);
+        let updated_updated_at = Utc::now().to_rfc3339();
 
         let query = query_utils::for_one(doc! { "movement_score_id": movement_score_id }, user_id);
+        let update = doc! {
+        "$set": {
+             "score": updated_score,
+                "reps": updated_reps,
+                "sets": updated_sets,
+                "notes": updated_notes,
+                "updated_at": updated_updated_at,
+            }
+        };
+
         let _ = self
             .get_score_collection()
-            .update_one(query, score.to_doc(), None)
+            .update_one(query, update, None)
             .await?;
 
         let res = self

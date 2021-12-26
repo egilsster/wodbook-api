@@ -1,4 +1,3 @@
-use bson::Document;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::vec::Vec;
@@ -45,21 +44,6 @@ pub struct WorkoutModel {
     pub is_public: bool,
     pub created_at: String,
     pub updated_at: String,
-}
-
-impl WorkoutModel {
-    pub fn to_doc(&self) -> Document {
-        doc! {
-            "workout_id": self.workout_id.to_owned(),
-            "user_id": self.user_id.to_owned(),
-            "name": self.name.to_owned(),
-            "measurement": self.measurement.to_string(),
-            "description": self.description.to_owned(),
-            "is_public": self.is_public,
-            "created_at": self.created_at.to_owned(),
-            "updated_at": self.updated_at.to_owned(),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -144,80 +128,9 @@ pub struct WorkoutScoreModel {
     pub updated_at: String,
 }
 
-impl WorkoutScoreModel {
-    pub fn to_doc(&self) -> Document {
-        doc! {
-            "workout_score_id": self.workout_score_id.to_owned(),
-            "workout_id": self.workout_id.to_owned(),
-            "user_id": self.user_id.to_owned(),
-            "score": self.score.to_owned(),
-            "rx": self.rx.to_owned(),
-            "notes": self.notes.to_owned(),
-            "created_at": self.created_at.to_owned(),
-            "updated_at": self.updated_at.to_owned(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_workout_model() {
-        let workout = WorkoutModel {
-            workout_id: "1".to_string(),
-            user_id: "2".to_string(),
-            name: "Fran".to_string(),
-            measurement: WorkoutMeasurement::Time,
-            description: "You know..".to_string(),
-            is_public: true,
-            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-        };
-
-        let doc = workout.to_doc();
-        let expected_doc = doc! {
-            "workout_id": "1",
-            "user_id": "2",
-            "name": "Fran",
-            "measurement": "time",
-            "description": "You know..",
-            "is_public": true,
-            "created_at": "2020-08-17T13:25:54.544746+00:00",
-            "updated_at": "2020-08-17T13:25:54.544746+00:00"
-        };
-
-        assert_eq!(doc, expected_doc);
-    }
-
-    #[test]
-    fn test_workout_score_response() {
-        let workout_score = WorkoutScoreModel {
-            workout_score_id: "1".to_string(),
-            workout_id: "2".to_string(),
-            user_id: "3".to_string(),
-            score: 119.0,
-            rx: true,
-            notes: "".to_string(),
-            created_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-            updated_at: "2020-08-17T13:25:54.544746+00:00".to_string(),
-        };
-
-        let doc = workout_score.to_doc();
-        let expected_doc = doc! {
-            "workout_score_id": "1",
-            "workout_id": "2",
-            "user_id": "3",
-            "score": 119.0,
-            "rx": true,
-            "notes": "",
-            "created_at": "2020-08-17T13:25:54.544746+00:00",
-            "updated_at": "2020-08-17T13:25:54.544746+00:00",
-        };
-
-        assert_eq!(doc, expected_doc);
-    }
 
     #[test]
     fn test_measurement_to_string() {
