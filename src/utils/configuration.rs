@@ -43,7 +43,9 @@ impl Config {
             .separator("__")
             .ignore_empty(true);
 
-        let x = config::Config::builder().add_source(env).build().unwrap();
-        x.try_deserialize()
+        config::Config::builder()
+            .add_source(env)
+            .build()?
+            .try_deserialize()
     }
 }
