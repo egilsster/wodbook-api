@@ -39,12 +39,11 @@ pub struct Config {
 
 impl Config {
     pub fn from_env() -> Result<Self, ConfigError> {
-        let mut cfg = config::Config::new();
-        cfg.merge(
-            config::Environment::new()
-                .separator("__")
-                .ignore_empty(true),
-        )?;
-        cfg.try_into()
+        let env = config::Environment::default()
+            .separator("__")
+            .ignore_empty(true);
+
+        let x = config::Config::builder().add_source(env).build().unwrap();
+        x.try_deserialize()
     }
 }
