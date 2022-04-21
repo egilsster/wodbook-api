@@ -731,7 +731,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -1988,7 +1988,7 @@ dependencies = [
  "trust-dns-proto 0.21.2",
  "trust-dns-resolver 0.21.2",
  "typed-builder",
- "uuid",
+ "uuid 0.8.2",
  "webpki-roots",
 ]
 
@@ -3687,6 +3687,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "uuid"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8cfcd319456c4d6ea10087ed423473267e1a071f3bc0aa89f80d60997843c6f0"
+dependencies = [
+ "getrandom 0.2.1",
+ "serde",
+]
+
+[[package]]
 name = "v_escape"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4020,7 +4030,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
- "uuid",
+ "uuid 1.0.0",
 ]
 
 [[package]]
