@@ -35,7 +35,7 @@ async fn create_workout(
 
     let user_id = claims.user_id.as_ref();
     let result = workout_repo
-        .create_workout(&user_id, workout.into_inner())
+        .create_workout(user_id, workout.into_inner())
         .await;
 
     result.map(|workout| HttpResponse::Created().json(workout))

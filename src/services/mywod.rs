@@ -118,7 +118,7 @@ pub async fn save_movements_and_scores(
         match created_movement {
             Ok(created_movement) => {
                 added_movements += 1;
-                let all_scores = get_scores_for_movement(m, &movement_scores);
+                let all_scores = get_scores_for_movement(m, movement_scores);
                 for score in all_scores {
                     movement_repo
                         .create_movement_score(user_id, &created_movement, score)
