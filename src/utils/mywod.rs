@@ -39,14 +39,18 @@ pub async fn write_payload_to_file(mut payload: Multipart) -> WebResult<String> 
     while let Ok(Some(mut field)) = payload.try_next().await {
         // File::create is blocking operation, use thread-pool
         let fp = filepath.to_owned();
-        let mut f = web::block(move || fs::File::create(fp)).await.unwrap();
+        let mut f = web::block(move || fs::File::create(fp))
+            .await
+            .unwrap()
+            .unwrap();
         // Field in turn is stream of *Bytes* object
         while let Some(chunk) = field.next().await {
             let data = chunk.unwrap();
             // filesystem operations are blocking, we have to use thread-pool
             f = web::block(move || f.write_all(&data).map(|_| f))
                 .await
-                .map_err(|_| AppError::Internal("Reading myWOD data failed".to_owned()))?;
+                .map_err(|_| AppError::Internal("Reading myWOD data failed".to_owned()))?
+                .unwrap();
         }
     }
 

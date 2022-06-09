@@ -11,7 +11,6 @@ use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 impl FromRequest for Claims {
     type Error = Error;
     type Future = Ready<Result<Claims, Error>>;
-    type Config = ();
 
     fn from_request(req: &HttpRequest, _payload: &mut dev::Payload) -> Self::Future {
         let auth = req.headers().get("Authorization");
