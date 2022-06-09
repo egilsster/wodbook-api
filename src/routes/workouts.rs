@@ -129,10 +129,11 @@ async fn create_workout_score(
 #[patch("/{workout_id}/{score_id}")]
 async fn update_workout_score(
     state: web::Data<AppState>,
-    web::Path((workout_id, score_id)): web::Path<(String, String)>,
+    params: web::Path<(String, String)>,
     claims: Claims,
     workout_score_update: web::Json<UpdateWorkoutScore>,
 ) -> Result<impl Responder, AppError> {
+    let (workout_id, score_id) = params.into_inner();
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
@@ -153,9 +154,10 @@ async fn update_workout_score(
 #[delete("/{workout_id}/{score_id}")]
 async fn delete_workout_score(
     state: web::Data<AppState>,
-    web::Path((workout_id, score_id)): web::Path<(String, String)>,
+    params: web::Path<(String, String)>,
     claims: Claims,
 ) -> Result<impl Responder, AppError> {
+    let (workout_id, score_id) = params.into_inner();
     let workout_repo = WorkoutRepository {
         mongo_client: state.mongo_client.clone(),
     };
