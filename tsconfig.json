@@ -3,7 +3,7 @@
     "module": "commonjs",
     "target": "esnext",
     "rootDir": "integration_tests",
-    "outDir": "./build",
+    "noEmit": true,
     "inlineSourceMap": true,
     "strict": true
   },
