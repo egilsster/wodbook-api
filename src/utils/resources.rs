@@ -8,9 +8,7 @@ pub fn create_hash(s: &str) -> String {
 }
 
 fn parse_num(s: &str) -> f64 {
-    let val = s.parse::<f64>().unwrap_or(0.0);
-    warn!("Parsing value '{}' to f64, got '{}'", s, val);
-    val
+    s.parse::<f64>().unwrap_or(0.0)
 }
 
 pub fn time_to_seconds(time: &str) -> f64 {

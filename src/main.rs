@@ -8,6 +8,7 @@ use crate::utils::mywod::AVATAR_FILE_LOCATION;
 use crate::utils::{AppState, Config};
 
 use actix_web::middleware::{Compress, Logger};
+use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
 use std::{fs, io};
@@ -38,9 +39,9 @@ async fn main() -> io::Result<()> {
 
     let app = move || {
         App::new()
-            .app_data(AppState {
+            .app_data(Data::new(AppState {
                 mongo_client: client.clone(),
-            })
+            }))
             .wrap(Compress::default())
             .wrap(Logger::default())
             // Setup endpoints (strictest matcher first)
@@ -48,8 +49,9 @@ async fn main() -> io::Result<()> {
             .service(web::scope("/v1/users").configure(routes::users::init_routes))
             .service(web::scope("/v1/movements").configure(routes::movements::init_routes))
             .service(web::scope("/v1/workouts").configure(routes::workouts::init_routes))
-            .service(web::scope("/").configure(routes::index::init_routes))
+            .service(web::scope("").configure(routes::index::init_routes))
     };
 
+    info!("Starting server on {}", server_addr);
     HttpServer::new(app).bind(server_addr)?.run().await
 }

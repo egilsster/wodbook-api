@@ -55,7 +55,7 @@ impl Connection {
                     info!("Connected to mongodb");
                 } else {
                     // Do not block startup if it can not connect
-                    error!("Connection to mongo is not functioning");
+                    error!("Not able to connect to mongodb");
                 }
 
                 Ok(Connection { client })

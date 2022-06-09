@@ -8,7 +8,6 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
 - Rust (1.43.0+)
 - Docker
-- docker-compose
 
 ## Usage
 
@@ -17,7 +16,7 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 λ cp .env.example .env
 
 # Run docker containers
-λ docker-compose -f docker-compose.deps.yml up -d
+λ docker compose -f docker-compose.deps.yml up -d
 
 # Run unit tests
 λ cargo test
@@ -25,9 +24,10 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 # Run the server (Add --release for an optimized build)
 λ cargo run
 ...
-[2020-10-13T12:49:44Z INFO  wodbook_api::db::mongo] Connected to mongodb
-[2020-10-13T12:49:44Z INFO  actix_server::builder] Starting 16 workers
-[2020-10-13T12:49:44Z INFO  actix_server::builder] Starting "actix-web-service-0.0.0.0:43210" service on 0.0.0.0:43210
+[2022-06-09T20:26:56Z INFO  wodbook_api::db::mongo] Connected to mongodb
+[2022-06-09T20:26:56Z INFO  wodbook_api] Starting server on 0.0.0.0:43210
+[2022-06-09T20:26:56Z INFO  actix_server::builder] Starting 8 workers
+[2022-06-09T20:26:56Z INFO  actix_server::server] Actix runtime found; starting in Actix runtime
 ```
 
 ## APIs
