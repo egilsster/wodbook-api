@@ -28,7 +28,7 @@ ring = "0.16.20"
 data-encoding = "2.3.2"
 
 [dependencies.mongodb]
-version = "2.2.2"
+version = "2.3.0"
 default-features = false
 features = ["async-std-runtime"]
 
