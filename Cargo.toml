@@ -25,7 +25,7 @@ derive_more = "0.99.17"
 oas3 = "0.2.1"
 rusqlite = { version = "0.28.0", features = ["bundled", "blob"] }
 ring = "0.16.20"
-data-encoding = "2.3.2"
+data-encoding = "2.3.3"
 
 [dependencies.mongodb]
 version = "2.3.0"
