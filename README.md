@@ -1,6 +1,4 @@
-# wodbook-api
-
-![Build status](https://github.com/egilsster/wodbook-api/workflows/build/badge.svg?branch=main)
+# wodbook api
 
 Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 
@@ -16,7 +14,7 @@ Back-end for the [wodbook-app](https://github.com/egilsster/wodbook-app).
 λ cp .env.example .env
 
 # Run docker containers
-λ docker compose -f docker-compose.deps.yml up -d
+λ docker compose -f docker-compose.yml up -d
 
 # Run unit tests
 λ cargo test

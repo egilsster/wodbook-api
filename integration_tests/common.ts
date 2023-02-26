@@ -10,10 +10,7 @@ export const getMongoClient = async () => {
   if (CLIENT_CACHE) {
     return CLIENT_CACHE;
   }
-  CLIENT_CACHE = await MongoClient.connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  CLIENT_CACHE = await MongoClient.connect(MONGO_URI);
   return CLIENT_CACHE;
 };
 
