@@ -19,29 +19,17 @@ jobs:
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all --check
 
-  # https://github.com/actions/first-interaction/issues/10
-  # https://github.com/actions-rs/clippy-check/issues/2
-  #   clippy-check:
-  #     runs-on: ubuntu-latest
-  #     steps:
-  #       - name: Checkout repository
-  #         uses: actions/checkout@v3
-  #       - name: Install stable toolchain
-  #         uses: actions-rs/toolchain@v1
-  #         with:
-  #           toolchain: stable
-  #           components: clippy
-  #           override: true
-  #       - name: Run cargo clippy
-  #         uses: actions-rs/clippy-check@v1
-  #         with:
-  #           token: ${{ secrets.GITHUB_TOKEN }}
-  #           args: --all-features
+  clippy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run cargo clippy
+        run: cargo clippy --all-features
 
   unit-test:
     runs-on: ubuntu-latest
@@ -66,9 +54,7 @@ jobs:
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test
 
   integration-test:
     services:
