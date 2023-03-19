@@ -1,4 +1,4 @@
-type MovementData = {
+export type MovementData = {
   movement_id: string;
   user_id: string;
   name: string;
@@ -9,21 +9,11 @@ type MovementData = {
   updated_at: string;
 };
 
-type ManyMovementsData = {
+export type ManyMovementsData = {
   data: MovementData[];
 };
 
-declare type MovementResponse = {
-  statusCode: number;
-  body: MovementData;
-};
-
-declare type ManyMovementsResponse = {
-  statusCode: number;
-  body: ManyMovementsData;
-};
-
-declare type MovementScoreData = {
+export type MovementScoreData = {
   movement_id: string;
   movement_score_id: string;
   score: number;
@@ -32,9 +22,4 @@ declare type MovementScoreData = {
   notes: string;
   created_at: string;
   updated_at: string;
-};
-
-declare type MovementScoreResponse = {
-  statusCode: number;
-  body: MovementScoreData;
 };

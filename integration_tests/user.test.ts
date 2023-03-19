@@ -1,19 +1,16 @@
 import { MongoClient } from "mongodb";
-import * as request from "request-promise-native";
 import { StatusCodes } from "http-status-codes";
 import users from "./data/users";
+import { LoginData, UserData, UserScores } from "./types/user";
+import { MovementData } from "./types/movement";
+import { WorkoutData } from "./types/workout";
 
 const MONGO_URI =
   process.env.MONGO_URI || "mongodb://localhost:27017/wodbook-test";
 
-describe("/users", () => {
-  const reqOpts: request.RequestPromiseOptions = {
-    json: true,
-    resolveWithFullResponse: true, // Get the full response instead of just the body
-    simple: false, // Get a rejection only if the request failed for technical reasons
-    baseUrl: `${process.env.API_URL || "http://127.0.0.1:43210"}/v1`,
-  };
+const baseUrl = `${process.env.API_URL || "http://127.0.0.1:43210"}/v1`;
 
+describe("/users", () => {
   let mongoClient: MongoClient;
 
   beforeAll(async () => {
@@ -39,12 +36,12 @@ describe("/users", () => {
   describe("/register and /login", () => {
     describe("POST", () => {
       it("should create new user and login", async () => {
-        const res1: TokenResponse = await request.post("users/register", {
-          ...reqOpts,
+        const res1 = await fetch(`${baseUrl}/users/register`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: {
+          body: JSON.stringify({
             first_name: "Juliette",
             last_name: "Danielle",
             box_name: "The Room",
@@ -53,47 +50,50 @@ describe("/users", () => {
             weight: 61000,
             date_of_birth: "1980-12-08",
             password: "tearing-me-apart-lisa",
-          },
+          }),
         });
 
-        expect(res1.statusCode).toBe(StatusCodes.CREATED);
-        expect(res1.body).toHaveProperty("token");
+        const body1: LoginData = await res1.json();
+        expect(res1.status).toBe(StatusCodes.CREATED);
+        expect(body1).toHaveProperty("token");
 
-        const res2: TokenResponse = await request.post("users/login", {
-          ...reqOpts,
+        const res2 = await fetch(`${baseUrl}/users/login`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: {
+          body: JSON.stringify({
             email: "lisa@the-room.com",
             password: "tearing-me-apart-lisa",
-          },
+          }),
         });
 
-        expect(res2.statusCode).toBe(StatusCodes.OK);
-        expect(res2.body).toHaveProperty("token");
-        expect(res2.body.token.startsWith("ey")).toBe(true);
+        const body2: LoginData = await res2.json();
+        expect(res2.status).toBe(StatusCodes.OK);
+        expect(body2).toHaveProperty("token");
+        expect(body2.token.startsWith("ey")).toBe(true);
 
-        const token = res2.body.token;
+        const token = body2.token;
 
-        const res3: UserResponse = await request.get("users/me", {
-          ...reqOpts,
+        const res3 = await fetch(`${baseUrl}/users/me`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+        const body3: UserData = await res3.json();
 
-        expect(res3.statusCode).toBe(StatusCodes.OK);
-        expect(res3.body).toHaveProperty("user_id");
-        expect(res3.body).toHaveProperty("first_name", "Juliette");
-        expect(res3.body).toHaveProperty("last_name", "Danielle");
-        expect(res3.body).toHaveProperty("box_name", "The Room");
-        expect(res3.body).toHaveProperty("email", "lisa@the-room.com");
-        expect(res3.body).toHaveProperty("height", 168);
-        expect(res3.body).toHaveProperty("weight", 61000);
-        expect(res3.body).toHaveProperty("date_of_birth", "1980-12-08");
-        expect(res3.body).toHaveProperty("password");
+        expect(res3.status).toBe(StatusCodes.OK);
+        expect(body3).toHaveProperty("user_id");
+        expect(body3).toHaveProperty("first_name", "Juliette");
+        expect(body3).toHaveProperty("last_name", "Danielle");
+        expect(body3).toHaveProperty("box_name", "The Room");
+        expect(body3).toHaveProperty("email", "lisa@the-room.com");
+        expect(body3).toHaveProperty("height", 168);
+        expect(body3).toHaveProperty("weight", 61000);
+        expect(body3).toHaveProperty("date_of_birth", "1980-12-08");
+        expect(body3).toHaveProperty("password");
       });
     });
   });
@@ -101,75 +101,79 @@ describe("/users", () => {
   describe("/me", () => {
     describe("GET", () => {
       it("should get information for the logged in user (non admin)", async () => {
-        const res1 = await request.post("users/login", {
-          ...reqOpts,
+        const res1 = await fetch(`${baseUrl}/users/login`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: {
+          body: JSON.stringify({
             email: "user@wodbook.com",
             password: "user",
-          },
+          }),
         });
 
-        expect(res1.statusCode).toBe(StatusCodes.OK);
-        expect(res1.body).toHaveProperty("token");
-        const { token } = res1.body;
+        const body1: LoginData = await res1.json();
+        expect(res1.status).toBe(StatusCodes.OK);
+        expect(body1).toHaveProperty("token");
+        const { token } = body1;
 
-        const res2 = await request.get("users/me", {
-          ...reqOpts,
+        const res2 = await fetch(`${baseUrl}/users/me`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+        const body2: UserData = await res2.json();
 
-        expect(res2.statusCode).toBe(StatusCodes.OK);
-        expect(res2.body).toHaveProperty("user_id");
-        expect(res2.body).toHaveProperty("first_name", "Greg");
-        expect(res2.body).toHaveProperty("last_name", "Sestero");
-        expect(res2.body).toHaveProperty("box_name", "The Room");
-        expect(res2.body).toHaveProperty("email", "user@wodbook.com");
-        expect(res2.body).toHaveProperty("height", 187);
-        expect(res2.body).toHaveProperty("weight", 89000);
-        expect(res2.body).toHaveProperty("date_of_birth");
-        expect(res2.body).toHaveProperty("password");
+        expect(res2.status).toBe(StatusCodes.OK);
+        expect(body2).toHaveProperty("user_id");
+        expect(body2).toHaveProperty("first_name", "Greg");
+        expect(body2).toHaveProperty("last_name", "Sestero");
+        expect(body2).toHaveProperty("box_name", "The Room");
+        expect(body2).toHaveProperty("email", "user@wodbook.com");
+        expect(body2).toHaveProperty("height", 187);
+        expect(body2).toHaveProperty("weight", 89000);
+        expect(body2).toHaveProperty("date_of_birth");
+        expect(body2).toHaveProperty("password");
       });
 
       it("should get information for the logged in user (admin)", async () => {
-        const res1 = await request.post("users/login", {
-          ...reqOpts,
+        const res1 = await fetch(`${baseUrl}/users/login`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: {
+          body: JSON.stringify({
             email: "admin@wodbook.com",
             password: "admin",
-          },
+          }),
         });
+        const body1: LoginData = await res1.json();
 
-        expect(res1.statusCode).toBe(StatusCodes.OK);
-        expect(res1.body).toHaveProperty("token");
-        const { token } = res1.body;
+        expect(res1.status).toBe(StatusCodes.OK);
+        expect(body1).toHaveProperty("token");
+        const { token } = body1;
 
-        const res2 = await request.get("users/me", {
-          ...reqOpts,
+        const res2 = await fetch(`${baseUrl}/users/me`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+        const body2: UserData = await res2.json();
 
-        expect(res2.statusCode).toBe(StatusCodes.OK);
-        expect(res2.body).toHaveProperty("user_id");
-        expect(res2.body).toHaveProperty("first_name", "Tommy");
-        expect(res2.body).toHaveProperty("last_name", "Wiseau");
-        expect(res2.body).toHaveProperty("box_name", "The Room");
-        expect(res2.body).toHaveProperty("email", "admin@wodbook.com");
-        expect(res2.body).toHaveProperty("height", 174);
-        expect(res2.body).toHaveProperty("weight", 85000);
-        expect(res2.body).toHaveProperty("date_of_birth");
-        expect(res2.body).toHaveProperty("password");
+        expect(res2.status).toBe(StatusCodes.OK);
+        expect(body2).toHaveProperty("user_id");
+        expect(body2).toHaveProperty("first_name", "Tommy");
+        expect(body2).toHaveProperty("last_name", "Wiseau");
+        expect(body2).toHaveProperty("box_name", "The Room");
+        expect(body2).toHaveProperty("email", "admin@wodbook.com");
+        expect(body2).toHaveProperty("height", 174);
+        expect(body2).toHaveProperty("weight", 85000);
+        expect(body2).toHaveProperty("date_of_birth");
+        expect(body2).toHaveProperty("password");
       });
     });
 
@@ -186,80 +190,84 @@ describe("/users", () => {
           password: "so-hot-right-now",
         };
 
-        const res1 = await request.post("users/register", {
-          ...reqOpts,
+        const res1 = await fetch(`${baseUrl}/users/register`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: user,
+          body: JSON.stringify(user),
         });
 
-        expect(res1.statusCode).toBe(StatusCodes.CREATED);
-        const { token } = res1.body;
+        const body1: LoginData = await res1.json();
+        expect(res1.status).toBe(StatusCodes.CREATED);
+        const { token } = body1;
 
-        const res2 = await request.get("users/me", {
-          ...reqOpts,
+        const res2 = await fetch(`${baseUrl}/users/me`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+        const body2: UserData = await res2.json();
 
-        expect(res2.statusCode).toBe(StatusCodes.OK);
-        expect(res2.body).toHaveProperty("user_id");
-        expect(res2.body).toHaveProperty("first_name", user.first_name);
-        expect(res2.body).toHaveProperty("last_name", user.last_name);
-        expect(res2.body).toHaveProperty("box_name", user.box_name);
-        expect(res2.body).toHaveProperty("email", user.email);
-        expect(res2.body).toHaveProperty("height", user.height);
-        expect(res2.body).toHaveProperty("weight", user.weight);
-        expect(res2.body).toHaveProperty("date_of_birth", user.date_of_birth);
-        expect(res2.body).toHaveProperty("password");
+        expect(res2.status).toBe(StatusCodes.OK);
+        expect(body2).toHaveProperty("user_id");
+        expect(body2).toHaveProperty("first_name", user.first_name);
+        expect(body2).toHaveProperty("last_name", user.last_name);
+        expect(body2).toHaveProperty("box_name", user.box_name);
+        expect(body2).toHaveProperty("email", user.email);
+        expect(body2).toHaveProperty("height", user.height);
+        expect(body2).toHaveProperty("weight", user.weight);
+        expect(body2).toHaveProperty("date_of_birth", user.date_of_birth);
+        expect(body2).toHaveProperty("password");
 
-        const res3 = await request.patch("users/me", {
-          ...reqOpts,
+        const res3 = await fetch(`${baseUrl}/users/me`, {
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: {
+          body: JSON.stringify({
             first_name: "new first_name",
             last_name: "new last_name",
             box_name: "new box_name",
-          },
+          }),
         });
+        const body3: UserData = await res3.json();
 
-        expect(res3.statusCode).toBe(StatusCodes.OK);
+        expect(res3.status).toBe(StatusCodes.OK);
         // Verify new data
-        expect(res3.body).toHaveProperty("first_name", "new first_name");
-        expect(res3.body).toHaveProperty("last_name", "new last_name");
-        expect(res3.body).toHaveProperty("box_name", "new box_name");
+        expect(body3).toHaveProperty("first_name", "new first_name");
+        expect(body3).toHaveProperty("last_name", "new last_name");
+        expect(body3).toHaveProperty("box_name", "new box_name");
         // Verify that unchanged data remains there
-        expect(res3.body).toHaveProperty("email", user.email);
-        expect(res3.body).toHaveProperty("height", user.height);
-        expect(res3.body).toHaveProperty("weight", user.weight);
-        expect(res3.body).toHaveProperty("date_of_birth", user.date_of_birth);
-        expect(res3.body).toHaveProperty("password");
+        expect(body3).toHaveProperty("email", user.email);
+        expect(body3).toHaveProperty("height", user.height);
+        expect(body3).toHaveProperty("weight", user.weight);
+        expect(body3).toHaveProperty("date_of_birth", user.date_of_birth);
+        expect(body3).toHaveProperty("password");
 
         // Verify that the GET requests returns the same data
-        const res4 = await request.get("users/me", {
-          ...reqOpts,
+        const res4 = await fetch(`${baseUrl}/users/me`, {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
 
-        expect(res4.statusCode).toBe(StatusCodes.OK);
-        expect(res4.body).toHaveProperty("user_id");
-        expect(res4.body).toHaveProperty("first_name", "new first_name");
-        expect(res4.body).toHaveProperty("last_name", "new last_name");
-        expect(res4.body).toHaveProperty("box_name", "new box_name");
-        expect(res4.body).toHaveProperty("email", user.email);
-        expect(res4.body).toHaveProperty("height", user.height);
-        expect(res4.body).toHaveProperty("weight", user.weight);
-        expect(res4.body).toHaveProperty("date_of_birth", user.date_of_birth);
-        expect(res4.body).toHaveProperty("password");
+        const body4: UserData = await res4.json();
+        expect(res4.status).toBe(StatusCodes.OK);
+        expect(body4).toHaveProperty("user_id");
+        expect(body4).toHaveProperty("first_name", "new first_name");
+        expect(body4).toHaveProperty("last_name", "new last_name");
+        expect(body4).toHaveProperty("box_name", "new box_name");
+        expect(body4).toHaveProperty("email", user.email);
+        expect(body4).toHaveProperty("height", user.height);
+        expect(body4).toHaveProperty("weight", user.weight);
+        expect(body4).toHaveProperty("date_of_birth", user.date_of_birth);
+        expect(body4).toHaveProperty("password");
       });
 
       it("should change password", async () => {
@@ -274,60 +282,62 @@ describe("/users", () => {
           password: "so-hot-right-now",
         };
 
-        const res1 = await request.post("users/register", {
-          ...reqOpts,
+        const res1 = await fetch(`${baseUrl}/users/register`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: user,
+          body: JSON.stringify(user),
         });
 
-        expect(res1.statusCode).toBe(StatusCodes.CREATED);
-        const { token } = res1.body;
+        const body1: LoginData = await res1.json();
+        expect(res1.status).toBe(StatusCodes.CREATED);
+        const { token } = body1;
 
         const new_pass = "my-new-password";
 
-        const res2 = await request.patch("users/me", {
-          ...reqOpts,
+        const res2 = await fetch(`${baseUrl}/users/me`, {
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: {
+          body: JSON.stringify({
             password: new_pass,
-          },
+          }),
         });
 
-        expect(res2.statusCode).toBe(StatusCodes.OK);
+        expect(res2.status).toBe(StatusCodes.OK);
 
         // Verify that login works with the new password
-        const res3 = await request.post("users/login", {
-          ...reqOpts,
+        const res3 = await fetch(`${baseUrl}/users/login`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: {
+          body: JSON.stringify({
             email: user.email,
             password: new_pass,
-          },
+          }),
         });
 
-        expect(res3.statusCode).toBe(StatusCodes.OK);
-        expect(res3.body).toHaveProperty("token");
+        const body3: LoginData = await res3.json();
+        expect(res3.status).toBe(StatusCodes.OK);
+        expect(body3).toHaveProperty("token");
 
         // Verify that login does NOT work with the old password
-        const res4 = await request.post("users/login", {
-          ...reqOpts,
+        const res4 = await fetch(`${baseUrl}/users/login`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: {
+          body: JSON.stringify({
             email: user.email,
             password: user.password,
-          },
+          }),
         });
 
-        expect(res4.statusCode).toBe(StatusCodes.BAD_REQUEST);
+        expect(res4.status).toBe(StatusCodes.BAD_REQUEST);
       });
     });
   });
@@ -344,134 +354,130 @@ describe("/users", () => {
         description: "15-12-9 Thruster (60kg / 45kg) / Chest to bar (weighted)",
       };
 
-      const login_res = await request.post("users/login", {
-        ...reqOpts,
+      const login_res = await fetch(`${baseUrl}/users/login`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: {
+        body: JSON.stringify({
           email: "user@wodbook.com",
           password: "user",
+        }),
+      });
+
+      const login_body: LoginData = await login_res.json();
+      expect(login_res.status).toBe(StatusCodes.OK);
+      expect(login_body).toHaveProperty("token");
+      const { token } = login_body;
+
+      const score_res1 = await fetch(`${baseUrl}/users/me/scores`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      expect(login_res.statusCode).toBe(StatusCodes.OK);
-      expect(login_res.body).toHaveProperty("token");
-      const { token } = login_res.body;
-
-      const score_res1: UserScoreResponse = await request.get(
-        "users/me/scores",
-        {
-          ...reqOpts,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      expect(score_res1.statusCode).toBe(StatusCodes.OK);
-      expect(score_res1.body).toHaveProperty("movement_scores");
-      expect(score_res1.body).toHaveProperty("workout_scores");
-      expect(score_res1.body.movement_scores.length).toEqual(0);
-      expect(score_res1.body.workout_scores.length).toEqual(0);
+      const score_body1: UserScores = await score_res1.json();
+      expect(score_res1.status).toBe(StatusCodes.OK);
+      expect(score_body1).toHaveProperty("movement_scores");
+      expect(score_body1).toHaveProperty("workout_scores");
+      expect(score_body1.movement_scores.length).toEqual(0);
+      expect(score_body1.workout_scores.length).toEqual(0);
 
       // Create movement & score
-      const movement_res1: MovementResponse = await request.post("/movements", {
-        ...reqOpts,
+      const movement_res1 = await fetch(`${baseUrl}/movements`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: {
-          name: movement.name,
-          measurement: movement.measurement,
-        },
+        body: JSON.stringify(movement),
       });
 
-      expect(movement_res1.statusCode).toBe(StatusCodes.CREATED);
-      const movementId = movement_res1.body.movement_id;
+      const movement_body1: MovementData = await movement_res1.json();
+      expect(movement_res1.status).toBe(StatusCodes.CREATED);
+      const movementId = movement_body1.movement_id;
 
-      const new_movement_score_res: MovementResponse = await request.post(
-        `/movements/${movementId}`,
+      const new_movement_score_res = await fetch(
+        `${baseUrl}/movements/${movementId}`,
         {
-          ...reqOpts,
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: {
+          body: JSON.stringify({
             score: 200,
             measurement: "weight",
-          },
+          }),
         }
       );
 
-      expect(new_movement_score_res.statusCode).toBe(StatusCodes.CREATED);
+      expect(new_movement_score_res.status).toBe(StatusCodes.CREATED);
 
       // Create workout & score
-      const workout_res1: WorkoutResponse = await request.post("/workouts", {
-        ...reqOpts,
+      const workout_res1 = await fetch(`${baseUrl}/workouts`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: wod,
+        body: JSON.stringify(wod),
       });
 
-      expect(workout_res1.statusCode).toBe(StatusCodes.CREATED);
-      const workoutId = workout_res1.body.workout_id;
+      const workout_body1: WorkoutData = await workout_res1.json();
+      expect(workout_res1.status).toBe(StatusCodes.CREATED);
+      const workoutId = workout_body1.workout_id;
 
-      const new_workout_score_res1: WorkoutResponse = await request.post(
-        `/workouts/${workoutId}`,
+      const new_workout_score_res1 = await fetch(
+        `${baseUrl}/workouts/${workoutId}`,
         {
-          ...reqOpts,
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: {
+          body: JSON.stringify({
             score: 260,
             rx: true,
-          },
+          }),
         }
       );
 
-      expect(new_workout_score_res1.statusCode).toBe(StatusCodes.CREATED);
+      expect(new_workout_score_res1.status).toBe(StatusCodes.CREATED);
 
-      const new_workout_score_res2: WorkoutResponse = await request.post(
-        `/workouts/${workoutId}`,
+      const new_workout_score_res2 = await fetch(
+        `${baseUrl}/workouts/${workoutId}`,
         {
-          ...reqOpts,
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: {
+          body: JSON.stringify({
             score: 260,
             rx: true,
-          },
+          }),
         }
       );
 
-      expect(new_workout_score_res2.statusCode).toBe(StatusCodes.CREATED);
+      expect(new_workout_score_res2.status).toBe(StatusCodes.CREATED);
 
-      const score_res2: UserScoreResponse = await request.get(
-        "users/me/scores",
-        {
-          ...reqOpts,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const score_res2 = await fetch(`${baseUrl}/users/me/scores`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      expect(score_res2.statusCode).toBe(StatusCodes.OK);
-      expect(score_res2.body).toHaveProperty("movement_scores");
-      expect(score_res2.body).toHaveProperty("workout_scores");
-      expect(score_res2.body.movement_scores.length).toEqual(1);
-      expect(score_res2.body.workout_scores.length).toEqual(2);
+      const score_body2: UserScores = await score_res2.json();
+      expect(score_res2.status).toBe(StatusCodes.OK);
+      expect(score_body2).toHaveProperty("movement_scores");
+      expect(score_body2).toHaveProperty("workout_scores");
+      expect(score_body2.movement_scores.length).toEqual(1);
+      expect(score_body2.workout_scores.length).toEqual(2);
     });
   });
 });

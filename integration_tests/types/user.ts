@@ -1,18 +1,16 @@
-type LoginData = {
+import { MovementScoreData } from "./movement";
+import { WorkoutScoreData } from "./workout";
+
+export type LoginData = {
   token: string;
 };
 
-declare type TokenResponse = {
-  statusCode: number;
-  body: LoginData;
-};
-
-declare type LoginPayload = {
+export type LoginPayload = {
   email: string;
   password: string;
 };
 
-type UserData = {
+export type UserData = {
   user_id: string;
   email: string;
   password: string;
@@ -26,17 +24,7 @@ type UserData = {
   avatar_url: string;
 };
 
-declare type UserResponse = {
-  statusCode: number;
-  body: UserData;
-};
-
-type UserScores = {
+export type UserScores = {
   movement_scores: MovementScoreData[];
   workout_scores: WorkoutScoreData[];
-};
-
-declare type UserScoreResponse = {
-  statusCode: number;
-  body: UserScores;
 };
