@@ -86,6 +86,10 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: build app
         run: cargo build
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
       - name: npm install
         run: npm ci
       - name: Run integration tests
