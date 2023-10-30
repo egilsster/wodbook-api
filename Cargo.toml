@@ -22,7 +22,7 @@ futures = "0.3.28"
 dotenv = "0.15.0"
 config = "0.13.3"
 derive_more = "0.99.17"
-oas3 = "0.2.1"
+oas3 = "0.3.0"
 rusqlite = { version = "0.29.0", features = ["bundled", "blob"] }
 ring = "0.17.5"
 data-encoding = "2.4.0"
