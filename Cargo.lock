@@ -1740,9 +1740,9 @@ dependencies = [
 
 [[package]]
 name = "oas3"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a55d7c8094964f36e61e41107e9cd0629f2a2e5aeb32dd93e81754fb982fffab"
+checksum = "920e12479993cfc5d07c3a5a7fc7fa2dfd79ad56d43bdb4513505d0fbda12b51"
 dependencies = [
  "bytes",
  "derive_more",
