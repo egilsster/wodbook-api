@@ -1644,9 +1644,9 @@ dependencies = [
 
 [[package]]
 name = "mongodb"
-version = "2.7.1"
+version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7c926772050c3a3f87c837626bf6135c8ca688d91d31dd39a3da547fc2bc9fe"
+checksum = "46c30763a5c6c52079602be44fa360ca3bfacee55fca73f4734aecd23706a7f2"
 dependencies = [
  "async-executor",
  "async-std",
