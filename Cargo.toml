@@ -18,7 +18,7 @@ serde_json = "1.0.108"
 jsonwebtoken = "9.2.0"
 chrono = "0.4.31"
 uuid = { version = "1.6", features = ["serde", "v4"] }
-futures = "0.3.29"
+futures = "0.3.30"
 dotenv = "0.15.0"
 config = "0.13.4"
 derive_more = "0.99.17"
