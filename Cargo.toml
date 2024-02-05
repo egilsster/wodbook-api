@@ -20,7 +20,7 @@ chrono = "0.4.33"
 uuid = { version = "1.7", features = ["serde", "v4"] }
 futures = "0.3.30"
 dotenv = "0.15.0"
-config = "0.13.4"
+config = "0.14.0"
 derive_more = "0.99.17"
 oas3 = "0.4.0"
 rusqlite = { version = "0.30.0", features = ["bundled", "blob"] }
