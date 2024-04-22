@@ -16,7 +16,7 @@ env_logger = "0.11.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.116"
 jsonwebtoken = "9.3.0"
-chrono = "0.4.37"
+chrono = "0.4.38"
 uuid = { version = "1.8", features = ["serde", "v4"] }
 futures = "0.3.30"
 dotenv = "0.15.0"
